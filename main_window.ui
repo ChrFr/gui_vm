@@ -33,7 +33,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset resource="../GUI Verkehrsmodelle/gui.qrc">
+             <iconset resource="gui.qrc">
               <normaloff>:/buttons/icons/minus.png</normaloff>:/buttons/icons/minus.png</iconset>
             </property>
            </widget>
@@ -44,7 +44,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset resource="../GUI Verkehrsmodelle/gui.qrc">
+             <iconset resource="gui.qrc">
               <normaloff>:/buttons/icons/plus.png</normaloff>:/buttons/icons/plus.png</iconset>
             </property>
             <property name="iconSize">
@@ -157,7 +157,7 @@
   </action>
  </widget>
  <resources>
-  <include location="../GUI Verkehrsmodelle/gui.qrc"/>
+  <include location="gui.qrc"/>
  </resources>
  <connections/>
 </ui>

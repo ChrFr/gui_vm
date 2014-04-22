@@ -272,7 +272,7 @@ class ResourceNode(ProjectTreeNode):
     resource: Resource,
               resource of the traffic model
     '''
-    def __init__(self, resource=None,
+    def __init__(self, resource,
                 parent=None):
         self.resource = resource
         super(ResourceNode, self).__init__(resource.name,
