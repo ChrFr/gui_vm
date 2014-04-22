@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>714</width>
-    <height>650</height>
+    <width>785</width>
+    <height>638</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +33,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset resource="gui.qrc">
+             <iconset resource="../GUI Verkehrsmodelle/gui.qrc">
               <normaloff>:/buttons/icons/minus.png</normaloff>:/buttons/icons/minus.png</iconset>
             </property>
            </widget>
@@ -44,7 +44,7 @@
              <string>...</string>
             </property>
             <property name="icon">
-             <iconset resource="gui.qrc">
+             <iconset resource="../GUI Verkehrsmodelle/gui.qrc">
               <normaloff>:/buttons/icons/plus.png</normaloff>:/buttons/icons/plus.png</iconset>
             </property>
             <property name="iconSize">
@@ -60,13 +60,22 @@
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="right_Layout">
         <item>
-         <widget class="QTextEdit" name="detail_text_output">
-          <property name="readOnly">
-           <bool>true</bool>
+         <layout class="QVBoxLayout" name="info_layout"/>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
           </property>
-         </widget>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item>
          <spacer name="horizontalSpacer_2">
@@ -116,7 +125,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>714</width>
+     <width>785</width>
      <height>21</height>
     </rect>
    </property>
@@ -148,7 +157,7 @@
   </action>
  </widget>
  <resources>
-  <include location="gui.qrc"/>
+  <include location="../GUI Verkehrsmodelle/gui.qrc"/>
  </resources>
  <connections/>
 </ui>

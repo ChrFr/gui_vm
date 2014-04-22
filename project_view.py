@@ -7,11 +7,11 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         super(ProjectTreeModel, self).__init__(parent)
         self.root = ProjectTreeNode('root')
         self.root.add_child(Project('Neues Projekt'))
-        self.header = ('Projektbrowser', 'Anmerkung')
+        self.header = ('Projektbrowser', 'Details')
 
 
     def add_run(self):
-        self.root.child_at(0).add_run()
+        self.root.child_at_row(0).add_run()
     #def flags(self, index):
         #defaultFlags = QAbstractItemModel.flags(self, index)
 
@@ -83,7 +83,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
 
     def index(self, row, column, parent):
         node = self.nodeFromIndex(parent)
-        return self.createIndex(row, column, node.child_at(row))
+        return self.createIndex(row, column, node.child_at_row(row))
 
 
     def data(self, index, role):
@@ -105,7 +105,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
             return QtCore.QVariant(node.name)
 
         elif index.column() == 1:
-            return QtCore.QVariant('')
+            return QtCore.QVariant(node.note)
 
         else:
             return QtCore.QVariant()
