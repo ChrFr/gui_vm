@@ -1,6 +1,7 @@
 #which traffic models are available to choose from
 #(same names as classes derived from TrafficModel base class)
 TRAFFIC_MODELS = ['Jens', 'Max']
+DEFAULT_MODEL = 'Jens'
 
 class TrafficModel(object):
     '''
@@ -8,68 +9,89 @@ class TrafficModel(object):
     '''
     def __init__(self, name):
         self.name = name
-        self.ressources = {}
+        #dictionary with categories of resources as keys
+        #items are lists of the resources to this category
+        self.resources = {}
 
     def command(self):
         return ''
 
-    def add_ressource(self, ressource):
-        if not self.ressources.has_key(ressource.category):
-            self.ressources[ressource.category] = []
-        self.ressources[ressource.category].append(ressource)
+    def add_resource(self, resource):
+        '''
+        add a resource to the traffic model
+
+        Parameters
+        ----------
+        resource: Resource
+        '''
+        if not self.resources.has_key(resource.category):
+            self.resources[resource.category] = []
+        self.resources[resource.category].append(resource)
 
     def is_complete(self):
         '''
-        check if set of ressources is complete (all sources are set)
+        check if set of resources is complete (all sources are valid)
         '''
-        for category in self.ressources:
-            for ressource in self.ressources[category]:
-                if not ressource.is_set:
+        for category in self.resources:
+            for resource in self.resources[category]:
+                if not resource.is_valid:
                     return False
         return True
-
-    def is_set(self):
-        if len(self.ressources):
-            return False
 
 
 class Jens(TrafficModel):
     def __init__(self, parent=None):
         super(Jens, self).__init__('Jens')
 
-        activities = Ressource('Aktivitaeten', category='Matrizen')
-        accessibilities = Ressource('Erreichbarkeiten', category='Matrizen')
-        net = Ressource('Netz1', category='Netze')
+        activities = Resource('Aktivitaeten', category='Matrizen')
+        accessibilities = Resource('Erreichbarkeiten', category='Matrizen')
+        net = Resource('Netz1', category='Netze')
 
-        self.add_ressource(activities)
-        self.add_ressource(accessibilities)
-        self.add_ressource(net)
+        self.add_resource(activities)
+        self.add_resource(accessibilities)
+        self.add_resource(net)
 
 
 class Max(TrafficModel):
     def __init__(self, parent=None):
         super(Max, self).__init__('Max')
 
-        something = Ressource('irgendwas', category='Matrizen')
-        bla = Ressource('bla', category='Netze')
+        something = Resource('irgendwas', category='irgendeine Kategorie')
+        bla = Resource('Ressource bla', category='Kategorie blubb')
 
-        self.add_ressource(something)
-        self.add_ressource(bla)
+        self.add_resource(something)
+        self.add_resource(bla)
 
 
-class Ressource(object):
-    def __init__(self, name, category = 'default', source = None):
+class Resource(object):
+    '''
+    categorized resource for the traffic model calculations
+
+    Parameters
+    ----------
+    name: String,
+          the name of the resource
+    category: String, optional
+              the category of the resource (e.g. matrices)
+    file_name: String, optional
+               the name of the resource file
+    file_path: String, optional
+               the path of the resource file
+
+    '''
+    def __init__(self, name, category = 'default',
+                 file_path = None, file_name = None):
         self.name = name
         self.category = category
-        if not source:
-            self.is_set = False
-            self.source = ''
-        else:
-            self.source = source
+        self.file_name = file_name
+        self.file_path = file_path
 
-    def set_source(self, path):
-        self.is_set = True
-        self.source = path
+    def set_source(self, file_name, file_path = None):
+        self.file_name = file_name
+        self.file_path = file_path
 
+    @property
     def is_valid(self):
-        return False
+        if self.file_name is None:
+            return False
+        return True

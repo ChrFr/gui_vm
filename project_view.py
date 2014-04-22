@@ -1,5 +1,5 @@
 from PyQt4 import QtCore
-from project import (Project, ProjectTreeNode)
+from project_tree import (Project, ProjectTreeNode)
 
 
 class ProjectTreeModel(QtCore.QAbstractItemModel):

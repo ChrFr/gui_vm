@@ -20,12 +20,19 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_tree.dataChanged.connect(self.refresh_view)
 
     def refresh_view(self):
+        '''
+        refresh the view on the project tree
+        '''
         self.project_tree_view.expandAll()
         for column in range(self.project_tree_view.model()
                             .columnCount(QtCore.QModelIndex())):
             self.project_tree_view.resizeColumnToContents(column)
 
     def row_clicked(self, index):
+        '''
+        show details when row of project tree is clicked
+        details shown depend on type of node that is behind the clicked row
+        '''
         node = self.project_tree_view.model().data(index, QtCore.Qt.UserRole)
         if self.row_index == index:
             print node.rename
@@ -35,24 +42,49 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 #layout = self.info_layout.itemAt(i)
             self.clear_layout(self.info_layout)
             if node.__class__.__name__ == 'Project':
-                self.display_project_details(node)
+                self.display_project_details(node, self.info_layout)
             elif node.__class__.__name__ == 'SimRun':
-                self.display_simrun_details(node)
-            elif node.__class__.__name__ == 'RessourceNode':
-                self.display_source_details(node)
+                self.display_simrun_details(node, self.info_layout)
+            elif node.__class__.__name__ == 'ResourceNode':
+                self.display_source_details(node, self.info_layout)
 
-    def display_project_details(self, node):
+    def display_project_details(self, node, layout):
+        '''
+        display the details of a resource node in the given layout
+        change the traffic model
+
+        Parameters
+        ----------
+        node: Project,
+              node, that contains the project information
+        layout: QVBoxLayout,
+                the elements showing the details are added as children of this
+                layout
+        '''
         form = QtGui.QFormLayout()
         for meta in node.meta:
             label = QtGui.QLabel(meta)
             edit = QtGui.QLineEdit(node.meta[meta])
             edit.setReadOnly(True)
             form.addRow(label, edit)
-        self.info_layout.addLayout(form)
+        layout.addLayout(form)
 
-    def display_simrun_details(self, node):
+    def display_simrun_details(self, node, layout):
+        '''
+        display the details of a simrun node in the given layout
+        input to change the traffic model
+
+        Parameters
+        ----------
+        node: SimRun,
+              node, that contains the
+        layout: QVBoxLayout,
+                the elements showing the details are added as children of this
+                layout
+        '''
         def changeModel(name):
             node.set_model(name)
+            self.refresh_view()
 
         form = QtGui.QFormLayout()
         label = QtGui.QLabel('Verkehrsmodell')
@@ -61,17 +93,38 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         combo.addItems(node._available)
         combo.currentIndexChanged['QString'].connect(changeModel)
         form.addRow(label, combo)
-        self.info_layout.addLayout(form)
+        layout.addLayout(form)
 
 
-    def display_source_details(self, node):
+    def display_source_details(self, node, layout):
+        '''
+        display the details of a resource node
+        input to change the source of the resource
+
+        Parameters
+        ----------
+        node: ResourceNode,
+              node, that wraps a resource and contains the file path of the
+              resource
+        layout: QVBoxLayout,
+                the elements showing the details are added as children of this
+                layout
+        '''
         form = QtGui.QFormLayout()
         label = QtGui.QLabel('Datei')
-        edit = QtGui.QLineEdit(node.ressource.source)
+        edit = QtGui.QLineEdit(node.source)
         form.addRow(label, edit)
-        self.info_layout.addLayout(form)
+        layout.addLayout(form)
 
     def clear_layout(self, layout):
+        '''
+        remove all child widgets of the given layout
+
+        Parameters
+        ----------
+        layout: QVBoxLayout,
+                layout whose child widgets are removed
+        '''
         for i in reversed(range(layout.count())):
             item = layout.itemAt(i)
             if isinstance(item, QtGui.QWidgetItem):
