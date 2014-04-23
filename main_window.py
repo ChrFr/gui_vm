@@ -19,11 +19,28 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #Slots for the plus and minus buttons
         self.plus_button.clicked.connect(self.project_tree.add_run)
         self.plus_button.clicked.connect(self.refresh_view)
+        self.save_button.clicked.connect(self.save_project)
         self.row_index = 0
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
             self.row_clicked)
         self.project_tree.dataChanged.connect(self.refresh_view)
         self.project_changed.connect(self.refresh_view)
+
+    def save_project(self):
+        '''
+        save the project
+        '''
+        filename = QtGui.QFileDialog.getSaveFileName(
+            self, 'Speichern des Projekts', '.', '*.xml')
+        #filename is '' if aborted
+        if len(filename) > 0:
+            #get first project (by now only 1 project is displayed)
+            #need to change, if there are more
+            self.project_tree.root.child_at_row(0).write_config(filename)
+            QtGui.QMessageBox.about(
+                self, "Speichern erfolgreich",
+                'Die Speicherung des Projektes\n{}\n war erfolgreich'.
+                format(filename))
 
     def refresh_view(self):
         '''
