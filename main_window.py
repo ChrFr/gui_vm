@@ -2,15 +2,20 @@ import sys
 from main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeModel
+from resource_ui import Ui_DetailsResource
+from simrun_ui import Ui_DetailsSimRun
+from project_ui import Ui_DetailsProject
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
+    project_changed = QtCore.pyqtSignal()
+
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
         self.project_tree = ProjectTreeModel()
         self.project_tree_view.setModel(self.project_tree)
         self.project_tree_view.expandAll()
-        self.details = Details(None, self.info_layout)
+        self.details = None
         #Slots for the plus and minus buttons
         self.plus_button.clicked.connect(self.project_tree.add_run)
         self.plus_button.clicked.connect(self.refresh_view)
@@ -18,6 +23,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
             self.row_clicked)
         self.project_tree.dataChanged.connect(self.refresh_view)
+        self.project_changed.connect(self.refresh_view)
 
     def refresh_view(self):
         '''
@@ -36,58 +42,32 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         node = self.project_tree_view.model().data(index, QtCore.Qt.UserRole)
         #clicked highlighted row
         if self.row_index == index:
-            print node.rename
+            #rename node if allowed
+            if node.rename:
+                text, ok = QtGui.QInputDialog.getText(
+                    self, 'Umbenennen', 'Neuen Namen eingeben:',
+                    QtGui.QLineEdit.Normal, node.name)
+                if ok:
+                    node.name = text
+                    self.project_changed.emit()
         #clicked another row
         else:
             self.row_index = index
             #clear the old details
-            clear_layout(self.info_layout)
+            if self.details:
+                self.details.close()
+            #show details depending on type of node
             if node.__class__.__name__ == 'Project':
-                self.details = ProjectDetails(node, self.info_layout)
+                self.details = ProjectDetails(node, self.details_layout)
             elif node.__class__.__name__ == 'SimRun':
-                self.details = SimRunDetails(node, self.info_layout)
+                self.details = SimRunDetails(node, self.details_layout)
             elif node.__class__.__name__ == 'ResourceNode':
-                self.details = ResourceDetails(node, self.info_layout)
+                self.details = ResourceDetails(node, self.details_layout)
+            if self.details:
+                self.details.value_changed.connect(self.refresh_view)
 
 
-class Details(QtGui.QWidget):
-    '''
-    base class for the details of nodes, shown in a given layout
-
-    Parameters
-    ----------
-    node: Node of the project tree
-    parent: layout the details will be added to
-    '''
-    def __init__(self, node, parent):
-        QtGui.QVBoxLayout.__init__(self)
-        self.node = node
-        self.parent = parent
-        self.parent.addWidget(self)
-
-    def __del__(self):
-        pass
-        #clear_layout(self.parent)
-
-def clear_layout(layout):
-    '''
-    remove all child widgets of the given layout
-
-    Parameters
-    ----------
-    layout: QVBoxLayout,
-            layout whose child widgets are removed
-    '''
-    for i in reversed(range(layout.count())):
-        item = layout.itemAt(i)
-        if isinstance(item, QtGui.QWidgetItem):
-            item.widget().close()
-        else:
-            clear_layout(item.layout())
-        layout.removeItem(item)
-
-
-class SimRunDetails(Details):
+class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
     '''
     display the details of a simrun node in the given layout
     input to change the traffic model
@@ -100,21 +80,27 @@ class SimRunDetails(Details):
             the elements showing the details are added as children of this
             layout
     '''
+
+    value_changed = QtCore.pyqtSignal()
+
     def __init__(self, node, parent):
-        super(SimRunDetails, self).__init__(node, parent)
-        self.form = QtGui.QFormLayout()
-        self.label = QtGui.QLabel('Verkehrsmodell')
-        self.combo = QtGui.QComboBox()
-        self.combo.setEditable(True)
-        self.combo.addItems(self.node._available)
-        self.combo.currentIndexChanged['QString'].connect(self.changeModel)
-        self.form.addRow(self.label, self.combo)
-        self.parent.addLayout(self.form)
+        super(SimRunDetails, self).__init__()
+        self.setupUi(self)
+        self.parent = parent
+        self.parent.addWidget(self)
+        self.setTitle(node.name)
+        self.node = node
+        self.combo_model.addItems(self.node._available)
+        index = self.combo_model.findText(self.node.model.name)
+        self.combo_model.setCurrentIndex(index)
+        self.combo_model.currentIndexChanged['QString'].connect(self.changeModel)
+        self.show()
 
     def changeModel(self, name):
         self.node.set_model(name)
+        self.value_changed.emit()
 
-class ProjectDetails(Details):
+class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
     '''
     display the details of a resource node in the given layout
     change the traffic model
@@ -127,18 +113,22 @@ class ProjectDetails(Details):
             the elements showing the details are added as children of this
             layout
     '''
+    value_changed = QtCore.pyqtSignal()
+
     def __init__(self, node, parent):
-        super(ProjectDetails, self).__init__(node, parent)
-        self.form = QtGui.QFormLayout()
+        super(ProjectDetails, self).__init__()
+        self.setupUi(self)
+        self.parent = parent
+        self.parent.addWidget(self)
+        self.setTitle(node.name)
         for meta in node.meta:
             label = QtGui.QLabel(meta)
             edit = QtGui.QLineEdit(node.meta[meta])
             edit.setReadOnly(True)
-            self.form.addRow(label, edit)
-        self.addLayout(self.form)
+            self.meta_layout.addRow(label, edit)
+        self.show()
 
-
-class ResourceDetails(Details):
+class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''
     display the details of a resource node
     input to change the source of the resource
@@ -152,20 +142,32 @@ class ResourceDetails(Details):
             the elements showing the details are added as children of this
             layout
     '''
+    value_changed = QtCore.pyqtSignal()
+
     def __init__(self, node, parent):
-        super(ResourceDetails, self).__init__(node, parent)
-        self.form = QtGui.QFormLayout()
-        label = QtGui.QLabel('Datei')
-        edit = QtGui.QLineEdit(self.node.source)
-        self.browse_button = QtGui.QPushButton('...')
+        super(ResourceDetails, self).__init__()
+        self.setupUi(self)
+        self.parent = parent
+        self.parent.addWidget(self)
+        self.node = node
+        self.file_edit.setText(self.node.source)
+        self.setTitle(node.name)
         self.browse_button.clicked.connect(self.browse_files)
-        self.form.addRow(label)
-        self.form.addRow(edit, self.browse_button)
-        self.parent.addLayout(self.form)
+        self.value_changed.connect(self.update)
+        self.show()
 
     def browse_files(self):
-        filename = QtGui.QFileDialog.getOpenFileName(self, 'Open File', '.')
-        print filename
+        fileinput = QtGui.QFileDialog.getOpenFileName(self, 'Open File', '.')
+        #filename is '' if aborted
+        if len(fileinput) > 0:
+            self.node.set_source(fileinput)
+            self.value_changed.emit()
+
+    def update(self):
+        self.file_edit.setText(self.node.source)
+
+    def __del__(self):
+        pass
 
 def startmain():
     app = QtGui.QApplication(sys.argv)

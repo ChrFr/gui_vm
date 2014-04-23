@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>785</width>
-    <height>638</height>
+    <width>856</width>
+    <height>658</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,6 +15,30 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="start_button">
+        <property name="text">
+         <string>Simulation starten</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
@@ -23,21 +47,7 @@
          <enum>QLayout::SetMaximumSize</enum>
         </property>
         <item>
-         <widget class="QTreeView" name="project_tree_view"/>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QToolButton" name="minus_button">
-            <property name="text">
-             <string>...</string>
-            </property>
-            <property name="icon">
-             <iconset resource="gui.qrc">
-              <normaloff>:/buttons/icons/minus.png</normaloff>:/buttons/icons/minus.png</iconset>
-            </property>
-           </widget>
-          </item>
           <item>
            <widget class="QToolButton" name="plus_button">
             <property name="text">
@@ -55,45 +65,51 @@
             </property>
            </widget>
           </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="right_Layout">
-        <item>
-         <layout class="QVBoxLayout" name="info_layout"/>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <spacer name="horizontalSpacer">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Add </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="minus_button">
+            <property name="text">
+             <string>...</string>
+            </property>
+            <property name="icon">
+             <iconset resource="gui.qrc">
+              <normaloff>:/buttons/icons/minus.png</normaloff>:/buttons/icons/minus.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Remove </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="save_button">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="gui.qrc">
+              <normaloff>:/buttons/icons/save.png</normaloff>:/buttons/icons/save.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Save </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -105,12 +121,29 @@
             </property>
            </spacer>
           </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTreeView" name="project_tree_view"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="right_Layout">
+        <item>
+         <layout class="QVBoxLayout" name="details_layout">
           <item>
-           <widget class="QPushButton" name="start_button">
-            <property name="text">
-             <string>Simulation starten</string>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-           </widget>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -125,7 +158,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>785</width>
+     <width>856</width>
      <height>21</height>
     </rect>
    </property>

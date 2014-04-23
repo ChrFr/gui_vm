@@ -19,7 +19,7 @@ class ProjectTreeNode(object):
         self.parent = parent
         self.name = name
         self.children = []
-        self.rename = True
+        self.rename = False
 
     @property
     def note(self):
@@ -186,7 +186,8 @@ class SimRun(ProjectTreeNode):
         super(SimRun, self).__init__(name)
         self.model = TrafficModel(default_names['empty'])
         self._available = TRAFFIC_MODELS
-        self.rename = False
+        #simulation runs can be renamed
+        self.rename = True
 
     @property
     def note(self):
@@ -227,12 +228,16 @@ class Project(ProjectTreeNode):
     def __init__(self, filename=None, parent=None):
         super(Project, self).__init__(default_names['new_project'],
                                       parent=parent)
+
+        self.meta = {}
+        #projects can be renamed
+        self.rename = True
         if filename is not None:
             self.read_config(filename)
-        self.meta = {}
-        self.meta['Datum'] = time.strftime("%d.%m.%Y")
-        self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
-        self.meta['Autor'] = ''
+        else:
+            self.meta['Datum'] = time.strftime("%d.%m.%Y")
+            self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
+            self.meta['Autor'] = ''
 
     @property
     def note(self):
@@ -303,8 +308,22 @@ class ResourceNode(ProjectTreeNode):
         '''
         if self.resource.file_path is None:
             file_path = os.getcwd()
+        else:
+            file_path = self.resource.file_path
         if self.resource.file_name is None:
             source = 'nicht angegeben'
         else:
-            source = os.path.join(file_path, file_name)
+            source = os.path.join(file_path, self.resource.file_name)
         return source
+
+    def set_source(self, filename):
+        '''
+        set the path and filename of the resource
+
+        Parameters
+        ----------
+        filename: String, path + name of file
+        '''
+        file_path, file_name = os.path.split(str(filename))
+        self.resource.file_name = file_name
+        self.resource.file_path = file_path

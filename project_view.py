@@ -6,7 +6,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
     def __init__(self, parent=None):
         super(ProjectTreeModel, self).__init__(parent)
         self.root = ProjectTreeNode('root')
-        self.root.add_child(Project('Neues Projekt'))
+        self.root.add_child(Project())
         self.header = ('Projektbrowser', 'Details')
 
 

@@ -2,5 +2,6 @@
   <qresource prefix="buttons">
     <file>icons/minus.png</file>
     <file>icons/plus.png</file>
+    <file>icons/save.png</file>
   </qresource>
 </RCC>
