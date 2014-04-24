@@ -1,16 +1,22 @@
 from copy import deepcopy
-from traffic_models import *
 import os
 import time
 from lxml import etree
+from shutil import copytree
+from config import DEFAULT_FOLDER
 
-default_names = {'new_project': 'Neues Projekt',
-                 'resources': 'Resourcen',
-                 'empty': '<keine Eingabe>',
-                 'new_run': 'Neuer Simulationslauf',
-                 'result_config': 'Ergebnisse',
-                 'input_config': 'Eingaben',
-                 'model_config': 'Verkehrsmodel'}
+from maxem import Maxem
+TRAFFIC_MODELS = ['Maxem']
+
+#dictionary defines how classes are called when written to xml
+#also used while reading xml project config
+XML_CLASS_NAMES = {'SimRun': 'Szenario',
+                   'Project': 'Projekt',
+                   'ResourceNode': 'Ressource',
+                   'ProjectTreeNode': 'Layer'}
+
+inversed_names = {v:k for k, v in XML_CLASS_NAMES.items()}
+
 
 class ProjectTreeNode(object):
     '''
@@ -32,14 +38,19 @@ class ProjectTreeNode(object):
         parent: SubElement,
                 this node will be added to it
         '''
-        #xml_element = etree.SubElement(parent, self.__class__.__name__)
-        name = etree.SubElement(parent, 'name')
-        name.text = self.name
+        xml_element = etree.SubElement(parent,
+                                       XML_CLASS_NAMES[self.__class__.__name__])
+        xml_element.attrib['name'] = self.name
         for child in self.children:
-            child.add_to_xml(parent)
+            child.add_to_xml(xml_element)
+        return xml_element
 
-    def from_xml(self):
-        pass
+    def from_xml(self, element):
+        '''
+        read the basic attributes from element and assign them to the node
+        '''
+        if element.attrib.has_key('name'):
+            self.name = element.attrib['name']
 
     @property
     def note(self):
@@ -202,10 +213,10 @@ class SimRun(ProjectTreeNode):
     used traffic model)
     the resources are its children
     '''
-    def __init__(self, name=None):
-        super(SimRun, self).__init__(name)
-        self.model = TrafficModel(default_names['empty'])
+    def __init__(self, model, name=None, parent=None):
+        super(SimRun, self).__init__(name, parent=parent)
         self._available = TRAFFIC_MODELS
+        self.set_model(model)
         #simulation runs can be renamed
         self.rename = True
 
@@ -226,16 +237,17 @@ class SimRun(ProjectTreeNode):
         set the traffic model of the sim run
         '''
         if name in self._available:
-            self.model = globals()[str(name)]()
+            self.model = globals()[name]()
             #remove the old children of the sim run (including resources)
             for i in reversed(range(self.child_count())):
                 self.remove_child_at(i)
             #add the resources needed by the traffic model, categorized
             for category in self.model.resources:
-                category_node = Category(category)
-                self.add_child(category_node)
+                layer_node = ProjectTreeNode(category)
+                self.add_child(layer_node)
                 for resource in self.model.resources[category]:
-                    category_node.add_child(ResourceNode(resource))
+                    layer_node.add_child(ResourceNode(resource.name,
+                                                      resource=resource))
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
 
@@ -249,29 +261,44 @@ class SimRun(ProjectTreeNode):
         parent: SubElement,
                 this node will be added to it
         '''
-        xml_element = etree.SubElement(parent, 'Simulationslauf')
-        tm = etree.SubElement(xml_element, 'Verkehrsmodell')
+        xml_element = super(SimRun, self).add_to_xml(parent)
+        tm = etree.Element('Verkehrsmodell')
         tm.text = self.model.name
-        super(SimRun, self).add_to_xml(xml_element)
+        xml_element.insert(0, tm)
+
+    def from_xml(self, element):
+        '''
+        read the basic attributes from element and assign them to the node
+
+        Parameters
+        ----------
+        element: SubElement,
+                 xml node containing informations about this project node
+        '''
+        super(SimRun, self).from_xml(element)
+        for subelement in element:
+            if subelement.tag == 'Verkehrsmodell':
+                name = subelement.text
+                if name in self._available:
+                    self.model = globals()[name]()
+                else:
+                    raise Exception('Traffic Model {0} not available'.format(name))
+
 
 class Project(ProjectTreeNode):
     '''
     Node that holds the informations about the project
     the simulation runs and their resources are its children
     '''
-    def __init__(self, filename=None, parent=None):
-        super(Project, self).__init__(default_names['new_project'],
-                                      parent=parent)
-
+    def __init__(self, name, parent=None):
+        super(Project, self).__init__(name, parent=parent)
+        self.project_folder = os.getcwd()
         self.meta = {}
         #projects can be renamed
         self.rename = True
-        if filename is not None:
-            self.read_config(filename)
-        else:
-            self.meta['Datum'] = time.strftime("%d.%m.%Y")
-            self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
-            self.meta['Autor'] = ''
+        self.meta['Datum'] = time.strftime("%d.%m.%Y")
+        self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
+        self.meta['Autor'] = ''
 
     def add_to_xml(self, parent):
         '''
@@ -283,11 +310,31 @@ class Project(ProjectTreeNode):
         parent: SubElement,
                 this node will be added to it
         '''
-        xml_element = etree.SubElement(parent, 'Projekt')
-        meta = etree.SubElement(xml_element, 'Meta')
+        xml_element = super(Project, self).add_to_xml(parent)
+        meta = etree.Element('Meta')
         for meta_data in self.meta:
             etree.SubElement(meta, meta_data).text = self.meta[meta_data]
-        super(Project, self).add_to_xml(xml_element)
+        xml_element.insert(0, meta)
+        folder = etree.Element('Projektordner')
+        folder.text = self.project_folder
+        xml_element.insert(0, folder)
+
+    def from_xml(self, element):
+        '''
+        read the basic attributes from element and assign them to the node
+
+        Parameters
+        ----------
+        element: SubElement,
+                 xml node containing informations about this project node
+        '''
+        super(Project, self).from_xml(element)
+        for subelement in element:
+            if subelement.tag == 'Meta':
+                for submeta in subelement:
+                    self.meta[submeta.tag] = submeta.text
+            if subelement.tag == 'Projektordner':
+                self.project_folder = subelement.text
 
     @property
     def note(self):
@@ -301,21 +348,13 @@ class Project(ProjectTreeNode):
         note = self.meta['Datum']
         return note
 
-
-    def read_config(self, filename):
-        pass
-
-    def write_config(self, filename):
-        a = etree.Element('config')
-        self.add_to_xml(a)
-        etree.ElementTree(a).write(str(filename), pretty_print=True)
-
-    def add_run(self, name=None):
+    def add_run(self, model, name=None):
         if name is None:
-            name = 'Simulationslauf {}'.format(self.child_count())
-        new_run = SimRun(name)
+            name = 'Szenario {}'.format(self.child_count())
+        #copytree(os.path.join(DEFAULT_FOLDER, 'Maxem'),
+                 #os.path.join(self.project_folder, name))
+        new_run = SimRun(model, name)
         self.add_child(new_run)
-        new_run.set_model(DEFAULT_MODEL)
 
     def remove_run(self, index):
         self.remove_child(index)
@@ -329,11 +368,12 @@ class ResourceNode(ProjectTreeNode):
     resource: Resource,
               resource of the traffic model
     '''
-    def __init__(self, resource,
+    def __init__(self, name, resource=None,
                 parent=None):
+        if resource is None:
+            resource = Resource(name)
         self.resource = resource
-        super(ResourceNode, self).__init__(resource.name,
-                                           parent=parent)
+        super(ResourceNode, self).__init__(name, parent=parent)
 
     def add_to_xml(self, parent):
         '''
@@ -345,9 +385,29 @@ class ResourceNode(ProjectTreeNode):
         parent: SubElement,
                 this node will be added to it
         '''
-        xml_element = etree.SubElement(parent, 'Ressource')
-        etree.SubElement(xml_element, 'Datei').text = self.source
-        super(ResourceNode, self).add_to_xml(xml_element)
+        xml_element = super(ResourceNode, self).add_to_xml(parent)
+        etree.SubElement(
+            xml_element, 'Dateiname').text = self.resource.file_name
+        etree.SubElement(
+            xml_element, 'Dateipfad').text = self.resource.file_path
+
+    def from_xml(self, element):
+        '''
+        read the basic attributes from element and assign them to the node
+
+        Parameters
+        ----------
+        element: SubElement,
+                 xml node containing informations about this project node
+        '''
+        super(ResourceNode, self).from_xml(element)
+        self.resource = Resource(self.name)
+        for subelement in element:
+            if subelement.tag == 'Dateiname':
+                self.resource.file_name = subelement.text
+            if subelement.tag == 'Dateipfad':
+                self.resource.file_path = subelement.text
+
 
     @property
     def note(self):
@@ -372,14 +432,11 @@ class ResourceNode(ProjectTreeNode):
         ------
         full path of the resource file
         '''
-        if self.resource.file_path is None:
-            file_path = os.getcwd()
-        else:
-            file_path = self.resource.file_path
         if self.resource.file_name is None:
             source = 'nicht angegeben'
         else:
-            source = os.path.join(file_path, self.resource.file_name)
+            source = os.path.join(self.resource.subfolder,
+                                  self.resource.file_name)
         return source
 
     def set_source(self, filename):
@@ -390,33 +447,82 @@ class ResourceNode(ProjectTreeNode):
         ----------
         filename: String, path + name of file
         '''
-        file_path, file_name = os.path.split(str(filename))
+        file_path, file_name = os.path.split(filename)
         self.resource.file_name = file_name
         self.resource.file_path = file_path
 
-class Category(ProjectTreeNode):
-    '''
-    category to structure the project tree (especially the resources)
-    contains no further information
+#class Layer(ProjectTreeNode):
+    #'''
+    #category to structure the project tree (especially the resources)
+    #contains no further information
 
-    Parameters
-    ----------
-    name: String, the name the category gets
-    '''
-    def __init__(self, name, parent=None):
-        super(Category, self).__init__(name, parent=parent)
+    #Parameters
+    #----------
+    #name: String, the name the category gets
+    #'''
+    #def __init__(self, name, parent=None):
+        #super(Layer, self).__init__(name, parent=parent)
 
-    def add_to_xml(self, parent):
+    #def add_to_xml(self, parent):
+        #'''
+        #converts all needed information of this node and recursive of
+        #its children to xml and attaches it to the given parent
+
+        #Parameters
+        #----------
+        #parent: SubElement,
+                #this node will be added to it
+        #'''
+        #xml_element = etree.SubElement(parent,
+                                       #XML_NAMES[self.__class__.__name__])
+        #xml_element.attrib['name'] = self.name
+        #for child in self.children:
+            #child.add_to_xml(xml_element)
+
+class XMLParser(object):
+    '''
+    class that holds functions to read and write xml
+    '''
+    def __init__(self):
+        pass
+
+    @classmethod
+    def read_xml(self, rootname, filename):
+        tree = etree.parse(filename)
+        root_element = tree.getroot()
+        if root_element.tag == 'GUI_VM':
+            root = ProjectTreeNode(root_element.tag)
+            self.build_xml(root_element, root)
+        return root
+
+    @classmethod
+    def build_xml(self, element, parent):
         '''
-        converts all needed information of this node and recursive of
-        its children to xml and attaches it to the given parent
+        build a project tree recursive from given XML Element
+        '''
+        for subelement in element:
+            xmltag = subelement.tag
+            #create new nodes, if the xmltag describes a project nodes
+            if xmltag in inversed_names:
+                classname = inversed_names[xmltag]
+                node = globals()[classname]('')
+                #assign attributes to node
+                node.from_xml(subelement)
+                if parent is not None:
+                    parent.add_child(node)
+                #recursion
+                self.build_xml(subelement, node)
+
+    @classmethod
+    def write_xml(self, project_tree, filename):
+        '''
+        build XML ElementTree recursive
+        out of project tree and write it to file
 
         Parameters
         ----------
-        parent: SubElement,
-                this node will be added to it
+        filename: String, xml file to write to, will be overwritten
         '''
-        xml_element = etree.SubElement(parent, self.name)
-        #doesn't call super here, because name is already an element name
-        for child in self.children:
-            child.add_to_xml(xml_element)
+        xml_tree = etree.Element('GUI_VM')
+        project_tree.add_to_xml(xml_tree)
+        etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)

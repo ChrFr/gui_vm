@@ -1,20 +1,16 @@
-#which traffic models are available to choose from
-#(same names as classes derived from TrafficModel base class)
-TRAFFIC_MODELS = ['Jens', 'Max']
-DEFAULT_MODEL = 'Jens'
-
 class TrafficModel(object):
     '''
     base class for traffic models
     '''
     def __init__(self, name):
         self.name = name
+        self.subfolder = None
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
 
-    def command(self):
-        return ''
+    def process(self):
+        pass
 
     def add_resource(self, resource):
         '''
@@ -39,30 +35,6 @@ class TrafficModel(object):
         return True
 
 
-class Jens(TrafficModel):
-    def __init__(self, parent=None):
-        super(Jens, self).__init__('Jens')
-
-        activities = Resource('Aktivitaeten', category='Matrizen')
-        accessibilities = Resource('Erreichbarkeiten', category='Matrizen')
-        net = Resource('Netz1', category='Netze')
-
-        self.add_resource(activities)
-        self.add_resource(accessibilities)
-        self.add_resource(net)
-
-
-class Max(TrafficModel):
-    def __init__(self, parent=None):
-        super(Max, self).__init__('Max')
-
-        something = Resource('irgendwas', category='irgendeine Kategorie')
-        bla = Resource('Ressource bla', category='Kategorie blubb')
-
-        self.add_resource(something)
-        self.add_resource(bla)
-
-
 class Resource(object):
     '''
     categorized resource for the traffic model calculations
@@ -79,19 +51,27 @@ class Resource(object):
                the path of the resource file
 
     '''
-    def __init__(self, name, category = 'default',
-                 file_path = None, file_name = None):
+    def __init__(self, name, subfolder='', category=None,
+                 default=None, do_show=True):
         self.name = name
-        self.category = category
-        self.file_name = file_name
-        self.file_path = file_path
+        self.subfolder = subfolder
+        self.file_name = default
+        #category is the folder as it is displayed later
+        if do_show:
+            if category is None:
+                category = self.subfolder
+            self.category = category
+
 
     def set_source(self, file_name, file_path = None):
         self.file_name = file_name
         self.file_path = file_path
 
     @property
-    def is_valid(self):
+    def is_set(self):
         if self.file_name is None:
             return False
+
+    @property
+    def is_valid(self):
         return True

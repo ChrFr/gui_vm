@@ -5,6 +5,8 @@ from project_view import ProjectTreeModel
 from resource_ui import Ui_DetailsResource
 from simrun_ui import Ui_DetailsSimRun
 from project_ui import Ui_DetailsProject
+from config import DEFAULT_FOLDER
+import os
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     project_changed = QtCore.pyqtSignal()
@@ -14,29 +16,67 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.project_tree = ProjectTreeModel()
         self.project_tree_view.setModel(self.project_tree)
-        self.project_tree_view.expandAll()
+        #self.project_tree_view.expandAll()
+        self.refresh_view()
         self.details = None
-        #Slots for the plus and minus buttons
-        self.plus_button.clicked.connect(self.project_tree.add_run)
+
+        #connect the buttons
+        self.plus_button.clicked.connect(self.add_run)
         self.plus_button.clicked.connect(self.refresh_view)
         self.save_button.clicked.connect(self.save_project)
+
+        #connect the tool bar
+        self.actionProjekt_speichern.triggered.connect(self.save_project)
+        self.actionProjekt_ffnen.triggered.connect(self.load_project)
+        self.actionNeues_Projekt.triggered.connect(self.create_project)
+        self.actionBeenden.triggered.connect(QtGui.qApp.quit)
+
         self.row_index = 0
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
             self.row_clicked)
         self.project_tree.dataChanged.connect(self.refresh_view)
         self.project_changed.connect(self.refresh_view)
 
+    def add_run(self):
+        self.project_tree.add_run()
+
+    def create_project(self):
+        '''
+        create a new project
+        '''
+        text, ok = QtGui.QInputDialog.getText(
+            self, 'Neues Projekt', 'Name des neuen Projekts:',
+            QtGui.QLineEdit.Normal, 'Neues Projekt')
+        if ok:
+            name = str(text)
+            self.project_tree = ProjectTreeModel(name=name)
+            self.project_tree_view.setModel(self.project_tree)
+            self.refresh_view()
+            self.project_tree.dataChanged.connect(self.refresh_view)
+
+    def load_project(self):
+        '''
+        load a project
+        '''
+        fileinput = str(QtGui.QFileDialog.getOpenFileName(
+            self, 'Projekt öffnen', '.', '*.xml'))
+        if len(fileinput) > 0:
+            self.project_tree.read_project(fileinput)
+            self.refresh_view()
+            #self.project_tree_view.setModel(self.project_tree)
+
     def save_project(self):
         '''
         save the project
         '''
-        filename = QtGui.QFileDialog.getSaveFileName(
-            self, 'Speichern des Projekts', '.', '*.xml')
+        filename = str(QtGui.QFileDialog.getSaveFileName(
+            self, 'Projekt speichern', '.', '*.xml'))
         #filename is '' if aborted
         if len(filename) > 0:
             #get first project (by now only 1 project is displayed)
             #need to change, if there are more
-            self.project_tree.root.child_at_row(0).write_config(filename)
+            self.project_tree.write_project(
+                self.project_tree.root.child_at_row(0).name, filename)
             QtGui.QMessageBox.about(
                 self, "Speichern erfolgreich",
                 'Die Speicherung des Projektes\n{}\n war erfolgreich'.
@@ -65,7 +105,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                     self, 'Umbenennen', 'Neuen Namen eingeben:',
                     QtGui.QLineEdit.Normal, node.name)
                 if ok:
-                    node.name = text
+                    node.name = str(text)
                     self.project_changed.emit()
         #clicked another row
         else:
@@ -114,7 +154,7 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.show()
 
     def changeModel(self, name):
-        self.node.set_model(name)
+        self.node.set_model(str(name))
         self.value_changed.emit()
 
 class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
@@ -135,6 +175,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
     def __init__(self, node, parent):
         super(ProjectDetails, self).__init__()
         self.setupUi(self)
+        self.node = node
         self.parent = parent
         self.parent.addWidget(self)
         self.setTitle(node.name)
@@ -143,7 +184,23 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
             edit = QtGui.QLineEdit(node.meta[meta])
             edit.setReadOnly(True)
             self.meta_layout.addRow(label, edit)
+        self.folder_edit.setText(self.node.project_folder)
+
+        self.folder_browse_button.clicked.connect(self.browse_folder)
+        self.folder_edit.textChanged.connect(self.update)
         self.show()
+
+    def update(self):
+        self.node.project_folder = (str(self.folder_edit.text()))
+        self.value_changed.emit()
+
+    def browse_folder(self):
+        folder = str(
+            QtGui.QFileDialog.getExistingDirectory(
+                self, 'Projektverzeichnis wählen', '.'))
+        #filename is '' if aborted
+        if len(folder) > 0:
+            self.folder_edit.setText(folder)
 
 class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''
@@ -170,18 +227,20 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.file_edit.setText(self.node.source)
         self.setTitle(node.name)
         self.browse_button.clicked.connect(self.browse_files)
-        self.value_changed.connect(self.update)
+        self.file_edit.textChanged.connect(self.update)
         self.show()
 
     def browse_files(self):
-        fileinput = QtGui.QFileDialog.getOpenFileName(self, 'Open File', '.')
+        fileinput = str(
+            QtGui.QFileDialog.getOpenFileName(
+                self, 'Ressourcenatei öffnen', '.'))
         #filename is '' if aborted
         if len(fileinput) > 0:
-            self.node.set_source(fileinput)
-            self.value_changed.emit()
+            self.file_edit.setText(fileinput)
 
     def update(self):
-        self.file_edit.setText(self.node.source)
+        self.node.set_source(str(self.file_edit.text()))
+        self.value_changed.emit()
 
     def __del__(self):
         pass

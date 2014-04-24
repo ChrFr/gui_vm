@@ -105,6 +105,12 @@
              <iconset resource="gui.qrc">
               <normaloff>:/buttons/icons/save.png</normaloff>:/buttons/icons/save.png</iconset>
             </property>
+            <property name="iconSize">
+             <size>
+              <width>22</width>
+              <height>22</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item>
@@ -172,8 +178,10 @@
     <property name="title">
      <string>Datei</string>
     </property>
+    <addaction name="actionNeues_Projekt"/>
     <addaction name="actionProjekt_ffnen"/>
     <addaction name="actionProjekt_speichern"/>
+    <addaction name="separator"/>
     <addaction name="actionBeenden"/>
    </widget>
    <addaction name="menuDatei"/>
@@ -192,6 +200,11 @@
   <action name="actionProjekt_speichern">
    <property name="text">
     <string>Projekt speichern</string>
+   </property>
+  </action>
+  <action name="actionNeues_Projekt">
+   <property name="text">
+    <string>Neues Projekt</string>
    </property>
   </action>
  </widget>

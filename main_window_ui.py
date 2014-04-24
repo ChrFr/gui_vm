@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Wed Apr 23 14:38:45 2014
+# Created: Thu Apr 24 17:12:30 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,10 +66,12 @@ class Ui_MainWindow(object):
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.horizontalLayout_2.addWidget(self.label_2)
         self.save_button = QtGui.QPushButton(self.centralwidget)
+        self.save_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.save_button.setText(_fromUtf8(""))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/save.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.save_button.setIcon(icon2)
+        self.save_button.setIconSize(QtCore.QSize(22, 22))
         self.save_button.setObjectName(_fromUtf8("save_button"))
         self.horizontalLayout_2.addWidget(self.save_button)
         self.label_3 = QtGui.QLabel(self.centralwidget)
@@ -107,8 +109,12 @@ class Ui_MainWindow(object):
         self.actionProjekt_ffnen.setObjectName(_fromUtf8("actionProjekt_ffnen"))
         self.actionProjekt_speichern = QtGui.QAction(MainWindow)
         self.actionProjekt_speichern.setObjectName(_fromUtf8("actionProjekt_speichern"))
+        self.actionNeues_Projekt = QtGui.QAction(MainWindow)
+        self.actionNeues_Projekt.setObjectName(_fromUtf8("actionNeues_Projekt"))
+        self.menuDatei.addAction(self.actionNeues_Projekt)
         self.menuDatei.addAction(self.actionProjekt_ffnen)
         self.menuDatei.addAction(self.actionProjekt_speichern)
+        self.menuDatei.addSeparator()
         self.menuDatei.addAction(self.actionBeenden)
         self.menubar.addAction(self.menuDatei.menuAction())
 
@@ -127,5 +133,6 @@ class Ui_MainWindow(object):
         self.actionBeenden.setText(_translate("MainWindow", "Beenden", None))
         self.actionProjekt_ffnen.setText(_translate("MainWindow", "Projekt öffnen", None))
         self.actionProjekt_speichern.setText(_translate("MainWindow", "Projekt speichern", None))
+        self.actionNeues_Projekt.setText(_translate("MainWindow", "Neues Projekt", None))
 
 import gui_rc

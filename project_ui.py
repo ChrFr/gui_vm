@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Wed Apr 23 14:38:45 2014
+# Created: Thu Apr 24 17:12:31 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,12 +27,25 @@ class Ui_DetailsProject(object):
     def setupUi(self, DetailsProject):
         DetailsProject.setObjectName(_fromUtf8("DetailsProject"))
         DetailsProject.resize(394, 406)
-        self.formLayoutWidget = QtGui.QWidget(DetailsProject)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 20, 371, 371))
-        self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
-        self.meta_layout = QtGui.QFormLayout(self.formLayoutWidget)
-        self.meta_layout.setMargin(0)
+        self.gridLayoutWidget = QtGui.QWidget(DetailsProject)
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 20, 371, 331))
+        self.gridLayoutWidget.setObjectName(_fromUtf8("gridLayoutWidget"))
+        self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
+        self.gridLayout.setMargin(0)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.folder_browse_button = QtGui.QPushButton(self.gridLayoutWidget)
+        self.folder_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
+        self.folder_browse_button.setObjectName(_fromUtf8("folder_browse_button"))
+        self.gridLayout.addWidget(self.folder_browse_button, 0, 2, 1, 1)
+        self.folder_edit = QtGui.QLineEdit(self.gridLayoutWidget)
+        self.folder_edit.setObjectName(_fromUtf8("folder_edit"))
+        self.gridLayout.addWidget(self.folder_edit, 0, 1, 1, 1)
+        self.label = QtGui.QLabel(self.gridLayoutWidget)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.meta_layout = QtGui.QFormLayout()
         self.meta_layout.setObjectName(_fromUtf8("meta_layout"))
+        self.gridLayout.addLayout(self.meta_layout, 1, 0, 1, 3)
 
         self.retranslateUi(DetailsProject)
         QtCore.QMetaObject.connectSlotsByName(DetailsProject)
@@ -40,4 +53,6 @@ class Ui_DetailsProject(object):
     def retranslateUi(self, DetailsProject):
         DetailsProject.setWindowTitle(_translate("DetailsProject", "GroupBox", None))
         DetailsProject.setTitle(_translate("DetailsProject", "GroupBox", None))
+        self.folder_browse_button.setText(_translate("DetailsProject", "...", None))
+        self.label.setText(_translate("DetailsProject", "Projektordner", None))
 
