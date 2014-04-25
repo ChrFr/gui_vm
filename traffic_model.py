@@ -1,10 +1,13 @@
+from backend import HDF5
+import os
+import numpy as np
+
 class TrafficModel(object):
     '''
     base class for traffic models
     '''
     def __init__(self, name):
         self.name = name
-        self.subfolder = None
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
@@ -12,7 +15,11 @@ class TrafficModel(object):
     def process(self):
         pass
 
-    def add_resource(self, resource):
+    def set_path(self, path):
+        for resource in self.resources.values():
+            resource.update(path)
+
+    def add_resources(self, *args):
         '''
         add a resource to the traffic model
 
@@ -20,9 +27,8 @@ class TrafficModel(object):
         ----------
         resource: Resource
         '''
-        if not self.resources.has_key(resource.category):
-            self.resources[resource.category] = []
-        self.resources[resource.category].append(resource)
+        for resource in args:
+            self.resources[resource.name] = resource
 
     def is_complete(self):
         '''
@@ -52,20 +58,20 @@ class Resource(object):
 
     '''
     def __init__(self, name, subfolder='', category=None,
-                 default=None, do_show=True):
+                 file_name=None, do_show=True):
         self.name = name
         self.subfolder = subfolder
-        self.file_name = default
+        self.file_name = file_name
         #category is the folder as it is displayed later
         if do_show:
             if category is None:
                 category = self.subfolder
             self.category = category
+        self.attributes = {}
+        self.validated = {}
 
-
-    def set_source(self, file_name, file_path = None):
-        self.file_name = file_name
-        self.file_path = file_path
+    def update(self, path):
+        pass
 
     @property
     def is_set(self):
@@ -74,4 +80,105 @@ class Resource(object):
 
     @property
     def is_valid(self):
-        return True
+        return False
+
+class H5Resource(Resource):
+    '''
+
+    '''
+    def __init__(self, name, subfolder='', category=None,
+                     file_name=None, do_show=True):
+        super(H5Resource, self).__init__(
+            name, subfolder=subfolder, category=category,
+            file_name=file_name, do_show=do_show)
+        self.tables = {}
+        #dictionary containing the tables as keys
+        #and their attributes as values
+        self.attributes = {}
+        #dictionary storing the validation messages of the single components
+        self.validated = {}
+
+    def add_table(self, table):
+        self.tables[table.name] = table
+
+    def validation(self):
+        for table in self.tables:
+            pass
+
+    def update(self, path):
+        '''
+        reads and sets the attributes of all set tables
+
+        Parameter
+        ---------
+        path: String, name of the working directory,
+                      where the file is in (without subfolder)
+        '''
+        h5 = HDF5(os.path.join(path, self.subfolder, self.file_name))
+        h5.read()
+        for table in self.tables.values():
+            table.update(h5)
+            self.attributes[table.name] = table.attributes
+        del(h5)
+
+
+    @property
+    def is_valid(self):
+        for table in tables:
+            pass
+
+class H5Table(object):
+    def __init__(self, table_path, expected_dtype=None):
+            self.name = table_path
+            self.table_path = table_path
+            self.shape = None
+            self.dtype = None
+            self.expected_dtype = expected_dtype
+
+    def __repr__(self):
+        return 'H5Table {}'.format(self.table_path)
+
+    @property
+    def attributes(self):
+        return 'Dim {0}'.format(self.shape)
+
+    def update(self, h5_in):
+        table = h5_in.get_table(self.table_path).read()
+        self.shape = table.shape
+        self.dtype = table.dtype
+
+
+    @property
+    def is_valid(self, dimension=None, value_range=None):
+        if self.dtype != self.expected_dtype:
+            return False
+
+
+class H5Matrix(object):
+    def __init__(self, table_path):
+        self.name = table_path
+        self.table_path = table_path
+        self.shape = None
+        self.min_value = None
+        self.max_value = None
+
+    def __repr__(self):
+        return 'H5Matrix {}'.format(self.table_path)
+
+    @property
+    def attributes(self):
+        return 'Dimension{0}\n Wertebereich [{1}...{2}]'.format(
+            self.shape, self.min_value, self.max_value)
+
+    def update(self, h5_in):
+        table = h5_in.get_table(self.table_path).read()
+        self.max_value = np.round(table.max(), decimals=2)
+        self.min_value = np.round(table.min(), decimals=2)
+        self.shape = table.shape
+
+
+    @property
+    def is_valid(self, dimension=None, value_range=None):
+        pass
+
+

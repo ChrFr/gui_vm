@@ -206,6 +206,25 @@ class ProjectTreeNode(object):
                 return i
         return -1
 
+    def get_parent_by_class(self, node_class):
+        '''
+        get the next parent with the given object's class
+        return None, if not found
+
+        Parameters
+        ----------
+        name: String, name of the class
+
+        Return
+        ------
+        node: ProjectTreeNode, the parent node with this class
+        '''
+        node = self
+        while node.parent is not None:
+            node = node.parent
+            if isinstance(node, node_class):
+                return node
+        return None
 
 class SimRun(ProjectTreeNode):
     '''
@@ -219,6 +238,11 @@ class SimRun(ProjectTreeNode):
         self.set_model(model)
         #simulation runs can be renamed
         self.rename = True
+
+    @property
+    def path(self):
+        return os.path.join(
+            self.get_parent_by_class(Project).project_folder, self.name)
 
     @property
     def note(self):
@@ -238,16 +262,26 @@ class SimRun(ProjectTreeNode):
         '''
         if name in self._available:
             self.model = globals()[name]()
+            self.model.set_path(self.path)
             #remove the old children of the sim run (including resources)
             for i in reversed(range(self.child_count())):
                 self.remove_child_at(i)
+
+            #categorize resources
+            res_dict = {}
+            resources = self.model.resources.values()
+            for resource in resources:
+                if not res_dict.has_key(resource.category):
+                    res_dict[resource.category] = []
+                res_dict[resource.category].append(resource)
             #add the resources needed by the traffic model, categorized
-            for category in self.model.resources:
+            for category in res_dict:
                 layer_node = ProjectTreeNode(category)
                 self.add_child(layer_node)
-                for resource in self.model.resources[category]:
+                for resource in res_dict[category]:
                     layer_node.add_child(ResourceNode(resource.name,
-                                                      resource=resource))
+                                                      resource=resource,
+                                                      parent=self))
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
 
@@ -282,7 +316,8 @@ class SimRun(ProjectTreeNode):
                 if name in self._available:
                     self.model = globals()[name]()
                 else:
-                    raise Exception('Traffic Model {0} not available'.format(name))
+                    raise Exception(
+                        'Traffic Model {0} not available'.format(name))
 
 
 class Project(ProjectTreeNode):
@@ -353,7 +388,7 @@ class Project(ProjectTreeNode):
             name = 'Szenario {}'.format(self.child_count())
         #copytree(os.path.join(DEFAULT_FOLDER, 'Maxem'),
                  #os.path.join(self.project_folder, name))
-        new_run = SimRun(model, name)
+        new_run = SimRun(model, name, parent=self)
         self.add_child(new_run)
 
     def remove_run(self, index):
@@ -374,6 +409,7 @@ class ResourceNode(ProjectTreeNode):
             resource = Resource(name)
         self.resource = resource
         super(ResourceNode, self).__init__(name, parent=parent)
+        self.original_source = self.full_source
 
     def add_to_xml(self, parent):
         '''
@@ -408,7 +444,6 @@ class ResourceNode(ProjectTreeNode):
             if subelement.tag == 'Dateipfad':
                 self.resource.file_path = subelement.text
 
-
     @property
     def note(self):
         '''
@@ -418,10 +453,9 @@ class ResourceNode(ProjectTreeNode):
         ------
         String
         '''
-        if self.resource.file_name is None:
-            source = 'nicht angegeben'
-        else:
-            source = self.resource.file_name
+        source = self.source
+        if source is None:
+            source = 'nicht vorhanden'
         note = '<{}>'.format(source)
         return note
 
@@ -430,14 +464,32 @@ class ResourceNode(ProjectTreeNode):
         '''
         Return
         ------
-        full path of the resource file
+        path of the resource file within the project folder
         '''
         if self.resource.file_name is None:
-            source = 'nicht angegeben'
+            return None
         else:
             source = os.path.join(self.resource.subfolder,
                                   self.resource.file_name)
+            return source
+
+    @property
+    def full_source(self):
+        '''
+        Return
+        ------
+        full path of the resource file
+        '''
+        #join path with simrun path to get full source
+        source = self.source
+        if self.source is not None:
+            source = os.path.join(
+                self.run_path, self.source)
         return source
+
+    @property
+    def run_path(self):
+        return self.get_parent_by_class(SimRun).path
 
     def set_source(self, filename):
         '''
@@ -447,9 +499,8 @@ class ResourceNode(ProjectTreeNode):
         ----------
         filename: String, path + name of file
         '''
-        file_path, file_name = os.path.split(filename)
-        self.resource.file_name = file_name
-        self.resource.file_path = file_path
+        #####hard copy missing by now#####
+        self.original_source = filename
 
 #class Layer(ProjectTreeNode):
     #'''

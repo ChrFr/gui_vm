@@ -224,10 +224,23 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.parent = parent
         self.parent.addWidget(self)
         self.node = node
-        self.file_edit.setText(self.node.source)
+        self.project_copy.setText(self.node.source)
+        self.file_edit.setText(self.node.original_source)
         self.setTitle(node.name)
         self.browse_button.clicked.connect(self.browse_files)
         self.file_edit.textChanged.connect(self.update)
+        attr = self.node.resource.attributes
+        self.attribute_view.setColumnCount(3)
+        self.attribute_view.setRowCount(len(attr))
+        for i, key in enumerate(attr):
+            self.attribute_view.setItem(
+                i, 0, QtGui.QTableWidgetItem(key))
+            self.attribute_view.setItem(
+                i, 1, QtGui.QTableWidgetItem(attr[key]))
+        header = self.attribute_view.horizontalHeader()
+        header.setResizeMode(QtGui.QHeaderView.Stretch)
+        labels = ['Komponente', 'Attribute', 'Status']
+        self.attribute_view.setHorizontalHeaderLabels(labels)
         self.show()
 
     def browse_files(self):

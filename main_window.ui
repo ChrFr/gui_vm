@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>856</width>
-    <height>658</height>
+    <width>615</width>
+    <height>647</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -136,7 +136,14 @@
          </layout>
         </item>
         <item>
-         <widget class="QTreeView" name="project_tree_view"/>
+         <widget class="QTreeView" name="project_tree_view">
+          <property name="maximumSize">
+           <size>
+            <width>500</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -170,7 +177,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>856</width>
+     <width>615</width>
      <height>21</height>
     </rect>
    </property>
