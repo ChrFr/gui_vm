@@ -111,14 +111,10 @@ class H5Resource(Resource):
         #and their attributes as values
         self.attributes = {}
         #dictionary storing the validation messages of the single components
-        self.validated = {}
+        self.status = {}
 
     def add_table(self, table):
         self.tables[table.name] = table
-
-    def validation(self):
-        for table in self.tables:
-            pass
 
     def update(self, path):
         '''
@@ -138,8 +134,13 @@ class H5Resource(Resource):
 
     @property
     def is_valid(self):
-        for table in tables:
-            pass
+        self.status = {}
+        is_valid = True
+        for table_name in self.tables:
+            table = self.tables[table_name]
+            self.status[table_name] = table.status
+            if not table.is_valid:
+                is_valid = False
 
 
 class H5Table(object):
@@ -149,13 +150,24 @@ class H5Table(object):
             self.shape = None
             self.dtype = None
             self.expected_dtype = expected_dtype
+            self.status = {}
 
     def __repr__(self):
         return 'H5Table {}'.format(self.table_path)
 
     @property
     def attributes(self):
-        return 'Dim {0}'.format(self.shape)
+        '''
+        attributes returned as a dictionary with
+        representative formatted strings
+        '''
+        attributes = {}
+        dimension = ''
+        for dim in self.shape:
+            dimension += (str(dim) + ' x ')
+        dimension = dimension[:-3]
+        attributes['Reihen'] = dimension
+        return attributes
 
     def update(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
@@ -165,24 +177,41 @@ class H5Table(object):
     @property
     def is_valid(self, dimension=None, value_range=None):
         if self.dtype != self.expected_dtype:
-            return False
+            return (False, 'Spalte fehlt')
+        return True
 
 
 class H5Matrix(object):
-    def __init__(self, table_path):
+    def __init__(self, table_path, max_value=None, min_value=None,
+                 expected_shape=None):
         self.name = table_path
         self.table_path = table_path
         self.shape = None
         self.min_value = None
         self.max_value = None
+        self.status = {}
+        self.expected_max_value = max_value
+        self.expected_min_value = min_value
+        self.expected_shape = expected_shape
 
     def __repr__(self):
         return 'H5Matrix {}'.format(self.table_path)
 
     @property
     def attributes(self):
-        return 'Dimension{}\n Wertebereich [{:.2f} ... {:.2f}]'.format(
-            self.shape, self.min_value, self.max_value)
+        '''
+        attributes returned as a dictionary with
+        representative formatted strings
+        '''
+        attributes = {}
+        dimension = ''
+        for dim in self.shape:
+            dimension += (str(dim) + ' x ')
+        dimension = dimension[:-3]
+        attributes['Dimension'] = dimension
+        attributes['Wertebereich'] = '[{:.2f} ... {:.2f}]'.format(
+            self.min_value, self.max_value)
+        return attributes
 
     def update(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
@@ -190,8 +219,68 @@ class H5Matrix(object):
         self.min_value = table.min()
         self.shape = table.shape
 
+
+    #def add_rule(self, **kwargs):
+        #reference = None
+        #if 'reference' in kwargs:
+            #reference = kwargs.pop('reference')
+        #for name, value in kwargs.items():
+            #if reference is not None:
+                #rule =
+            #else:
+                #rule = value
+            #rules[name] = v
+
+    def add_dependancy(self, reference=None, shape=None,
+                       max_value=None, min_value=None):
+        if shape is not None:
+            if reference is not None:
+                self.expected_shape = (reference, shape)
+            else:
+                self.expected_shape = shape
+
     @property
-    def is_valid(self, dimension=None, value_range=None):
-        pass
-
-
+    def is_valid(self):
+        #reset status
+        self.status = {}
+        is_valid = True
+        #check dimension
+        if self.expected_shape is not None:
+            if isinstance(self.expected_shape, tuple):
+                reference, dim = self.expected_shape
+                referenced = True
+            else:
+                dim = self.expected_shape
+                referenced = False
+            dim = list(dim)
+            #standard message
+            self.status['Dimension'] = 'OK'
+            for i, d in enumerate(dim):
+                if d != '*':
+                    if referenced:
+                        dim[i] = getattr(reference, d)
+                    if self.shape[i] != dim[i]:
+                        is_valid = False
+                        #pretty print of dimension
+                        dimension = ''
+                        for j in dim:
+                            dimension += (str(j) + ' x ')
+                        dimension = dimension[:-3]
+                        #add error message
+                        self.status['Dimension'] = \
+                            'Erwartete Dimension: {}'.format(dimension)
+        #check value range
+        if (self.expected_max_value is not None) \
+           | (self.expected_min_value is not None):
+            self.status['Wertebereich'] = 'OK'
+            if self.expected_max_value is not None:
+                if self.max_value != self.expected_max_value:
+                    is_valid = False
+                    self.status['Wertebereich'] = \
+                        'Erwarteter Maximalwert: {}'.format(self.max_value)
+            if self.expected_min_value is not None:
+                if self.min_value != self.expected_min_value:
+                    is_valid = False
+                    self.status['Wertebereich'] = \
+                        'Erwarteter Minimalwert: {}'.format(self.min_value)
+        return is_valid

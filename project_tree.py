@@ -523,6 +523,14 @@ class ResourceNode(ProjectTreeNode):
             #self.parent.add_child(self)
 
     @property
+    def model(self):
+        return self.get_parent_by_class(SimRun).model
+
+    @property
+    def simrun_path(self):
+        return self.get_parent_by_class(SimRun).path
+
+    @property
     def note(self):
         '''
         short textual info to display in ui tree

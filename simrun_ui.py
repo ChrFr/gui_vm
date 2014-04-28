@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'simrun.ui'
 #
-# Created: Fri Apr 25 17:10:27 2014
+# Created: Mon Apr 28 17:34:11 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!

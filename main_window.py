@@ -229,19 +229,44 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.setTitle(node.name)
         self.browse_button.clicked.connect(self.browse_files)
         self.file_edit.textChanged.connect(self.update)
-        attr = self.node.resource.attributes
-        self.attribute_view.setColumnCount(3)
-        self.attribute_view.setRowCount(len(attr))
-        for i, key in enumerate(attr):
-            self.attribute_view.setItem(
-                i, 0, QtGui.QTableWidgetItem(key))
-            self.attribute_view.setItem(
-                i, 1, QtGui.QTableWidgetItem(attr[key]))
-        header = self.attribute_view.horizontalHeader()
-        header.setResizeMode(QtGui.QHeaderView.Stretch)
-        labels = ['Komponente', 'Attribute', 'Status']
-        self.attribute_view.setHorizontalHeaderLabels(labels)
+        self.status_button.clicked.connect(self.get_status)
+        self.show_attributes()
         self.show()
+
+    def show_attributes(self, show_status=False):
+        self.listWidget.clear()
+        attr = self.node.resource.attributes
+        status = self.node.resource.status
+        bold = QtGui.QFont("Arial", 12, QtGui.QFont.Bold)
+        green = QtGui.QColor('green')
+        red = QtGui.QColor('red')
+        for key in attr:
+            #check if attributes are further divided into "subattributes"
+            if isinstance(attr[key], dict):
+                item = QtGui.QListWidgetItem(key)
+                item.setFont(bold)
+                self.listWidget.addItem(item)
+                #subdictionary (as the tables in H5 files)
+                for subkey in attr[key]:
+                    status_color = None
+                    text = '   {}: {}'.format(subkey, attr[key][subkey])
+                    #get status with colors
+                    if show_status:
+                        substatus = status[key]
+                        if substatus.has_key(subkey):
+                            statustext = substatus[subkey]
+                            if statustext == 'OK':
+                                status_color = green
+                            else:
+                                status_color = red
+                            text += '  - ' + statustext
+                    item = QtGui.QListWidgetItem(text)
+                    if status_color is not None:
+                        item.setTextColor(status_color)
+                    self.listWidget.addItem(item)
+            else:
+                item = QtGui.QListWidgetItem('{}: {}'.format(key, attr[key]))
+                self.listWidget.addItem(item)
 
     def browse_files(self):
         fileinput = str(
@@ -254,6 +279,11 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     def update(self):
         self.node.set_source(str(self.file_edit.text()))
         self.value_changed.emit()
+
+    def get_status(self):
+        self.node.model.update(self.node.simrun_path)
+        self.node.resource.is_valid
+        self.show_attributes(show_status=True)
 
     def __del__(self):
         pass

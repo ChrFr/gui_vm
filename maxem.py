@@ -36,18 +36,21 @@ class Maxem(TrafficModel):
                                category='OV Matrizen',
                                file_name='VEP_NF_final_2010.h5')
         cost_put = H5Matrix('/put/cost_put')
+        cost_put.add_dependancy(shape=[5, '*', '*'])
         skims_put.add_table(cost_put)
-
         self.add_resources(params, constants, zones, skims_put)
 
     def update(self, path):
         self.set_path(path)
-        self.n_zones = self.resources['Parameter']\
+        self.n_time_series = self.resources['Parameter']\
             .tables['/activities/time_series'].shape[0]
+        self.n_zones = 7
 
     def validate(self, path):
         self.update(path)
-        dtype_ = [('code', 'S8'), ('name', 'S30'), ('from_hour', 'i1'), ('to_hour', 'i1'), ('type', 'S8'), ('time_slice_durations', '<f4')]
+        #dtype_ = [('code', 'S8'), ('name', 'S30'), ('from_hour', 'i1'), ('to_hour', 'i1'), ('type', 'S8'), ('time_slice_durations', '<f4')]
+        for resource in self.resources:
+            resource.is_valid()
 
     def process(self):
         pass
