@@ -2,6 +2,7 @@ from backend import HDF5
 import os
 import numpy as np
 
+
 class TrafficModel(object):
     '''
     base class for traffic models
@@ -18,6 +19,19 @@ class TrafficModel(object):
     def set_path(self, path):
         for resource in self.resources.values():
             resource.update(path)
+
+    def get_resource(self, name):
+        '''
+        get a resource by name
+
+        Parameters
+        ----------
+        name: String, name of the resource
+        '''
+        for res_name in self.resources:
+            if res_name == name:
+                return self.resources[res_name]
+        return None
 
     def add_resources(self, *args):
         '''
@@ -82,12 +96,13 @@ class Resource(object):
     def is_valid(self):
         return False
 
+
 class H5Resource(Resource):
     '''
 
     '''
     def __init__(self, name, subfolder='', category=None,
-                     file_name=None, do_show=True):
+                 file_name=None, do_show=True):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder, category=category,
             file_name=file_name, do_show=do_show)
@@ -121,11 +136,11 @@ class H5Resource(Resource):
             self.attributes[table.name] = table.attributes
         del(h5)
 
-
     @property
     def is_valid(self):
         for table in tables:
             pass
+
 
 class H5Table(object):
     def __init__(self, table_path, expected_dtype=None):
@@ -147,7 +162,6 @@ class H5Table(object):
         self.shape = table.shape
         self.dtype = table.dtype
 
-
     @property
     def is_valid(self, dimension=None, value_range=None):
         if self.dtype != self.expected_dtype:
@@ -167,15 +181,14 @@ class H5Matrix(object):
 
     @property
     def attributes(self):
-        return 'Dimension{0}\n Wertebereich [{1}...{2}]'.format(
+        return 'Dimension{}\n Wertebereich [{:.2f} ... {:.2f}]'.format(
             self.shape, self.min_value, self.max_value)
 
     def update(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
-        self.max_value = np.round(table.max(), decimals=2)
-        self.min_value = np.round(table.min(), decimals=2)
+        self.max_value = table.max()
+        self.min_value = table.min()
         self.shape = table.shape
-
 
     @property
     def is_valid(self, dimension=None, value_range=None):
