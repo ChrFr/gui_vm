@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Mon Apr 28 17:34:11 2014
+# Created: Tue Apr 29 15:43:50 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(672, 674)
+        MainWindow.resize(1040, 711)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.centralwidget)
@@ -42,11 +42,6 @@ class Ui_MainWindow(object):
         self.start_button.setObjectName(_fromUtf8("start_button"))
         self.horizontalLayout_2.addWidget(self.start_button)
         self.gridLayout.addLayout(self.horizontalLayout_2, 6, 1, 1, 1)
-        self.details_layout = QtGui.QVBoxLayout()
-        self.details_layout.setObjectName(_fromUtf8("details_layout"))
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.details_layout.addItem(spacerItem1)
-        self.gridLayout.addLayout(self.details_layout, 5, 1, 1, 1)
         self.gridLayout_4 = QtGui.QGridLayout()
         self.gridLayout_4.setObjectName(_fromUtf8("gridLayout_4"))
         self.label_3 = QtGui.QLabel(self.centralwidget)
@@ -88,10 +83,15 @@ class Ui_MainWindow(object):
         self.project_tree_view.setMaximumSize(QtCore.QSize(500, 16777215))
         self.project_tree_view.setObjectName(_fromUtf8("project_tree_view"))
         self.gridLayout.addWidget(self.project_tree_view, 5, 0, 1, 1)
+        self.details_layout = QtGui.QVBoxLayout()
+        self.details_layout.setObjectName(_fromUtf8("details_layout"))
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.details_layout.addItem(spacerItem1)
+        self.gridLayout.addLayout(self.details_layout, 3, 1, 3, 1)
         self.horizontalLayout.addLayout(self.gridLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 672, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1040, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuDatei = QtGui.QMenu(self.menubar)
         self.menuDatei.setObjectName(_fromUtf8("menuDatei"))

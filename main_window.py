@@ -8,6 +8,7 @@ from project_ui import Ui_DetailsProject
 from config import DEFAULT_FOLDER
 import os
 
+
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     project_changed = QtCore.pyqtSignal()
 
@@ -150,12 +151,14 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.combo_model.addItems(self.node._available)
         index = self.combo_model.findText(self.node.model.name)
         self.combo_model.setCurrentIndex(index)
-        self.combo_model.currentIndexChanged['QString'].connect(self.changeModel)
+        self.combo_model.currentIndexChanged['QString'].connect(
+            self.changeModel)
         self.show()
 
     def changeModel(self, name):
         self.node.set_model(str(name))
         self.value_changed.emit()
+
 
 class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
     '''
@@ -202,6 +205,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         if len(folder) > 0:
             self.folder_edit.setText(folder)
 
+
 class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''
     display the details of a resource node
@@ -233,40 +237,44 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.show_attributes()
         self.show()
 
-    def show_attributes(self, show_status=False):
-        self.listWidget.clear()
-        attr = self.node.resource.attributes
-        status = self.node.resource.status
+    def show_attributes(self):
         bold = QtGui.QFont("Arial", 12, QtGui.QFont.Bold)
         green = QtGui.QColor('green')
         red = QtGui.QColor('red')
-        for key in attr:
-            #check if attributes are further divided into "subattributes"
-            if isinstance(attr[key], dict):
-                item = QtGui.QListWidgetItem(key)
-                item.setFont(bold)
-                self.listWidget.addItem(item)
-                #subdictionary (as the tables in H5 files)
-                for subkey in attr[key]:
-                    status_color = None
-                    text = '   {}: {}'.format(subkey, attr[key][subkey])
-                    #get status with colors
-                    if show_status:
-                        substatus = status[key]
-                        if substatus.has_key(subkey):
-                            statustext = substatus[subkey]
-                            if statustext == 'OK':
-                                status_color = green
-                            else:
-                                status_color = red
-                            text += '  - ' + statustext
-                    item = QtGui.QListWidgetItem(text)
-                    if status_color is not None:
-                        item.setTextColor(status_color)
+        black = QtGui.QColor('black')
+
+        def build_textblock(attr, level=0):
+            normal = QtGui.QFont("Arial", 10-(level*2))
+            bold = QtGui.QFont("Arial", 10-(level*2), QtGui.QFont.Bold)
+            for key in attr:
+                if isinstance(attr[key], dict):
+                    item = QtGui.QListWidgetItem(key)
+                    item.setFont(bold)
                     self.listWidget.addItem(item)
-            else:
-                item = QtGui.QListWidgetItem('{}: {}'.format(key, attr[key]))
-                self.listWidget.addItem(item)
+                    build_textblock(attr[key], level+1)
+                else:
+                    value, target, message, status = attr[key]
+                    line = ('    ' * level + '{name}: {value}  {message} '
+                            .format(name=key, value=value,
+                                    message=message))
+                    #get status with colors
+                    if status == 3:
+                        status_color = black
+                    elif status == 0:
+                        status_color = green
+                    else:
+                        if status == 2:
+                            line += '- erwartet: {target}'.format(
+                                target=target)
+                        status_color = red
+                    item = QtGui.QListWidgetItem(line)
+                    item.setFont(normal)
+                    item.setTextColor(status_color)
+                    self.listWidget.addItem(item)
+
+        self.listWidget.clear()
+        attr = self.node.resource.attributes
+        build_textblock(attr)
 
     def browse_files(self):
         fileinput = str(
@@ -281,12 +289,12 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.value_changed.emit()
 
     def get_status(self):
-        self.node.model.update(self.node.simrun_path)
-        self.node.resource.is_valid
-        self.show_attributes(show_status=True)
+        self.node.resource.validate(self.node.simrun_path)
+        self.show_attributes()
 
     def __del__(self):
         pass
+
 
 def startmain():
     app = QtGui.QApplication(sys.argv)

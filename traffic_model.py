@@ -10,6 +10,7 @@ MISMATCH = 2
 NOT_CHECKED = 3
 status_message = ['OK', 'nicht vorhanden', 'falsche Werte', '']
 
+
 class TrafficModel(object):
     '''
     base class for traffic models
@@ -147,9 +148,10 @@ class H5Resource(Resource):
             attributes[table.name] = table.attributes
         return attributes
 
-    def add_table(self, table):
-        self.tables[table.name] = table
-        self.status_flags[table.name] = NOT_CHECKED
+    def add_tables(self, *args):
+        for table in args:
+            self.tables[table.name] = table
+            self.status_flags[table.name] = NOT_CHECKED
 
     def update(self, path):
         '''
@@ -181,61 +183,20 @@ class H5Resource(Resource):
             return is_valid
         return False
 
-#class H5Table(object):
-    #def __init__(self, table_path, dtype=None):
-        #self.name = table_path
-        #self.table_path = table_path
-        #self.shape = None
-        #self.dtype = None
-        #self.expected_dtype = dtype
-        #self.error = {}
 
-    #def __repr__(self):
-        #return 'H5Table {}'.format(self.table_path)
-
-    #@property
-    #def attributes(self):
-        #'''
-        #attributes returned as a dictionary with
-        #representative formatted strings
-        #'''
-        #attributes = {}
-        #dimension = ''
-        #for dim in self.shape:
-            #dimension += (str(dim) + ' x ')
-        #dimension = dimension[:-3]
-        #attributes['Reihen'] = dimension
-        #return attributes, self.error
-
-    #def load(self, h5_in):
-        #table = h5_in.get_table(self.table_path).read()
-        #self.shape = table.shape
-        #self.dtype = table.dtype
-
-    #@property
-    #def is_valid(self, dimension=None, value_range=None):
-        #if self.dtype != self.expected_dtype:
-            #return (False, 'Spalte fehlt')
-        #return True
-
-
-class H5Matrix(object):
-    public = {'shape': 'Dimension',
-              'min_value': 'Minimalwert',
-              'max_value': 'Maximalwert'}
+class H5Node(object):
+    public = {'shape': 'Dimension'}
 
     def __init__(self, table_path):
         self.name = table_path
         self.table_path = table_path
         self.shape = None
-        self.min_value = None
-        self.max_value = None
         self.rules = []
         #set flags to not checked
         self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
 
     def __repr__(self):
-        return 'H5Table {}'.format(self.table_path)
+        return 'H5Node {}'.format(self.table_path)
 
     @property
     def attributes(self):
@@ -270,8 +231,6 @@ class H5Matrix(object):
 
     def load(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
-        self.max_value = table.max()
-        self.min_value = table.min()
         self.shape = table.shape
 
     def add_rules(self, **kwargs):
@@ -290,15 +249,6 @@ class H5Matrix(object):
         rule = Rule(field_name, value, operator, reference=reference)
         self.rules.append(rule)
 
-
-    #def add_rule(self, reference=None, shape=None,
-                       #max_value=None, min_value=None):
-        #if shape is not None:
-            #if reference is not None:
-                #self.expected_shape = (reference, shape)
-            #else:
-                #self.expected_shape = shape
-
     @property
     def is_valid(self):
         is_valid = True
@@ -309,6 +259,46 @@ class H5Matrix(object):
             else:
                 self.status_flags[rule.field_name] = OK
         return is_valid
+
+
+class H5Table(H5Node):
+    public = {}
+
+    def __init__(self, table_path):
+        #set dict for public attributes, then call super constructor
+        #(there the flags are built out of public dict)
+        self.public.update(super(H5Table, self).public)
+        super(H5Table, self).__init__(table_path)
+
+    def __repr__(self):
+        return 'H5Table {}'.format(self.table_path)
+
+    def load(self, h5_in):
+        table = h5_in.get_table(self.table_path).read()
+        self.shape = table.shape
+
+
+class H5Matrix(H5Node):
+    public = {'min_value': 'Minimalwert',
+              'max_value': 'Maximalwert'}
+
+    def __init__(self, table_path):
+        #set dict for public attributes, then call super constructor
+        #(there the flags are built out of public dict)
+        self.public.update(super(H5Matrix, self).public)
+        super(H5Matrix, self).__init__(table_path)
+        self.min_value = None
+        self.max_value = None
+
+    def __repr__(self):
+        return 'H5Matrix {}'.format(self.table_path)
+
+    def load(self, h5_in):
+        table = h5_in.get_table(self.table_path).read()
+        self.max_value = table.max()
+        self.min_value = table.min()
+        self.shape = table.shape
+
 
 class Rule(object):
     wildcards = ['*', '']
