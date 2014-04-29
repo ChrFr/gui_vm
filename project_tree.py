@@ -308,7 +308,7 @@ class SimRun(ProjectTreeNode):
         '''
         if name in self._available:
             self.model = globals()[name]()
-            self.model.set_path(self.path)
+            self.model.update(self.path)
             #remove the old children of the sim run (including resources)
             for i in reversed(range(self.child_count())):
                 self.remove_child_at(i)
@@ -360,7 +360,7 @@ class SimRun(ProjectTreeNode):
         vm = element.find('Verkehrsmodell').text
         if vm in self._available:
             self.model = globals()[vm]()
-            self.model.set_path(self.path)
+            self.model.update(self.path)
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
 

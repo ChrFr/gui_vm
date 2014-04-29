@@ -1,7 +1,14 @@
 from backend import HDF5
 import os
 import numpy as np
+import operator as op
+import time
 
+OK = 0
+NOT_FOUND = 1
+MISMATCH = 2
+NOT_CHECKED = 3
+status_message = ['OK', 'nicht vorhanden', 'falsche Werte', '']
 
 class TrafficModel(object):
     '''
@@ -16,7 +23,7 @@ class TrafficModel(object):
     def process(self):
         pass
 
-    def set_path(self, path):
+    def update(self, path):
         for resource in self.resources.values():
             resource.update(path)
 
@@ -71,6 +78,8 @@ class Resource(object):
                the path of the resource file
 
     '''
+    public = {'file_info': 'Datei'}
+
     def __init__(self, name, subfolder='', category=None,
                  file_name=None, do_show=True):
         self.name = name
@@ -81,11 +90,33 @@ class Resource(object):
             if category is None:
                 category = self.subfolder
             self.category = category
-        self.attributes = {}
         self.validated = {}
+        self.file_info = ''
+        self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
 
     def update(self, path):
-        pass
+        file_name = os.path.join(path, self.subfolder, self.file_name)
+        if os.path.exists(file_name):
+            stats = os.stat(file_name)
+            t = time.strftime('%d-%m-%Y %H:%M:%S',
+                              time.localtime(stats.st_mtime))
+            self.file_info = t
+            self.status_flags['file_info'] = OK
+        else:
+            self.status_flags['file_info'] = NOT_FOUND
+
+    @property
+    def attributes(self):
+        attributes = {}
+        for i, attr in enumerate(self.public):
+            value = getattr(self, attr)
+            pretty_name = self.public[attr]
+            status = self.status_flags[attr]
+            message = status_message[status]
+            detail = ''
+            attr_tuple = (value, detail, message, status)
+            attributes[pretty_name] = attr_tuple
+        return attributes
 
     @property
     def is_set(self):
@@ -107,14 +138,18 @@ class H5Resource(Resource):
             name, subfolder=subfolder, category=category,
             file_name=file_name, do_show=do_show)
         self.tables = {}
-        #dictionary containing the tables as keys
-        #and their attributes as values
-        self.attributes = {}
-        #dictionary storing the validation messages of the single components
-        self.status = {}
+
+    @property
+    def attributes(self):
+        attributes = super(H5Resource, self).attributes
+        #add the tables as attributes
+        for table in self.tables.values():
+            attributes[table.name] = table.attributes
+        return attributes
 
     def add_table(self, table):
         self.tables[table.name] = table
+        self.status_flags[table.name] = NOT_CHECKED
 
     def update(self, path):
         '''
@@ -125,32 +160,79 @@ class H5Resource(Resource):
         path: String, name of the working directory,
                       where the file is in (without subfolder)
         '''
+        super(H5Resource, self).update(path)
         h5 = HDF5(os.path.join(path, self.subfolder, self.file_name))
-        h5.read()
-        for table in self.tables.values():
-            table.update(h5)
-            self.attributes[table.name] = table.attributes
+        successful = h5.read()
+        if not successful:
+            #set a flag for file not found
+            self.status_flags['file_info'] = NOT_FOUND
+        else:
+            for table in self.tables.values():
+                table.load(h5)
         del(h5)
 
-    @property
-    def is_valid(self):
-        self.status = {}
+    def validate(self, path):
+        self.update(path)
+        self.error = {}
         is_valid = True
-        for table_name in self.tables:
-            table = self.tables[table_name]
-            self.status[table_name] = table.status
+        for table in self.tables.values():
             if not table.is_valid:
                 is_valid = False
+        return is_valid
 
 
-class H5Table(object):
-    def __init__(self, table_path, expected_dtype=None):
-            self.name = table_path
-            self.table_path = table_path
-            self.shape = None
-            self.dtype = None
-            self.expected_dtype = expected_dtype
-            self.status = {}
+#class H5Table(object):
+    #def __init__(self, table_path, dtype=None):
+        #self.name = table_path
+        #self.table_path = table_path
+        #self.shape = None
+        #self.dtype = None
+        #self.expected_dtype = dtype
+        #self.error = {}
+
+    #def __repr__(self):
+        #return 'H5Table {}'.format(self.table_path)
+
+    #@property
+    #def attributes(self):
+        #'''
+        #attributes returned as a dictionary with
+        #representative formatted strings
+        #'''
+        #attributes = {}
+        #dimension = ''
+        #for dim in self.shape:
+            #dimension += (str(dim) + ' x ')
+        #dimension = dimension[:-3]
+        #attributes['Reihen'] = dimension
+        #return attributes, self.error
+
+    #def load(self, h5_in):
+        #table = h5_in.get_table(self.table_path).read()
+        #self.shape = table.shape
+        #self.dtype = table.dtype
+
+    #@property
+    #def is_valid(self, dimension=None, value_range=None):
+        #if self.dtype != self.expected_dtype:
+            #return (False, 'Spalte fehlt')
+        #return True
+
+
+class H5Matrix(object):
+    public = {'shape': 'Dimension',
+              'min_value': 'Minimalwert',
+              'max_value': 'Maximalwert'}
+
+    def __init__(self, table_path):
+        self.name = table_path
+        self.table_path = table_path
+        self.shape = None
+        self.min_value = None
+        self.max_value = None
+        self.rules = []
+        #set flags to not checked
+        self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
 
     def __repr__(self):
         return 'H5Table {}'.format(self.table_path)
@@ -158,129 +240,135 @@ class H5Table(object):
     @property
     def attributes(self):
         '''
-        attributes returned as a dictionary with
-        representative formatted strings
+        dictionary with pretty attributes as keys and representative
+        formatted strings of the actual and the target values of those
+        attributes (target only if error occured, else empty string)
+
+        Return
+        ------
+        attributes: dict,
+                    attribute names as keys
+                    (actual value, message, errorflag) as values
         '''
         attributes = {}
-        dimension = ''
-        for dim in self.shape:
-            dimension += (str(dim) + ' x ')
-        dimension = dimension[:-3]
-        attributes['Reihen'] = dimension
+        error = {}
+        expected = {}
+        for rule in self.rules:
+            expected[rule.field_name] = rule.value
+        for i, attr in enumerate(self.public):
+            value = getattr(self, attr)
+            pretty_name = self.public[attr]
+            status = self.status_flags[attr]
+            message = status_message[status]
+            if expected.has_key(attr):
+                target = expected[attr]
+            else:
+                target = ''
+            attr_tuple = (value, target, message, status)
+            attributes[pretty_name] = attr_tuple
         return attributes
 
-    def update(self, h5_in):
-        table = h5_in.get_table(self.table_path).read()
-        self.shape = table.shape
-        self.dtype = table.dtype
-
-    @property
-    def is_valid(self, dimension=None, value_range=None):
-        if self.dtype != self.expected_dtype:
-            return (False, 'Spalte fehlt')
-        return True
-
-
-class H5Matrix(object):
-    def __init__(self, table_path, max_value=None, min_value=None,
-                 expected_shape=None):
-        self.name = table_path
-        self.table_path = table_path
-        self.shape = None
-        self.min_value = None
-        self.max_value = None
-        self.status = {}
-        self.expected_max_value = max_value
-        self.expected_min_value = min_value
-        self.expected_shape = expected_shape
-
-    def __repr__(self):
-        return 'H5Matrix {}'.format(self.table_path)
-
-    @property
-    def attributes(self):
-        '''
-        attributes returned as a dictionary with
-        representative formatted strings
-        '''
-        attributes = {}
-        dimension = ''
-        for dim in self.shape:
-            dimension += (str(dim) + ' x ')
-        dimension = dimension[:-3]
-        attributes['Dimension'] = dimension
-        attributes['Wertebereich'] = '[{:.2f} ... {:.2f}]'.format(
-            self.min_value, self.max_value)
-        return attributes
-
-    def update(self, h5_in):
+    def load(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
         self.max_value = table.max()
         self.min_value = table.min()
         self.shape = table.shape
 
+    def add_rules(self, **kwargs):
+        reference = None
+        if 'operator' not in kwargs:
+            raise Exception('Missing argument: operator=...')
+        else:
+            operator = kwargs.pop('operator')
+        if 'reference' in kwargs:
+            reference = kwargs.pop('reference')
+        for name, value in kwargs.items():
+            rule = Rule(name, value, operator, reference=reference)
+            self.rules.append(rule)
 
-    #def add_rule(self, **kwargs):
-        #reference = None
-        #if 'reference' in kwargs:
-            #reference = kwargs.pop('reference')
-        #for name, value in kwargs.items():
+    def add_rule(self, field_name, value, operator, reference=None):
+        rule = Rule(field_name, value, operator, reference=reference)
+        self.rules.append(rule)
+
+
+    #def add_rule(self, reference=None, shape=None,
+                       #max_value=None, min_value=None):
+        #if shape is not None:
             #if reference is not None:
-                #rule =
+                #self.expected_shape = (reference, shape)
             #else:
-                #rule = value
-            #rules[name] = v
-
-    def add_dependancy(self, reference=None, shape=None,
-                       max_value=None, min_value=None):
-        if shape is not None:
-            if reference is not None:
-                self.expected_shape = (reference, shape)
-            else:
-                self.expected_shape = shape
+                #self.expected_shape = shape
 
     @property
     def is_valid(self):
-        #reset status
-        self.status = {}
+        #self.load(h5_in)
         is_valid = True
-        #check dimension
-        if self.expected_shape is not None:
-            if isinstance(self.expected_shape, tuple):
-                reference, dim = self.expected_shape
-                referenced = True
+        for rule in self.rules:
+            if not rule.check(self):
+                is_valid = False
+                self.status_flags[rule.field_name] = MISMATCH
             else:
-                dim = self.expected_shape
-                referenced = False
-            dim = list(dim)
-            #standard message
-            self.status['Dimension'] = 'OK'
-            for i, d in enumerate(dim):
-                if d != '*':
-                    if referenced:
-                        dim[i] = getattr(reference, d)
-                    if self.shape[i] != dim[i]:
-                        is_valid = False
-                        #pretty print of dimension
-                        dimension = ''
-                        for j in dim:
-                            dimension += (str(j) + ' x ')
-                        dimension = dimension[:-3]
-                        #add error message
-                        self.status['Dimension'] = \
-                            'Erwartete Dimension: {}'.format(dimension)
-        #check value range
-        if (self.expected_max_value is not None) \
-           | (self.expected_min_value is not None):
-            self.status['Wertebereich'] = 'OK'
-            if self.expected_max_value is not None:
-                if self.max_value != self.expected_max_value:
-                    is_valid = False
-                    self.status['Wertebereich'] = \
-                        'Erwarteter Maximalwert: {}'.format(self.max_value)
-            if self.expected_min_value is not None:
-                if self.min_value != self.expected_min_value:
-                    is_valid = False
-                    self.status['Wertebereich'] = \
-                        'Erwarteter Minimalwert: {}'.format(self.min_value)
+                self.status_flags[rule.field_name] = OK
+        return is_valid
+
+class Rule(object):
+    wildcards = ['*', '']
+    mapping = {'>': op.gt,
+               '>=': op.ge,
+               '=>': op.ge,
+               '<': op.lt,
+               '=<': op.le,
+               '<=': op.le,
+               '==': op.eq,
+               '!=': op.ne,
+               }
+
+    def __init__(self, field_name, value, operator, reference=None):
+        self.reference = reference
+        self.operator = operator
+        self.field_name = field_name
+        self._value = value
+
+    @property
+    def value(self):
+        value = list(self._value)
+        for i, val in enumerate(self._value):
+            #ignore wildcards
+            if val in self.wildcards:
+                continue
+            if isinstance(val, str):
+                #look if the referenced object has a field with the name
+                if (self.reference is not None) and \
+                   hasattr(self.reference, val):
+                    value[i] = getattr(self.reference, val)
+        return tuple(value)
+
+    def check(self, obj):
+        message = None
+        is_valid = True
+        #map the operator string to its function
+        compare = self.mapping[self.operator]
+
+        #get the field of the object
+        if not hasattr(obj, self.field_name):
+            raise Exception('The object {} does not own a field {}'
+                            .format(obj, self.field_name))
+        attr = getattr(obj, self.field_name)
+        #wrap all values with a list (if they are not already)
+        if (not isinstance(attr, list)) and (not isinstance(attr, tuple)):
+            attr = [attr]
+        value = self.value
+        if (not isinstance(value, list)) and (not isinstance(value, tuple)):
+            value = [value]
+        if len(attr) != len(value):
+            raise Exception('The attribute {} and the value {} to be\
+compared with have to have the same length!'.format(attr, value))
+        #compare the field of the given object with the defined value
+        for i, val in enumerate(value):
+            #ignore wildcards
+            if val in self.wildcards:
+                continue
+            #compare the value with the field of the given object
+            if not compare(attr[i], val):
+                is_valid = False
         return is_valid
