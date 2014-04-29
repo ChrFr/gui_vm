@@ -78,7 +78,7 @@ class Resource(object):
                the path of the resource file
 
     '''
-    public = {'file_info': 'Datei'}
+    public = {'file_status': 'Datei'}
 
     def __init__(self, name, subfolder='', category=None,
                  file_name=None, do_show=True):
@@ -91,7 +91,7 @@ class Resource(object):
                 category = self.subfolder
             self.category = category
         self.validated = {}
-        self.file_info = ''
+        self.file_status = ''
         self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
 
     def update(self, path):
@@ -100,10 +100,10 @@ class Resource(object):
             stats = os.stat(file_name)
             t = time.strftime('%d-%m-%Y %H:%M:%S',
                               time.localtime(stats.st_mtime))
-            self.file_info = t
-            self.status_flags['file_info'] = OK
+            self.file_status = t
+            self.status_flags['file_status'] = OK
         else:
-            self.status_flags['file_info'] = NOT_FOUND
+            self.status_flags['file_status'] = NOT_FOUND
 
     @property
     def attributes(self):
@@ -165,7 +165,7 @@ class H5Resource(Resource):
         successful = h5.read()
         if not successful:
             #set a flag for file not found
-            self.status_flags['file_info'] = NOT_FOUND
+            self.status_flags['file_status'] = NOT_FOUND
         else:
             for table in self.tables.values():
                 table.load(h5)
@@ -173,13 +173,13 @@ class H5Resource(Resource):
 
     def validate(self, path):
         self.update(path)
-        self.error = {}
-        is_valid = True
-        for table in self.tables.values():
-            if not table.is_valid:
-                is_valid = False
-        return is_valid
-
+        if self.status_flags['file_status'] == OK:
+            is_valid = True
+            for table in self.tables.values():
+                if not table.is_valid:
+                    is_valid = False
+            return is_valid
+        return False
 
 #class H5Table(object):
     #def __init__(self, table_path, dtype=None):
@@ -301,7 +301,6 @@ class H5Matrix(object):
 
     @property
     def is_valid(self):
-        #self.load(h5_in)
         is_valid = True
         for rule in self.rules:
             if not rule.check(self):
@@ -361,8 +360,7 @@ class Rule(object):
         if (not isinstance(value, list)) and (not isinstance(value, tuple)):
             value = [value]
         if len(attr) != len(value):
-            raise Exception('The attribute {} and the value {} to be\
-compared with have to have the same length!'.format(attr, value))
+            return False
         #compare the field of the given object with the defined value
         for i, val in enumerate(value):
             #ignore wildcards
