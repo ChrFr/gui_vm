@@ -258,7 +258,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
 
             return status_color
 
-        def build_textblock(attr, level=0):
+        def build_tree(attr, level=0, parent=self.resource_tree):
             normal = QtGui.QFont("Arial", 10-(level))
             bold = QtGui.QFont("Arial", 10-(level), QtGui.QFont.Bold)
             for key in attr:
@@ -269,29 +269,29 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                 if isinstance(value, dict):
                     val = ''
                     font = bold
+                    has_subdict = True
                 else:
                     val = value
                     font = normal
+                    has_subdict = False
 
-                line = ('    ' * level + '{name}: {value}  {status} '
-                        .format(name=key, value=val,
-                                status=status_message))
+                line = ('    ' * level + '{name}: {value}   '
+                         .format(name=key, value=val))
                 status_color = get_status_color(status)
-                item = QtGui.QListWidgetItem(line)
-                item.setFont(font)
-                item.setTextColor(status_color)
-                #add in front if no sub dictionaries and first level
-                if level == 0:
-                    self.listWidget.insertItem(0, item)
-                else:
-                    self.listWidget.addItem(item)
-                if isinstance(value, dict):
+                item = QtGui.QTreeWidgetItem(parent, [line, status_message])
+                item.setFont(0, font)
+                item.setTextColor(0, status_color)
+                item.setTextColor(1, status_color)
+                if has_subdict:
                     #recursion if there are sub dictionaries
-                    build_textblock(value, level+1)
+                    build_tree(value, level+1, parent=parent)
 
-        self.listWidget.clear()
+        self.resource_tree.clear()
+        header=QtGui.QTreeWidgetItem(['bla', 'Status'])
+        self.resource_tree.setHeaderItem(header)
         attr = self.node.resource.attributes
-        build_textblock(attr)
+        build_tree(attr)
+        self.resource_tree.resizeColumnToContents(0)
 
     def browse_files(self):
         fileinput = str(

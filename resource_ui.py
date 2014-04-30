@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'resource.ui'
 #
-# Created: Tue Apr 29 15:43:50 2014
+# Created: Wed Apr 30 13:42:06 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -53,9 +53,6 @@ class Ui_DetailsResource(object):
         self.status_button.setObjectName(_fromUtf8("status_button"))
         self.horizontalLayout_2.addWidget(self.status_button)
         self.gridLayout.addLayout(self.horizontalLayout_2, 6, 2, 1, 1)
-        self.listWidget = QtGui.QListWidget(DetailsResource)
-        self.listWidget.setObjectName(_fromUtf8("listWidget"))
-        self.gridLayout.addWidget(self.listWidget, 4, 2, 1, 1)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.label_3 = QtGui.QLabel(DetailsResource)
@@ -70,6 +67,12 @@ class Ui_DetailsResource(object):
         self.project_copy.setText(_fromUtf8(""))
         self.project_copy.setObjectName(_fromUtf8("project_copy"))
         self.gridLayout.addWidget(self.project_copy, 0, 2, 1, 1)
+        self.resource_tree = QtGui.QTreeWidget(DetailsResource)
+        self.resource_tree.setRootIsDecorated(True)
+        self.resource_tree.setObjectName(_fromUtf8("resource_tree"))
+        self.resource_tree.headerItem().setText(0, _fromUtf8("1"))
+        self.resource_tree.header().setVisible(False)
+        self.gridLayout.addWidget(self.resource_tree, 4, 2, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
 
         self.retranslateUi(DetailsResource)

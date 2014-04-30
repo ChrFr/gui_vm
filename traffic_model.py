@@ -129,9 +129,9 @@ class Maxem(TrafficModel):
                                category='OV Matrizen',
                                file_name='VEP_NF_final_2010.h5')
         cost_put = H5Matrix('/put/cost_put')
-        cost_put.define_rules(shape=('n_time_series', 'n_zones', 'n_zones'),
-                              operator='==',
-                              reference=self)
+        rule = Rule('shape', '==', ('n_time_series', 'n_zones', 'n_zones'),
+                    reference=self)
+        cost_put.add_rule(rule)
         skims_put.add_tables(cost_put)
         self.add_resources(params, constants, zonal_data, skims_put)
 

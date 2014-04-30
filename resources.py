@@ -3,6 +3,7 @@ import os
 import numpy as np
 import operator as op
 import time
+from collections import OrderedDict
 
 #status flags (with ascending priority)
 NOT_CHECKED = 0
@@ -28,7 +29,8 @@ class Resource(object):
                the path of the resource file
 
     '''
-    public = {'file_status': 'Datei'}
+    public = {'file_name': 'Datei',
+              'file_modified': 'Datum',}
 
     def __init__(self, name, subfolder='', category=None,
                  file_name=None, do_show=True):
@@ -41,7 +43,7 @@ class Resource(object):
                 category = self.subfolder
             self.category = category
         self.validated = {}
-        self.file_status = ''
+        self.file_modified = ''
         self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
 
     @property
@@ -59,10 +61,10 @@ class Resource(object):
             stats = os.stat(file_name)
             t = time.strftime('%d-%m-%Y %H:%M:%S',
                               time.localtime(stats.st_mtime))
-            self.file_status = t
-            self.status_flags['file_status'] = FOUND
+            self.file_modified = t
+            self.status_flags['file_name'] = FOUND
         else:
-            self.status_flags['file_status'] = NOT_FOUND
+            self.status_flags['file_name'] = NOT_FOUND
 
     @property
     def attributes(self):
@@ -76,8 +78,8 @@ class Resource(object):
                     attribute names as keys
                     (actual value, message, statusflag) as values
         '''
-        attributes = {}
-        attr_dict = {}
+        attributes = OrderedDict()
+        attr_dict = OrderedDict()
         for i, attr in enumerate(self.public):
             value = getattr(self, attr)
             pretty_name = self.public[attr]
@@ -148,7 +150,7 @@ class H5Resource(Resource):
         successful = h5.read()
         if not successful:
             #set a flag for file not found
-            self.status_flags['file_status'] = NOT_FOUND
+            self.status_flags['file_name'] = NOT_FOUND
         else:
             for table in self.tables.values():
                 table.load(h5)
@@ -156,7 +158,7 @@ class H5Resource(Resource):
 
     def validate(self, path):
         self.update(path)
-        if self.status_flags['file_status'] == FOUND:
+        if self.status_flags['file_name'] == FOUND:
             is_valid = True
             for table in self.tables.values():
                 if not table.is_valid:
@@ -219,18 +221,6 @@ class H5Node(object):
     def load(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
         self.shape = table.shape
-
-    def define_rules(self, **kwargs):
-        reference = None
-        if 'operator' not in kwargs:
-            raise Exception('Missing argument: operator=...')
-        else:
-            operator = kwargs.pop('operator')
-        if 'reference' in kwargs:
-            reference = kwargs.pop('reference')
-        for name, value in kwargs.items():
-            rule = Rule(name, value, operator, reference=reference)
-            self.rules.append(rule)
 
     def add_rule(self, rule):
         self.rules.append(rule)
@@ -307,8 +297,13 @@ class Rule(object):
     @property
     def value(self):
         value = self._value
-        if (not isinstance(value, list)) and (not isinstance(value, tuple)):
+        cast = False
+        if isinstance(value, tuple):
+            value = list(value)
+            cast = True
+        if (not isinstance(value, list)):
             value = [value]
+            cast = True
         for i, val in enumerate(value):
             #ignore wildcards
             if val in self.wildcards:
@@ -318,7 +313,9 @@ class Rule(object):
                 if (self.reference is not None) and \
                    hasattr(self.reference, val):
                     value[i] = getattr(self.reference, val)
-        return tuple(value)
+        if cast:
+            value = tuple(value)
+        return value
 
     def check(self, obj):
         is_valid = True
