@@ -5,14 +5,13 @@ from project_tree import (Project, ProjectTreeNode, XMLParser)
 class ProjectTreeModel(QtCore.QAbstractItemModel):
     def __init__(self, name=None, filename=None, parent=None):
         super(ProjectTreeModel, self).__init__(parent)
-        self.root = ProjectTreeNode('root')
         if name is None:
             name = 'Neues Projekt'
-        self.root.add_child(Project(name, filename))
+        self.root = Project(name, filename)
         self.header = ('Projektbrowser', 'Details')
 
     def add_run(self):
-        self.root.child_at_row(0).add_run('Maxem')
+        self.root.add_run(name, 'Maxem')
 
     #def flags(self, index):
         #defaultFlags = QAbstractItemModel.flags(self, index)
@@ -24,8 +23,8 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         #else:
             #return Qt.ItemIsDropEnabled | defaultFlags
 
-    def write_project(self, name, filename):
-        XMLParser.write_xml(self.root.get_child(name), filename)
+    def write_project(self, filename):
+        XMLParser.write_xml(self.root, filename)
 
     def read_project(self, filename):
         self.root = XMLParser.read_xml('root', filename)

@@ -273,7 +273,11 @@ class H5Matrix(H5Node):
         table = h5_in.get_table(self.table_path).read()
         self.max_value = table.max()
         self.min_value = table.min()
-        self.shape = table.shape
+        shape = list(table.shape)
+        #get rid of the L's
+        for i, dim in enumerate(shape):
+            shape[i] = int(dim)
+        self.shape = tuple(shape)
 
 
 class Rule(object):
@@ -312,7 +316,10 @@ class Rule(object):
                 #look if the referenced object has a field with the name
                 if (self.reference is not None) and \
                    hasattr(self.reference, val):
-                    value[i] = getattr(self.reference, val)
+                    attr = getattr(self.reference, val)
+                    if attr is not None:
+                        attr = int(attr)
+                    value[i] = attr
         if cast:
             value = tuple(value)
         return value

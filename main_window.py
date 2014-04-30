@@ -5,6 +5,7 @@ from project_view import ProjectTreeModel
 from resource_ui import Ui_DetailsResource
 from simrun_ui import Ui_DetailsSimRun
 from project_ui import Ui_DetailsProject
+from new_project_ui import Ui_NewProject
 from config import DEFAULT_FOLDER
 import os
 
@@ -39,21 +40,25 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_changed.connect(self.refresh_view)
 
     def add_run(self):
-        self.project_tree.add_run()
+        project = self.project_tree.root
+        text, ok = QtGui.QInputDialog.getText(
+            self, 'Neues Szenario', 'Name des neuen Szenarios:',
+            QtGui.QLineEdit.Normal,
+            'Szenario {}'.format(project.child_count()))
+        if ok:
+            name = str(text)
+            project.add_run(model='Maxem', name=name)
+            self.refresh_view()
 
     def create_project(self):
         '''
         create a new project
         '''
-        text, ok = QtGui.QInputDialog.getText(
-            self, 'Neues Projekt', 'Name des neuen Projekts:',
-            QtGui.QLineEdit.Normal, 'Neues Projekt')
+        project_name, project_folder, ok = NewProjectDialog.getValues()
         if ok:
-            name = str(text)
-            self.project_tree = ProjectTreeModel(name=name)
-            self.project_tree_view.setModel(self.project_tree)
-            self.refresh_view()
-            self.project_tree.dataChanged.connect(self.refresh_view)
+            self.project_tree = ProjectTreeModel(name=project_name)
+            self.project_tree.root.get_child(
+                project_name).project_folder = project_folder
 
     def load_project(self):
         '''
@@ -66,7 +71,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.refresh_view()
             #select first row
             root_index = self.project_tree.createIndex(
-                0, 0, self.project_tree.root.child_at_row(0))
+                0, 0, self.project_tree.root)
             self.project_tree_view.setCurrentIndex(root_index)
             self.row_clicked(root_index)
 
@@ -80,8 +85,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if len(filename) > 0:
             #get first project (by now only 1 project is displayed)
             #need to change, if there are more
-            self.project_tree.write_project(
-                self.project_tree.root.child_at_row(0).name, filename)
+            self.project_tree.write_project(filename)
             QtGui.QMessageBox.about(
                 self, "Speichern erfolgreich",
                 'Die Speicherung des Projektes\n{}\n war erfolgreich'.
@@ -127,6 +131,44 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.details = ResourceDetails(node, self.details_layout)
             if self.details:
                 self.details.value_changed.connect(self.refresh_view)
+
+
+class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
+    '''
+    display the details of a simrun node in the given layout
+    input to change the traffic model
+
+    Parameters
+    ----------
+    node: SimRun,
+          node, that contains the
+    layout: QVBoxLayout,
+            the elements showing the details are added as children of this
+            layout
+    '''
+
+    def __init__(self, parent):
+        super(NewProjectDialog, self).__init__()
+        self.setupUi(self)
+        self.folder_browse_button.clicked.connect(self.browse_folder)
+        self.show()
+
+    def browse_folder(self):
+        folder = str(
+            QtGui.QFileDialog.getExistingDirectory(
+                self, 'Projektverzeichnis wählen', '.'))
+        #filename is '' if aborted
+        if len(folder) > 0:
+            self.folder_edit.setText(folder)
+
+
+    @staticmethod
+    def getValues(parent=None):
+        dialog = NewProjectDialog(parent)
+        ok = dialog.exec_()
+        project_name = str(dialog.project_edit.text())
+        project_folder = str(dialog.folder_edit.text())
+        return (project_name, project_folder, ok == QtGui.QDialog.Accepted)
 
 
 class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
@@ -278,6 +320,8 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                 line = ('    ' * level + '{name}: {value}   '
                          .format(name=key, value=val))
                 status_color = get_status_color(status)
+                if status == 4 and len(message) > 0:
+                    status_message = 'erwartet: {}'.format(message)
                 item = QtGui.QTreeWidgetItem(parent, [line, status_message])
                 item.setFont(0, font)
                 item.setTextColor(0, status_color)
