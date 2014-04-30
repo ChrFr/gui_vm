@@ -40,7 +40,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_changed.connect(self.refresh_view)
 
     def add_run(self):
-        project = self.project_tree.root
+        project = self.project_tree.project
         text, ok = QtGui.QInputDialog.getText(
             self, 'Neues Szenario', 'Name des neuen Szenarios:',
             QtGui.QLineEdit.Normal,
@@ -57,8 +57,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         project_name, project_folder, ok = NewProjectDialog.getValues()
         if ok:
             self.project_tree = ProjectTreeModel(name=project_name)
-            self.project_tree.root.get_child(
-                project_name).project_folder = project_folder
+            self.project_tree.project.project_folder = project_folder
+            self.project_tree_view.setModel(self.project_tree)
+            self.refresh_view()
+            #select first row
+            root_index = self.project_tree.createIndex(
+                0, 0, self.project_tree.project)
+            self.project_tree_view.setCurrentIndex(root_index)
+            self.row_clicked(root_index)
 
     def load_project(self):
         '''
@@ -71,7 +77,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.refresh_view()
             #select first row
             root_index = self.project_tree.createIndex(
-                0, 0, self.project_tree.root)
+                0, 0, self.project_tree.project)
             self.project_tree_view.setCurrentIndex(root_index)
             self.row_clicked(root_index)
 

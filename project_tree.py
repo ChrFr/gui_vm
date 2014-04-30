@@ -610,9 +610,8 @@ class XMLParser(object):
         tree = etree.parse(filename)
         root_element = tree.getroot()
         if root_element.tag == 'GUI_VM':
-            root_element = root_element[0]
-        root = Project(root_element.tag)
-        self.build_xml(root_element, root)
+            root = ProjectTreeNode(root_element.tag)
+            self.build_xml(root_element, root)
         return root
 
     @classmethod
