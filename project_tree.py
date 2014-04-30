@@ -4,9 +4,9 @@ import time
 from lxml import etree
 from shutil import copytree
 from config import DEFAULT_FOLDER
-from traffic_model import Resource
+from resources import Resource
 
-from maxem import Maxem
+from traffic_model import Maxem
 TRAFFIC_MODELS = ['Maxem']
 
 #dictionary defines how classes are called when written to xml

@@ -64,7 +64,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if len(fileinput) > 0:
             self.project_tree.read_project(fileinput)
             self.refresh_view()
-            #self.project_tree_view.setModel(self.project_tree)
+            #select first row
+            root_index = self.project_tree.createIndex(
+                0, 0, self.project_tree.root.child_at_row(0))
+            self.project_tree_view.setCurrentIndex(root_index)
+            self.row_clicked(root_index)
 
     def save_project(self):
         '''
@@ -228,7 +232,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.parent = parent
         self.parent.addWidget(self)
         self.node = node
-        self.project_copy.setText(self.node.source)
+        self.project_copy.setText(self.node.full_source)
         self.file_edit.setText(self.node.original_source)
         self.setTitle(node.name)
         self.browse_button.clicked.connect(self.browse_files)
@@ -238,39 +242,52 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.show()
 
     def show_attributes(self):
-        bold = QtGui.QFont("Arial", 12, QtGui.QFont.Bold)
-        green = QtGui.QColor('green')
-        red = QtGui.QColor('red')
-        black = QtGui.QColor('black')
+        status_messages = ['', 'gefunden', 'Werte geprueft',
+                          'nicht vorhanden', 'falsche Werte']
+
+        def get_status_color(status):
+            green = QtGui.QColor('green')
+            red = QtGui.QColor('red')
+            black = QtGui.QColor('black')
+            if status in [3, 4]:
+                status_color = red
+            elif status in [1, 2]:
+                status_color = green
+            else:
+                status_color = black
+
+            return status_color
 
         def build_textblock(attr, level=0):
-            normal = QtGui.QFont("Arial", 10-(level*2))
-            bold = QtGui.QFont("Arial", 10-(level*2), QtGui.QFont.Bold)
+            normal = QtGui.QFont("Arial", 10-(level))
+            bold = QtGui.QFont("Arial", 10-(level), QtGui.QFont.Bold)
             for key in attr:
-                if isinstance(attr[key], dict):
-                    item = QtGui.QListWidgetItem(key)
-                    item.setFont(bold)
-                    self.listWidget.addItem(item)
-                    build_textblock(attr[key], level+1)
+                value, message, status = attr[key]
+                status_message = status_messages[status]
+                status_color = get_status_color(status)
+
+                if isinstance(value, dict):
+                    val = ''
+                    font = bold
                 else:
-                    value, target, message, status = attr[key]
-                    line = ('    ' * level + '{name}: {value}  {message} '
-                            .format(name=key, value=value,
-                                    message=message))
-                    #get status with colors
-                    if status == 3:
-                        status_color = black
-                    elif status == 0:
-                        status_color = green
-                    else:
-                        if status == 2:
-                            line += '- erwartet: {target}'.format(
-                                target=target)
-                        status_color = red
-                    item = QtGui.QListWidgetItem(line)
-                    item.setFont(normal)
-                    item.setTextColor(status_color)
+                    val = value
+                    font = normal
+
+                line = ('    ' * level + '{name}: {value}  {status} '
+                        .format(name=key, value=val,
+                                status=status_message))
+                status_color = get_status_color(status)
+                item = QtGui.QListWidgetItem(line)
+                item.setFont(font)
+                item.setTextColor(status_color)
+                #add in front if no sub dictionaries and first level
+                if level == 0:
+                    self.listWidget.insertItem(0, item)
+                else:
                     self.listWidget.addItem(item)
+                if isinstance(value, dict):
+                    #recursion if there are sub dictionaries
+                    build_textblock(value, level+1)
 
         self.listWidget.clear()
         attr = self.node.resource.attributes
