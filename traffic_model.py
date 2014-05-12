@@ -1,4 +1,6 @@
 from resources import (H5Matrix, H5Table, H5Resource, Rule)
+from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
+import numpy as np
 
 class TrafficModel(object):
     '''
@@ -53,12 +55,17 @@ class TrafficModel(object):
 
 class Maxem(TrafficModel):
 
+    input_config_file = 'Maxem_input.csv'
+    tables_config_file = 'Maxem_tables.csv'
+    arrays_config_file = 'Maxem_arrays.csv'
+    columns_config_file = 'Maxem_columns.csv'
+
     DEFAULT_SUBFOLDER = 'Maxem'
     def __init__(self, path=None, parent=None):
         super(Maxem, self).__init__('Maxem')
         self.subfolder = self.DEFAULT_SUBFOLDER
-
-        self.apply_defaults()
+        self.read_config()
+        #self.apply_defaults()
         if path is not None:
             self.update()
 
@@ -84,6 +91,22 @@ class Maxem(TrafficModel):
         else:
             return shape[0]
 
+    def read_config(self):
+        input_table = InputTable()
+        input_table.from_csv(self.input_config_file)
+        resource_names = np.unique(input_table['name'])
+        for res_name in resource_names:
+            idx = input_table['name'].index(res_name)
+            category = input_table['category'][idx]
+            if input_table['type'][idx].startswith('H5'):
+                resource = H5Resource(str(res_name),
+                                      subfolder='',
+                                      category=category,
+                                      file_name='')
+
+                self.add_resources(resource)
+
+
     def apply_defaults(self):
         #### Parameters ####
         params = H5Resource('Parameter',
@@ -91,7 +114,6 @@ class Maxem(TrafficModel):
                             category='Parameter',
                             file_name='tdm_params.h5')
         time_series = H5Table('/activities/time_series')
-                              #dtype="[('code', 'S8'), ('name', 'S30'), ('from_hour', 'i1'), ('to_hour', 'i1'), ('type', 'S8'), ('time_slice_durations', '<f4')]")
         params.add_tables(time_series)
 
         #### Constants ####
@@ -124,7 +146,7 @@ class Maxem(TrafficModel):
                               activity_kf, attraction)
 
         #### Skims #####
-        skims_put = H5Resource('Skims Put',
+        skims_put = H5Resource('SkimsPut',
                                subfolder='matrices\skims_put',
                                category='OV Matrizen',
                                file_name='VEP_NF_final_2010.h5')
@@ -138,11 +160,10 @@ class Maxem(TrafficModel):
     def update(self, path):
         super(Maxem, self).update(path)
 
-
     def validate(self, path):
         self.update(path)
         for resource in self.resources:
-            resource.is_valid()
+            resource.validate()
 
     def process(self):
         pass

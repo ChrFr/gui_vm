@@ -38,9 +38,75 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         #node = self.model().data(index, QtCore.Qt.UserRole)
 
     def headerData(self, section, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if (orientation == QtCore.Qt.Horizontal and
+            role == QtCore.Qt.DisplayRole):
             return QtCore.QVariant(self.header[section])
         return QtCore.QVariant()
+
+    def index(self, row, column, parent):
+        node = self.nodeFromIndex(parent)
+        return self.createIndex(row, column, node.child_at_row(row))
+
+
+    def data(self, index, role):
+        node = self.nodeFromIndex(index)
+
+        if role == QtCore.Qt.DecorationRole:
+            return QtCore.QVariant()
+
+        if role == QtCore.Qt.TextAlignmentRole:
+            return QtCore.QVariant(
+                int(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft))
+
+        if role == QtCore.Qt.UserRole:
+            return node
+
+        if role != QtCore.Qt.DisplayRole:
+            return QtCore.QVariant()
+
+        if index.column() == 0:
+            return QtCore.QVariant(node.name)
+
+        elif index.column() == 1:
+            return QtCore.QVariant(node.note)
+
+        else:
+            return QtCore.QVariant()
+
+    def columnCount(self, parent):
+        return len(self.header)
+
+    def rowCount(self, parent):
+        node = self.nodeFromIndex(parent)
+        if node is None:
+            return 0
+        return node.child_count()
+
+    def parent(self, child):
+        if not child.isValid():
+            return QModelIndex()
+
+        node = self.nodeFromIndex(child)
+
+        if node is None:
+            return QModelIndex()
+
+        parent = node.parent
+
+        if parent is None:
+            return QModelIndex()
+
+        grandparent = parent.parent
+        if grandparent is None:
+            return QtCore.QModelIndex()
+        row = grandparent.row_of_child(parent)
+
+        assert row != - 1
+        return self.createIndex(row, 0, parent)
+
+    def nodeFromIndex(self, index):
+        return index.internalPointer() if index.isValid() else self.root
+
 
     #def mimeTypes(self):
         #types = QStringList()
@@ -90,68 +156,3 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         #self.endRemoveRows()
 
         #return True
-
-
-    def index(self, row, column, parent):
-        node = self.nodeFromIndex(parent)
-        return self.createIndex(row, column, node.child_at_row(row))
-
-
-    def data(self, index, role):
-        node = self.nodeFromIndex(index)
-
-        if role == QtCore.Qt.DecorationRole:
-            return QtCore.QVariant()
-
-        if role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.QVariant(int(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft))
-
-        if role == QtCore.Qt.UserRole:
-            return node
-
-        if role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
-
-        if index.column() == 0:
-            return QtCore.QVariant(node.name)
-
-        elif index.column() == 1:
-            return QtCore.QVariant(node.note)
-
-        else:
-            return QtCore.QVariant()
-
-    def columnCount(self, parent):
-        return len(self.header)
-
-    def rowCount(self, parent):
-        node = self.nodeFromIndex(parent)
-        if node is None:
-            return 0
-        return node.child_count()
-
-    def parent(self, child):
-        if not child.isValid():
-            return QModelIndex()
-
-        node = self.nodeFromIndex(child)
-
-        if node is None:
-            return QModelIndex()
-
-        parent = node.parent
-
-        if parent is None:
-            return QModelIndex()
-
-        grandparent = parent.parent
-        if grandparent is None:
-            return QtCore.QModelIndex()
-        row = grandparent.row_of_child(parent)
-
-        assert row != - 1
-        return self.createIndex(row, 0, parent)
-
-
-    def nodeFromIndex(self, index):
-        return index.internalPointer() if index.isValid() else self.root

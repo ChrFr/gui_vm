@@ -42,7 +42,6 @@ class Resource(object):
             if category is None:
                 category = self.subfolder
             self.category = category
-        self.validated = {}
         self.file_modified = ''
         self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
 

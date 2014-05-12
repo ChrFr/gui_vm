@@ -1,0 +1,57 @@
+name;sub_name;category;type
+Fuss und Rad;/Bezirke;Fuss und Rad;H5Table
+Fuss und Rad;/fuss_long;Fuss und Rad;H5Table
+Fuss und Rad;/rad_long;Fuss und Rad;H5Table
+Fuss und Rad;/nmt/s_bicycle;Fuss und Rad;H5Array
+Fuss und Rad;/nmt/s_foot;Fuss und Rad;H5Array
+Fuss und Rad;/nmt/t_bicycle;Fuss und Rad;H5Array
+Fuss und Rad;/nmt/t_foot;Fuss und Rad;H5Array
+MIV;/Bezirke;MIV;H5Table
+MIV;/iv/cost_car;MIV;H5Array
+MIV;/iv/cost_passenger;MIV;H5Array
+MIV;/visum/Fahrweite;MIV;H5Array
+MIV;/visum/t0;MIV;H5Array
+MIV;/visum/tAkt;MIV;H5Array
+Tarifrelationen;/tarif_relationen;OV;H5Array
+OV;/Bezirke;OV;H5Table
+OV;/put/cost_put;OV;H5Array
+OV;/put/no_connection;OV;H5Array
+OV;/put/share_bus;OV;H5Array
+OV;/put/start_waiting_time;OV;H5Array
+OV;/put/walk_time;OV;H5Array
+OV;/visum/Abgangszeit;OV;H5Array
+OV;/visum/Anzahl Tarifzonen;OV;H5Array
+OV;/visum/Bedienungshaufigkeit;OV;H5Array
+OV;/visum/Fahrpreis;OV;H5Array
+OV;/visum/Fahrweite;OV;H5Array
+OV;/visum/FahrzeitimFahrzeug;OV;H5Array
+OV;/visum/Reisezeit;OV;H5Array
+OV;/visum/Umsteigegehzeit;OV;H5Array
+OV;/visum/Umsteigehaufigkeit;OV;H5Array
+OV;/visum/Umsteigewartezeit;OV;H5Array
+OV;/visum/Zugangszeit;OV;H5Array
+OV;/visum/in_vehicle_time_ast;OV;H5Array
+OV;/visum/in_vehicle_time_bus;OV;H5Array
+Betas;/coefficients/betas;Parameter;H5Table
+Betas;/coefficients/offset_ls_a;Parameter;H5Array
+Konstanten;/constants;Parameter;H5Table
+Params;/activities/activities;Parameter;H5Table
+Params;/activities/activity_parking;Parameter;H5Table
+Params;/activities/activitypair_time_series;Parameter;H5Array
+Params;/activities/activitypairs;Parameter;H5Table
+Params;/activities/time_series;Parameter;H5Table
+Params;/activities/trip_chain_rates;Parameter;H5Table
+Params;/activities/validation_activities;Parameter;H5Table
+Params;/groups/groups_calibration;Parameter;H5Table
+Params;/groups/groups_dest_mode;Parameter;H5Table
+Params;/groups/groups_generation;Parameter;H5Table
+Params;/groups/groups_pkwverf;Parameter;H5Table
+Params;/groups/validation_mode;Parameter;H5Table
+Params;/modes/modes;Parameter;H5Table
+Zonen;/activities/activity_kf;Zonen;H5Table
+Zonen;/activities/attraction;Zonen;H5Table
+Zonen;/groups/production;Zonen;H5Table
+Zonen;/zones/access_egress;Zonen;H5Array
+Zonen;/zones/binnenreisezeiten;Zonen;H5Table
+Zonen;/zones/zones;Zonen;H5Table
+Zonen;/zones/zuordnung_alt_neu;Zonen;H5Table
