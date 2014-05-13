@@ -1,4 +1,4 @@
-from resources import (H5Array, H5Table, H5Resource, Rule)
+from resources import (H5Array, H5Table, H5Resource, CompareRule)
 from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
 import numpy as np
 
@@ -7,12 +7,26 @@ class TrafficModel(object):
     base class for traffic models
     '''
 
-    def __init__(self, name):
+    def __init__(self, name,
+                 input_config_file = None, tables_config_file = None,
+                 arrays_config_file = None, columns_config_file=None):
         self.name = name
-        self.input_config_file = None
-        self.tables_config_file = None
-        self.arrays_config_file = None
-        self.columns_config_file = None
+        self.input_config_file = input_config_file
+        self.tables_config_file = tables_config_file
+        self.arrays_config_file = arrays_config_file
+        self.columns_config_file = columns_config_file
+        self.input_table = InputTable()
+        self.tables_table = TableTable()
+        self.array_table = ArrayTable()
+        self.column_table = ColumnTable()
+        if self.input_config_file:
+            self.input_table.from_csv(self.input_config_file)
+        if self.tables_config_file:
+            self.tables_table.from_csv(self.tables_config_file)
+        if self.arrays_config_file:
+            self.array_table.from_csv(self.arrays_config_file)
+        if self.columns_config_file:
+            self.column_table.from_csv(self.columns_config_file)
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
@@ -54,23 +68,10 @@ class TrafficModel(object):
             resource.validate()
 
     def read_config(self):
-        input_table = InputTable()
-        tables_table = TableTable()
-        array_table = ArrayTable()
-        column_table = ColumnTable()
-        if self.input_config_file:
-            input_table.from_csv(self.input_config_file)
-        if self.tables_config_file:
-            tables_table.from_csv(self.tables_config_file)
-        if self.arrays_config_file:
-            array_table.from_csv(self.arrays_config_file)
-        if self.columns_config_file:
-            column_table.from_csv(self.columns_config_file)
-
-        if input_table.row_count > 0:
-            unique_resources = np.unique(input_table['resource_name'])
+        if self.input_table.row_count > 0:
+            unique_resources = np.unique(self.input_table['resource_name'])
             for res_name in unique_resources:
-                res_table = input_table.get_rows_by_entries(
+                res_table = self.input_table.get_rows_by_entries(
                     resource_name=res_name)
                 category = str(res_table['category'][0])
                 if res_table['type'][0].startswith('H5'):
@@ -85,20 +86,18 @@ class TrafficModel(object):
                         #read and add rules for arrays
                         if node_type == 'H5Array':
                             node = self.create_H5ArrayNode(res_name,
-                                                           node_name,
-                                                           array_table)
+                                                           node_name)
                         #read and add rules for arrays
                         elif node_type == 'H5Table':
                             node = self.create_H5TableNode(res_name,
-                                                           node_name,
-                                                           tables_table)
+                                                           node_name)
                         resource.add_tables(node)
                     self.add_resources(resource)
 
-    def create_H5ArrayNode(self, res_name, node_name, array_table):
+    def create_H5ArrayNode(self, res_name, node_name):
         node = H5Array(node_name)
-        if array_table.row_count > 0:
-            rows = array_table.get_rows_by_entries(resource_name=res_name,
+        if self.array_table.row_count > 0:
+            rows = self.array_table.get_rows_by_entries(resource_name=res_name,
                                                    subdivision=node_name)
             if rows.row_count > 1:
                 raise Exception('{}{} defined more than once in {}'.format(
@@ -113,27 +112,26 @@ class TrafficModel(object):
                     reference = None
                 else:
                     reference = self
-                min_rule = Rule('min_value', '>=', minimum,
+                min_rule = CompareRule('min_value', '>=', minimum,
                                 reference=reference)
                 if is_number(maximum):
                     reference = None
                 else:
                     reference = self
-                max_rule = Rule('max_value', '<=', maximum,
+                max_rule = CompareRule('max_value', '<=', maximum,
                                 reference=reference)
-                dim_rule = Rule('shape', '==', dimension,
+                dim_rule = CompareRule('shape', '==', dimension,
                                 reference=self)
                 node.add_rule(min_rule)
                 node.add_rule(max_rule)
                 node.add_rule(dim_rule)
         return node
 
-    def create_H5TableNode(self, res_name, node_name, tables_table):
+    def create_H5TableNode(self, res_name, node_name):
         node = H5Table(node_name)
-        if tables_table.row_count > 0:
-            rows = tables_table.get_rows_by_entries(
-                resource_name=res_name,
-                subdivision=node_name)
+        if self.tables_table.row_count > 0:
+            rows = self.tables_table.get_rows_by_entries(
+                resource_name=res_name, subdivision=node_name)
             if rows.row_count > 0:
                 if rows.row_count > 1:
                     raise Exception('{}{} defined more than once in {}'
@@ -142,8 +140,14 @@ class TrafficModel(object):
                 n_rows = rows['n_rows']
                 if len(n_rows) == 1:
                     n_rows = n_rows[0]
-                dim_rule = Rule('shape', '==', n_rows, reference=self)
+                dim_rule = CompareRule('shape', '==', n_rows, reference=self)
                 node.add_rule(dim_rule)
+                #add check of dtypes
+                table_cols = self.column_table.get_rows_by_entries(
+                    resource_name=res_name, subdivision=node_name)
+
+                print
+
         return node
 
 
@@ -157,16 +161,21 @@ def is_number(s):
 class Maxem(TrafficModel):
 
     DEFAULT_SUBFOLDER = 'Maxem'
-    def __init__(self, path=None, parent=None):
-        super(Maxem, self).__init__('Maxem')
+    INPUT_CONFIG_FILE = 'Maxem_input.csv'
+    TABLES_CONFIG_FILE = 'Maxem_tables.csv'
+    ARRAYS_CONFIG_FILE = 'Maxem_arrays.csv'
+    COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
 
-        self.input_config_file = 'Maxem_input.csv'
-        self.tables_config_file = 'Maxem_tables.csv'
-        self.arrays_config_file = 'Maxem_arrays.csv'
-        self.columns_config_file = 'Maxem_columns.csv'
+    def __init__(self, path=None, parent=None):
+        super(Maxem, self).__init__(
+            'Maxem',
+            input_config_file = self.INPUT_CONFIG_FILE,
+            tables_config_file = self.TABLES_CONFIG_FILE,
+            arrays_config_file = self.ARRAYS_CONFIG_FILE,
+            columns_config_file = self.COLUMNS_CONFIG_FILE)
+
         self.subfolder = self.DEFAULT_SUBFOLDER
         self.read_config()
-        #self.apply_defaults()
         if path is not None:
             self.update()
 
@@ -191,56 +200,6 @@ class Maxem(TrafficModel):
             return None
         else:
             return shape[0]
-
-    def apply_defaults(self):
-        #### Parameters ####
-        params = H5Resource('Parameter',
-                            subfolder='params',
-                            category='Parameter',
-                            file_name='tdm_params.h5')
-        time_series = H5Table('/activities/time_series')
-        params.add_tables(time_series)
-
-        #### Constants ####
-        constants = H5Resource('Konstanten',
-                               subfolder='params',
-                               category='Parameter',
-                               file_name='tdm_constants.h5')
-
-        #### Zonal data ####
-        zonal_data = H5Resource('Zonendaten',
-                                subfolder='zonal_data',
-                                category='Zonen',
-                                file_name='zonal_2010_bs_Innenstadt.h5')
-
-        zones = H5Table('/zones/zones')
-        rule = Rule('shape', '==', 'n_zones', reference=self)
-
-        access_egress = H5Array('/zones/access_egress')
-        binnenreisezeiten = H5Table('/zones/binnenreisezeiten')
-        binnenreisezeiten.add_rule(rule)
-        production = H5Table('/groups/production')
-        production.add_rule(rule)
-        activity_kf = H5Table('/activities/activity_kf')
-        activity_kf.add_rule(rule)
-        attraction = H5Table('/activities/attraction')
-        attraction.add_rule(rule)
-
-        zonal_data.add_tables(zones, binnenreisezeiten,
-                              access_egress, production,
-                              activity_kf, attraction)
-
-        #### Skims #####
-        skims_put = H5Resource('SkimsPut',
-                               subfolder='matrices\skims_put',
-                               category='OV Matrizen',
-                               file_name='VEP_NF_final_2010.h5')
-        cost_put = H5Array('/put/cost_put')
-        rule = Rule('shape', '==', ('n_time_series', 'n_zones', 'n_zones'),
-                    reference=self)
-        cost_put.add_rule(rule)
-        skims_put.add_tables(cost_put)
-        self.add_resources(params, constants, zonal_data, skims_put)
 
     def update(self, path):
         super(Maxem, self).update(path)

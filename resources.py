@@ -263,11 +263,14 @@ class H5Node(object):
 class H5Table(H5Node):
     public = OrderedDict()
 
-    def __init__(self, table_path):
+    def __init__(self, table_path, dtype=None):
         #set dict for public attributes, then call super constructor
         #(there the flags are built out of public dict)
         self.public.update(super(H5Table, self).public)
+        self.public['shape'] = 'Reihen'
         super(H5Table, self).__init__(table_path)
+        self.dtype = dtype
+        self.columns = []
 
     def __repr__(self):
         return 'H5Table {}'.format(self.table_path)
@@ -275,6 +278,57 @@ class H5Table(H5Node):
     def load(self, h5_in):
         table = h5_in.get_table(self.table_path).read()
         self.shape = table.shape
+        for col_name in table.dtype.names:
+            dtype = table.dtype[col_name]
+            col = H5TableColumn(col_name, dtype=dtype)
+            #no max or min for strings
+            if dtype.char != 'S':
+                col.max_value = table[col_name].max()
+                col.min_value = table[col_name].min()
+            self.columns.append(col)
+
+    @property
+    def column_names(self):
+        column_names = []
+        for col in self.columns:
+            column_names.append(col.name)
+        return column_names
+
+    @property
+    def attributes(self):
+        '''
+        dictionary with pretty attributes as keys and a tuple as values
+        with the actual and the target values of those attributes
+        and a status flag
+
+        Return
+        ------
+        attributes: dict,
+                    attribute names as keys
+                    (actual value, target, statusflag) as values
+        '''
+        attributes = super(H5Table, self).attributes[0]
+        #add the tables as attributes
+        attr_dict = OrderedDict()
+        for col in self.columns:
+            attr_dict[col.name] = col.attributes
+        attributes.update(attr_dict)
+        return (attributes, '', self.overall_status)
+
+
+class H5TableColumn(H5Node):
+    public = OrderedDict([('primary_key', 'Primaerschluessel'),
+                          ('dtype', 'dtype'),
+                          ('max_value', 'Maximum'),
+                          ('min_value', 'Minimum')])
+
+    def __init__(self, name, primary_key=False, dtype=None):
+        super(H5TableColumn, self).__init__(name)
+        self.max_value = None
+        self.min_value = None
+        self.primary_key = primary_key
+        self.dtype = dtype
+        self.rules = []
 
 
 class H5Array(H5Node):
@@ -302,8 +356,35 @@ class H5Array(H5Node):
             shape[i] = int(dim)
         self.shape = tuple(shape)
 
-
 class Rule(object):
+    def check(self, obj):
+        return True
+
+class DtypeRule(object):
+    pass
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def is_in_list(self, left_list, right_list):
+        '''
+        check if all elements of left list are in right list
+        '''
+        if not isinstance(left_list, list):
+            left_list = [left_list]
+        if not isinstance(right_list, list):
+            right_list = [right_list]
+        for element in left_list:
+            if element not in right_list:
+                return False
+        return True
+
+class CompareRule(Rule):
     wildcards = ['*', '']
     mapping = {'>': op.gt,
                '>=': op.ge,
@@ -313,6 +394,7 @@ class Rule(object):
                '<=': op.le,
                '==': op.eq,
                '!=': op.ne,
+               'in': is_in_list,
                }
 
     def __init__(self, field_name, operator, value, reference=None):
@@ -384,10 +466,3 @@ class Rule(object):
             if not compare(attr[i], val):
                 is_valid = False
         return is_valid
-
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
