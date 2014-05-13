@@ -1,4 +1,4 @@
-from PyQt4 import QtCore
+from PyQt4 import (QtCore, QtGui)
 from project_tree import (Project, ProjectTreeNode, XMLParser)
 
 
@@ -49,7 +49,15 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
 
 
     def data(self, index, role):
+        '''
+        return data to the tableview depending on the requested role
+        '''
         node = self.nodeFromIndex(index)
+        is_valid = True
+        is_checked = False
+        if hasattr(node, 'resource'):
+            is_valid = node.resource.is_valid
+            is_checked = node.resource.is_checked
 
         if role == QtCore.Qt.DecorationRole:
             return QtCore.QVariant()
@@ -61,9 +69,20 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         if role == QtCore.Qt.UserRole:
             return node
 
+        if role == QtCore.Qt.TextColorRole and index.column() == 1:
+            if is_checked:
+                if is_valid:
+                    return QtCore.QVariant(QtGui.QColor(QtCore.Qt.darkGreen))
+                else:
+                    return QtCore.QVariant(QtGui.QColor(QtCore.Qt.red))
+            else:
+                return QtCore.QVariant(QtGui.QColor(QtCore.Qt.black))
+
+        #all other roles (except display role)
         if role != QtCore.Qt.DisplayRole:
             return QtCore.QVariant()
 
+        #Display Role (text)
         if index.column() == 0:
             return QtCore.QVariant(node.name)
 

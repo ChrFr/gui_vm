@@ -1,4 +1,4 @@
-name;sub_name;column_name;type;minimum;maximum;is_primary_key
+resource_name;subdivision;column_name;type;minimum;maximum;is_primary_key
 Fuss und Rad;/Bezirke;zone_no;int32;;;0
 Fuss und Rad;/Bezirke;name;|S255;;;0
 Fuss und Rad;/fuss_long;vonVZNr;int32;;;0

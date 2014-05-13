@@ -5,11 +5,11 @@ from collections import OrderedDict
 import csv
 import numpy as np
 
-INPUT_HEADER = ['name', 'sub_name', 'category', 'type']
-TABLE_HEADER = ['name', 'sub_name', 'n_rows']
-ARRAY_HEADER = ['name', 'sub_name', 'dimension',
+INPUT_HEADER = ['resource_name', 'subdivision', 'category', 'type']
+TABLE_HEADER = ['resource_name', 'subdivision', 'n_rows']
+ARRAY_HEADER = ['resource_name', 'subdivision', 'dimension',
                 'minimum', 'maximum']
-COLUMN_HEADER = ['name', 'sub_name', 'column_name', 'type',
+COLUMN_HEADER = ['resource_name', 'subdivision', 'column_name', 'type',
                  'minimum', 'maximum', 'is_primary_key']
 
 
@@ -49,7 +49,7 @@ class HDF5(object):
         return None
 
 
-class Table(object):
+class ConfigTable(object):
     def __init__(self, header):
         self.header = header
         self.columns = OrderedDict()
@@ -96,8 +96,24 @@ class Table(object):
 
         return '\n'.join(lines)
 
-    def __getitem__(self, key):
-        return self.columns[key]
+    def get_rows_by_entries(self, **kwargs):
+        ret_table = self.__class__()
+        idx = np.ones(self.row_count, dtype=bool)
+        for name, value in kwargs.items():
+            if not self.columns.has_key(name):
+                raise Exception('columns {} does not exist'.format(name))
+            idx = idx & (np.array(self[name]) == value)
+        return self[idx]
+
+
+    def __getitem__(self, key_or_idx):
+        if key_or_idx.__class__.__name__ == 'ndarray':
+            ret = self.__class__()
+            for col in self:
+                ret[col] = list(np.array(self[col])[key_or_idx])
+        else:
+            ret = self.columns[key_or_idx]
+        return ret
 
     def __setitem__(self, key, value):
         if not self.columns.has_key(key):
@@ -145,14 +161,14 @@ class Table(object):
                 rows.append(row)
         header = rows.pop(0)
         for row in rows:
-            table = Table(header)
+            table = ConfigTable(header)
             for col_nr in range(len(header)):
                 col_name = header[col_nr]
                 table[col_name] = row[col_nr]
             self += table
 
     def add_table(self, table):
-        if not isinstance(table, Table):
+        if not isinstance(table, ConfigTable):
             raise Exception('given table has wrong type')
         for column in self:
             if table.columns.has_key(column):
@@ -162,46 +178,46 @@ class Table(object):
                                 .format(column))
 
 
-class InputTable(Table):
+class InputTable(ConfigTable):
     def __init__(self):
         super(InputTable, self).__init__(INPUT_HEADER)
         self.name = 'Input'
 
 
-class TableTable(Table):
+class TableTable(ConfigTable):
     def __init__(self):
         super(TableTable, self).__init__(TABLE_HEADER)
         self.name = 'Tables'
 
 
-class ArrayTable(Table):
+class ArrayTable(ConfigTable):
     def __init__(self):
         super(ArrayTable, self).__init__(ARRAY_HEADER)
         self.name = 'Arrays'
 
 
-class ColumnTable(Table):
+class ColumnTable(ConfigTable):
     def __init__(self):
         super(ColumnTable, self).__init__(COLUMN_HEADER)
         self.name = 'Columns'
 
 ##### parse the input files ####
 
-class FileParser(object):
+class ConfigParser(object):
     def __init__(self, file_name):
         self.file_name = file_name
         self.input_table = InputTable()
 
     def parse(self):
         directory, name = os.path.split(self.file_name)
-        self.input_table['name'] = name
+        self.input_table['resource_name'] = name
         self.input_table['type'] = 'unknown'
         return self.input_table
 
 
-class H5Parser(FileParser):
+class H5ConfigParser(ConfigParser):
     def __init__(self, file_name):
-        super(H5Parser, self).__init__(file_name)
+        super(H5ConfigParser, self).__init__(file_name)
         self.tables = TableTable()
         self.arrays = ArrayTable()
         self.columns = ColumnTable()
@@ -213,13 +229,13 @@ class H5Parser(FileParser):
         h5_input.read()
         for table in h5_input.h5_file:
             in_table = InputTable()
-            in_table['name'] = name
+            in_table['resource_name'] = name
             in_table['type'] = 'H5{}'.format(table._c_classId.title())
             if table._c_classId == 'TABLE':
-                in_table['sub_name'] = table._v_pathname
+                in_table['subdivision'] = table._v_pathname
                 t_table = TableTable()
-                t_table['name'] = name
-                t_table['sub_name'] = table._v_pathname
+                t_table['resource_name'] = name
+                t_table['subdivision'] = table._v_pathname
                 t_table['n_rows'] = table.nrows
                 self.tables += t_table
                 table_data = table.read()
@@ -227,17 +243,17 @@ class H5Parser(FileParser):
                 for col in columns.names:
                     dtype = columns[col]
                     c_table = ColumnTable()
-                    c_table['name'] = name
-                    c_table['sub_name'] = table._v_pathname
+                    c_table['resource_name'] = name
+                    c_table['subdivision'] = table._v_pathname
                     c_table['column_name'] = col
                     c_table['type'] = dtype
                     c_table['is_primary_key'] = 0
                     self.columns += c_table
             elif table._c_classId == 'ARRAY':
-                in_table['sub_name'] = table._v_pathname
+                in_table['subdivision'] = table._v_pathname
                 a_table = ArrayTable()
-                a_table['name'] = name
-                a_table['sub_name'] = table._v_pathname
+                a_table['resource_name'] = name
+                a_table['subdivision'] = table._v_pathname
                 shape = table.shape
                 dim = ''
                 for d in shape:

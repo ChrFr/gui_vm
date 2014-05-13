@@ -472,6 +472,7 @@ class ResourceNode(ProjectTreeNode):
                 #res_type.text = 'H5'
         etree.SubElement(
             xml_element, 'Quelle').text = self.original_source
+        source = self.source
         etree.SubElement(
             xml_element, 'Projektdatei').text = self.source
 
@@ -499,7 +500,10 @@ class ResourceNode(ProjectTreeNode):
             if existing_resource is not None:
                 self.resource = existing_resource
         self.original_source = element.find('Quelle').text
-        self.source = element.find('Projektdatei').text
+        source = element.find('Projektdatei').text
+        if source is None:
+            source = ''
+        self.source = source
         ##look if resource is already existing after initializing traffic model
         #found = simrun.find_all(self.name)
         #res_nodes = []
@@ -539,10 +543,10 @@ class ResourceNode(ProjectTreeNode):
         ------
         String
         '''
-        source = self.source
-        if source is None:
-            source = 'nicht vorhanden'
-        note = '<{}>'.format(source)
+        file_name = self.resource.file_name
+        if file_name is None or file_name == '':
+            file_name = 'nicht gesetzt'
+        note = '<{}>'.format(file_name)
         return note
 
     @property
@@ -562,9 +566,9 @@ class ResourceNode(ProjectTreeNode):
 
     @source.setter
     def source(self, subpath):
-        path, filename = os.path.split(subpath)
-        self.resource.file_name = filename
-        self.resource.subfolder = path
+        subfolder, filename = os.path.split(subpath)
+        self.resource.set_source(filename, subfolder)
+        self.resource.update(self.simrun_path)
 
     @property
     def full_source(self):
@@ -592,8 +596,9 @@ class ResourceNode(ProjectTreeNode):
         ----------
         filename: String, path + name of file
         '''
-        #####hard copy missing by now#####
         self.original_source = filename
+        #####hard copy missing by now#####
+        self.source = filename
 
 
 class XMLParser(object):

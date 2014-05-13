@@ -1,4 +1,4 @@
-name;sub_name;dimension;minimum;maximum
+resource_name;subdivision;dimension;minimum;maximum
 Fuss und Rad;/nmt/s_bicycle;n_zones x n_zones;;
 Fuss und Rad;/nmt/s_foot;n_zones x n_zones;;
 Fuss und Rad;/nmt/t_bicycle;n_zones x n_zones;;

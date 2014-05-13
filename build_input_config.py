@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 import os
 import numpy as np
-from backend import (H5Parser, InputTable, TableTable,
-                     ArrayTable, ColumnTable, FileParser)
+from backend import (H5ConfigParser, InputTable, TableTable,
+                     ArrayTable, ColumnTable, ConfigParser)
 
 def main(folder, model):
     """
@@ -22,13 +22,13 @@ def main(folder, model):
     #iterate over all files in directory (incl. subdirectories)
     for file_name in file_names:
         if file_name.endswith('.h5'):
-            parser = H5Parser(file_name)
+            parser = H5ConfigParser(file_name)
             i, t, a, c = parser.parse()
             tables += t
             arrays += a
             columns += c
         else:
-            i = FileParser(file_name).parse()
+            i = ConfigParser(file_name).parse()
         input_table += i
 
     #write tables to csv

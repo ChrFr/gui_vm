@@ -4,11 +4,12 @@ import numpy as np
 import operator as op
 import time
 from collections import OrderedDict
+import copy
 
 #status flags (with ascending priority)
 NOT_CHECKED = 0
 FOUND = 1
-CHECKED = 2
+CHECKED_AND_VALID = 2
 NOT_FOUND = 3
 MISMATCH = 4
 
@@ -29,8 +30,8 @@ class Resource(object):
                the path of the resource file
 
     '''
-    public = {'file_name': 'Datei',
-              'file_modified': 'Datum',}
+    public = OrderedDict([('file_name', 'Datei'),
+                          ('file_modified', 'Datum')])
 
     def __init__(self, name, subfolder='', category=None,
                  file_name=None, do_show=True):
@@ -53,17 +54,25 @@ class Resource(object):
                 status = flag
         return status
 
+    def set_source(self, file_name, subfolder):
+        self.file_name = file_name
+        self.subfolder = subfolder
 
     def update(self, path):
-        file_name = os.path.join(path, self.subfolder, self.file_name)
-        if os.path.exists(file_name):
-            stats = os.stat(file_name)
-            t = time.strftime('%d-%m-%Y %H:%M:%S',
-                              time.localtime(stats.st_mtime))
-            self.file_modified = t
-            self.status_flags['file_name'] = FOUND
-        else:
-            self.status_flags['file_name'] = NOT_FOUND
+        '''
+        base class only checks if file exists, actual reading has to be done
+        in the subclasses
+        '''
+        if self.file_name != '':
+            file_name = os.path.join(path, self.subfolder, self.file_name)
+            if os.path.exists(file_name):
+                stats = os.stat(file_name)
+                t = time.strftime('%d-%m-%Y %H:%M:%S',
+                                  time.localtime(stats.st_mtime))
+                self.file_modified = t
+                self.status_flags['file_name'] = FOUND
+                return
+        self.status_flags['file_name'] = NOT_FOUND
 
     @property
     def attributes(self):
@@ -95,8 +104,18 @@ class Resource(object):
             return False
 
     @property
+    def is_checked(self):
+        if self.overall_status > 1:
+            return True
+        else:
+            return False
+
+    @property
     def is_valid(self):
-        return False
+        if self.overall_status == 2:
+            return True
+        else:
+            return False
 
 
 class H5Resource(Resource):
@@ -108,7 +127,7 @@ class H5Resource(Resource):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder, category=category,
             file_name=file_name, do_show=do_show)
-        self.tables = {}
+        self.tables = OrderedDict()
 
     @property
     def overall_status(self):
@@ -124,7 +143,7 @@ class H5Resource(Resource):
     def attributes(self):
         attributes = super(H5Resource, self).attributes
         #add the tables as attributes
-        attr_dict = {}
+        attr_dict = OrderedDict()
         for table in self.tables.values():
             attr_dict[table.name] = table.attributes
         attributes[self.name][0].update(attr_dict)
@@ -167,7 +186,7 @@ class H5Resource(Resource):
 
 
 class H5Node(object):
-    public = {'shape': 'Dimension'}
+    public = OrderedDict([('shape', 'Dimension')])
 
     def __init__(self, table_path):
         self.name = table_path
@@ -201,8 +220,8 @@ class H5Node(object):
                     attribute names as keys
                     (actual value, target, statusflag) as values
         '''
-        attributes = {}
-        expected = {}
+        attributes = OrderedDict()
+        expected = OrderedDict()
         for rule in self.rules:
             expected[rule.field_name] = rule.value
         for i, attr in enumerate(self.public):
@@ -213,6 +232,11 @@ class H5Node(object):
                 target = expected[attr]
             else:
                 target = ''
+            if attr == 'shape' and value is not None:
+                dim = ''
+                for v in value:
+                    dim += '{} x '.format(v)
+                value = dim[:-3]
             attr_tuple = (value, target, status)
             attributes[pretty_name] = attr_tuple
         return (attributes, '', self.overall_status)
@@ -232,12 +256,12 @@ class H5Node(object):
                 is_valid = False
                 self.status_flags[rule.field_name] = MISMATCH
             else:
-                self.status_flags[rule.field_name] = CHECKED
+                self.status_flags[rule.field_name] = CHECKED_AND_VALID
         return is_valid
 
 
 class H5Table(H5Node):
-    public = {}
+    public = OrderedDict()
 
     def __init__(self, table_path):
         #set dict for public attributes, then call super constructor
@@ -253,15 +277,15 @@ class H5Table(H5Node):
         self.shape = table.shape
 
 
-class H5Matrix(H5Node):
-    public = {'min_value': 'Minimalwert',
-              'max_value': 'Maximalwert'}
+class H5Array(H5Node):
+    public = OrderedDict([('min_value', 'Minimalwert'),
+                          ('max_value', 'Maximalwert')])
 
     def __init__(self, table_path):
         #set dict for public attributes, then call super constructor
         #(there the flags are built out of public dict)
-        self.public.update(super(H5Matrix, self).public)
-        super(H5Matrix, self).__init__(table_path)
+        self.public.update(super(H5Array, self).public)
+        super(H5Array, self).__init__(table_path)
         self.min_value = None
         self.max_value = None
 
@@ -295,32 +319,42 @@ class Rule(object):
         self.reference = reference
         self.operator = operator
         self.field_name = field_name
+        if isinstance(value, str) and is_number(value):
+            value = float(value)
+            if value % 1 == 0:
+                value = int(value)
         self._value = value
 
     @property
     def value(self):
-        value = self._value
-        cast = False
-        if isinstance(value, tuple):
-            value = list(value)
-            cast = True
-        if (not isinstance(value, list)):
-            value = [value]
-            cast = True
-        for i, val in enumerate(value):
-            #ignore wildcards
-            if val in self.wildcards:
-                continue
-            if isinstance(val, str):
-                #look if the referenced object has a field with the name
-                if (self.reference is not None) and \
-                   hasattr(self.reference, val):
-                    attr = getattr(self.reference, val)
-                    if attr is not None:
-                        attr = int(attr)
-                    value[i] = attr
-        if cast:
-            value = tuple(value)
+        '''
+        if referenced:
+        get the fields from the referenced object and return it's value
+        '''
+        #copy needed (otherwise side effect is caused)
+        value = copy.copy(self._value)
+        if self.reference:
+            cast = False
+            if isinstance(value, tuple):
+                value = list(value)
+                cast = True
+            if (not isinstance(value, list)):
+                value = [value]
+                cast = True
+            for i, val in enumerate(value):
+                #ignore wildcards
+                if val in self.wildcards:
+                    continue
+                if isinstance(val, str):
+                    #look if the referenced object has a field with the name
+                    if (self.reference is not None) and \
+                       hasattr(self.reference, val):
+                        attr = getattr(self.reference, val)
+                        if attr is not None:
+                            attr = int(attr)
+                        value[i] = attr
+            if cast:
+                value = tuple(value)
         return value
 
     def check(self, obj):
@@ -337,6 +371,8 @@ class Rule(object):
         value = self.value
         if (not isinstance(value, list)) and (not isinstance(value, tuple)):
             value = [value]
+        if (not isinstance(attr, list)) and (not isinstance(attr, tuple)):
+            attr = [attr]
         if len(attr) != len(value):
             return False
         #compare the field of the given object with the defined value
@@ -348,3 +384,10 @@ class Rule(object):
             if not compare(attr[i], val):
                 is_valid = False
         return is_valid
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
