@@ -68,6 +68,9 @@ class TrafficModel(object):
             resource.validate()
 
     def read_config(self):
+        '''
+        build the resource tree with according rules out of the csv definitions
+        '''
         if self.input_table.row_count > 0:
             unique_resources = np.unique(self.input_table['resource_name'])
             for res_name in unique_resources:
@@ -91,7 +94,7 @@ class TrafficModel(object):
                         elif node_type == 'H5Table':
                             node = self.create_H5TableNode(res_name,
                                                            node_name)
-                        resource.add_tables(node)
+                        resource.add_child(node)
                     self.add_resources(resource)
 
     def create_H5ArrayNode(self, res_name, node_name):
@@ -185,8 +188,7 @@ class Maxem(TrafficModel):
     def n_zones(self):
         #number of zones is determined by the number of rows in
         #/zones/zones
-        shape = self.resources['Zonen']\
-                    .tables['/zones/zones'].shape
+        shape = self.resources['Zonen'].get_child('zones').shape
         if shape is None:
             return None
         else:

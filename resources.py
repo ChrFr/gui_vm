@@ -16,6 +16,114 @@ MISMATCH = 4
 
 class Resource(object):
     '''
+    base class for resource files and their subdivisions
+    '''
+    #dictionary for monitored attributes
+    monitored = OrderedDict()
+
+    def __init__(self, name):
+        self.name = name
+        self.children = []
+        self.rules = []
+        self.overall_status = NOT_CHECKED
+        #add status flags for the monitored attributes
+        self.status_flags = {k: NOT_CHECKED for k, v in self.monitored.items()}
+
+    def add_child(self, child):
+        self.children.append(child)
+        self.status_flags[child.name] = NOT_CHECKED
+
+    def get_child(self, name):
+        for child in self.children:
+            if child.name == name:
+                return child
+        return None
+
+    def add_rule(self, rule):
+        self.rules.append(rule)
+
+    def update(self, path):
+        for child in self.children:
+            child.update(path)
+        self.set_overall_status()
+
+    def set_overall_status(self):
+        status = NOT_CHECKED
+        for flag in self.status_flags.values():
+            if flag > status:
+                status = flag
+        for child in self.children:
+            child.set_overall_status()
+            child_status = child.overall_status
+            if child_status > status:
+                status = child_status
+        print self.name
+        self.overall_status = status
+
+    @property
+    def status(self, overwrite=None):
+        '''
+        dictionary with pretty attributes as keys and a tuple as values
+        with the actual value, a message and a status flag
+
+        Return
+        ------
+        attributes: dict,
+                    attribute names as keys
+                    (name of attribute, detail, statusflag) as values
+        '''
+
+        status = OrderedDict()
+        attributes = OrderedDict()
+        #add the status of the monitored attributes
+        for i, attr in enumerate(self.monitored):
+            value = getattr(self, attr)
+            pretty_name = self.monitored[attr]
+            status_flag = self.status_flags[attr]
+            detail = ''
+            attr_tuple = (value, detail, status_flag)
+            attributes[pretty_name] = attr_tuple
+        #add the status of the children
+        for child in self.children:
+            attributes.update(child.status)  #, '', child.overall_status)
+        status[self.name] = (attributes, '', self.overall_status)
+        return status
+
+    @property
+    def is_checked(self):
+        if self.overall_status > 1:
+            return True
+        else:
+            return False
+
+    @property
+    def is_valid(self):
+        if self.overall_status == 2:
+            return True
+        else:
+            return False
+
+    def validate(self, path):
+        self.update(path)
+        #only check rules if successfully loaded
+        if self.overall_status == FOUND:
+            self._validate(path)
+        self.set_overall_status()
+
+    def _validate(self, path):
+        for rule in self.rules:
+            if not rule.check(self):
+                is_valid = False
+                self.status_flags[rule.field_name] = MISMATCH
+            else:
+                self.status_flags[rule.field_name] = CHECKED_AND_VALID
+        for child in self.children:
+            child._validate(path)
+
+
+
+class ResourceFile(Resource):
+    '''
     categorized resource for the traffic model calculations
 
     Parameters
@@ -30,12 +138,13 @@ class Resource(object):
                the path of the resource file
 
     '''
-    public = OrderedDict([('file_name', 'Datei'),
-                          ('file_modified', 'Datum')])
+    monitored = OrderedDict([('file_name', 'Datei'),
+                             ('file_modified', 'Datum')])
 
     def __init__(self, name, subfolder='', category=None,
                  file_name=None, do_show=True):
-        self.name = name
+        self.monitored.update(super(ResourceFile, self).monitored)
+        super(ResourceFile, self).__init__(name)
         self.subfolder = subfolder
         self.file_name = file_name
         #category is the folder as it is displayed later
@@ -44,15 +153,6 @@ class Resource(object):
                 category = self.subfolder
             self.category = category
         self.file_modified = ''
-        self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
-
-    @property
-    def overall_status(self):
-        status = NOT_CHECKED
-        for flag in self.status_flags.values():
-            if flag > status:
-                status = flag
-        return status
 
     def set_source(self, file_name, subfolder):
         self.file_name = file_name
@@ -75,50 +175,12 @@ class Resource(object):
         self.status_flags['file_name'] = NOT_FOUND
 
     @property
-    def attributes(self):
-        '''
-        dictionary with pretty attributes as keys and a tuple as values
-        with the actual value, a message and a status flag
-
-        Return
-        ------
-        attributes: dict,
-                    attribute names as keys
-                    (actual value, message, statusflag) as values
-        '''
-        attributes = OrderedDict()
-        attr_dict = OrderedDict()
-        for i, attr in enumerate(self.public):
-            value = getattr(self, attr)
-            pretty_name = self.public[attr]
-            status = self.status_flags[attr]
-            detail = ''
-            attr_tuple = (value, detail, status)
-            attr_dict[pretty_name] = attr_tuple
-        attributes[self.name] = (attr_dict, '', self.overall_status)
-        return attributes
-
-    @property
     def is_set(self):
         if self.file_name is None:
             return False
 
-    @property
-    def is_checked(self):
-        if self.overall_status > 1:
-            return True
-        else:
-            return False
 
-    @property
-    def is_valid(self):
-        if self.overall_status == 2:
-            return True
-        else:
-            return False
-
-
-class H5Resource(Resource):
+class H5Resource(ResourceFile):
     '''
 
     '''
@@ -127,32 +189,6 @@ class H5Resource(Resource):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder, category=category,
             file_name=file_name, do_show=do_show)
-        self.tables = OrderedDict()
-
-    @property
-    def overall_status(self):
-        status = super(H5Resource, self).overall_status
-        #check all tables additionally
-        for table in self.tables.values():
-            flag = table.overall_status
-            if flag > status:
-                status = flag
-        return status
-
-    @property
-    def attributes(self):
-        attributes = super(H5Resource, self).attributes
-        #add the tables as attributes
-        attr_dict = OrderedDict()
-        for table in self.tables.values():
-            attr_dict[table.name] = table.attributes
-        attributes[self.name][0].update(attr_dict)
-        return attributes
-
-    def add_tables(self, *args):
-        for table in args:
-            self.tables[table.name] = table
-            self.status_flags[table.name] = NOT_CHECKED
 
     def update(self, path):
         '''
@@ -170,134 +206,67 @@ class H5Resource(Resource):
             #set a flag for file not found
             self.status_flags['file_name'] = NOT_FOUND
         else:
-            for table in self.tables.values():
-                table_read = table.load(h5)
-                if table_read:
-                    self.status_flags[table.name] = FOUND
-                else:
-                    self.status_flags[table.name] = NOT_FOUND
+            #give child tables the opened h5 file
+            #to avoid multiple readings of the same file
+            for child in self.children:
+                child.update(h5)
+        self.set_overall_status()
+        #close file
         del(h5)
 
-    def validate(self, path):
-        self.update(path)
-        if self.status_flags['file_name'] == FOUND:
-            is_valid = True
-            for table in self.tables.values():
-                if not table.is_valid:
-                    is_valid = False
-            return is_valid
-        return False
 
-
-class H5Node(object):
-    public = OrderedDict([('shape', 'Dimension')])
+class H5Node(Resource):
+    monitored = OrderedDict([('table_path', 'Pfad'),
+                             ('shape', 'Dimension')])
 
     def __init__(self, table_path):
-        self.name = table_path
+        name = os.path.split(table_path)[1]
+        super(H5Node, self).__init__(name)
         self.table_path = table_path
         self.shape = None
-        self.rules = []
         #set flags to not checked
-        self.status_flags = {k: NOT_CHECKED for k, v in self.public.items()}
+        self.status_flags = {k: NOT_CHECKED for k, v in self.monitored.items()}
 
     def __repr__(self):
         return 'H5Node {}'.format(self.table_path)
 
-    @property
-    def overall_status(self):
-        status = NOT_CHECKED
-        for flag in self.status_flags.values():
-            if flag > status:
-                status = flag
-        return status
-
-    @property
-    def attributes(self):
-        '''
-        dictionary with pretty attributes as keys and a tuple as values
-        with the actual and the target values of those attributes
-        and a status flag
-
-        Return
-        ------
-        attributes: dict,
-                    attribute names as keys
-                    (actual value, target, statusflag) as values
-        '''
-        attributes = OrderedDict()
-        expected = OrderedDict()
-        for rule in self.rules:
-            expected[rule.field_name] = rule.value
-        for i, attr in enumerate(self.public):
-            value = getattr(self, attr)
-            pretty_name = self.public[attr]
-            status = self.status_flags[attr]
-            if expected.has_key(attr):
-                target = expected[attr]
-            else:
-                target = ''
-            if attr == 'shape' and value is not None:
-                dim = ''
-                for v in value:
-                    dim += '{} x '.format(v)
-                value = dim[:-3]
-            attr_tuple = (value, target, status)
-            attributes[pretty_name] = attr_tuple
-        return (attributes, '', self.overall_status)
-
-    def load(self, h5_in):
+    def update(self, h5_in):
         table = h5_in.get_table(self.table_path)
         if not table:
-            return False
+            self.status_flags['table_path'] = NOT_FOUND
+            return None
+        self.status_flags['table_path'] = FOUND
         table = table.read()
         self.shape = table.shape
-        return True
-
-    def add_rule(self, rule):
-        self.rules.append(rule)
+        return table
 
     @property
-    def is_valid(self):
-        is_valid = True
-        for rule in self.rules:
-            if not rule.check(self):
-                is_valid = False
-                self.status_flags[rule.field_name] = MISMATCH
-            else:
-                self.status_flags[rule.field_name] = CHECKED_AND_VALID
-        return is_valid
-
+    def status(self):
+        status = super(H5Node, self).status
+        if self.shape is not None:
+            dim = ''
+            for v in self.shape:
+                dim += '{} x '.format(v)
+            dim = dim[:-3]
+            dim_status = list(status[self.name][0][self.monitored['shape']])
+            dim_status[0] = dim
+            status[self.name][0][self.monitored['shape']] = tuple(dim_status)
+        return status
 
 class H5Table(H5Node):
-    public = OrderedDict()
+    monitored = OrderedDict()
 
     def __init__(self, table_path, dtype=None):
-        #set dict for public attributes, then call super constructor
-        #(there the flags are built out of public dict)
-        self.public.update(super(H5Table, self).public)
-        self.public['shape'] = 'Reihen'
+        #set dict for monitored attributes, then call super constructor
+        #(there the flags are built out of monitored dict)
+        self.monitored.update(super(H5Table, self).monitored)
+        self.monitored['shape'] = 'Reihen'
         super(H5Table, self).__init__(table_path)
         self.dtype = dtype
-        self.columns = []
 
     def __repr__(self):
         return 'H5Table {}'.format(self.table_path)
 
-    def load(self, h5_in):
-        table = h5_in.get_table(self.table_path)
-        if not table:
-            return False
-        table = table.read()
-        self.shape = table.shape
-        for col_name in table.dtype.names:
-            dtype = table.dtype[col_name]
-            col = H5TableColumn(col_name, dtype=dtype)
-            #no max or min for strings
-            if dtype.char != 'S':
-                col.max_value = table[col_name].max()
-                col.min_value = table[col_name].min()
-            self.columns.append(col)
-        return True
     @property
     def column_names(self):
         column_names = []
@@ -305,33 +274,12 @@ class H5Table(H5Node):
             column_names.append(col.name)
         return column_names
 
-    @property
-    def attributes(self):
-        '''
-        dictionary with pretty attributes as keys and a tuple as values
-        with the actual and the target values of those attributes
-        and a status flag
 
-        Return
-        ------
-        attributes: dict,
-                    attribute names as keys
-                    (actual value, target, statusflag) as values
-        '''
-        attributes = super(H5Table, self).attributes[0]
-        #add the tables as attributes
-        attr_dict = OrderedDict()
-        for col in self.columns:
-            attr_dict[col.name] = col.attributes
-        attributes.update(attr_dict)
-        return (attributes, '', self.overall_status)
-
-
-class H5TableColumn(H5Node):
-    public = OrderedDict([('primary_key', 'Primaerschluessel'),
-                          ('dtype', 'dtype'),
-                          ('max_value', 'Maximum'),
-                          ('min_value', 'Minimum')])
+class H5TableColumn(Resource):
+    monitored = OrderedDict([('primary_key', 'Primaerschluessel'),
+                             ('dtype', 'dtype'),
+                             ('max_value', 'Maximum'),
+                             ('min_value', 'Minimum')])
 
     def __init__(self, name, primary_key=False, dtype=None):
         super(H5TableColumn, self).__init__(name)
@@ -343,13 +291,15 @@ class H5TableColumn(H5Node):
 
 
 class H5Array(H5Node):
-    public = OrderedDict([('min_value', 'Minimalwert'),
-                          ('max_value', 'Maximalwert')])
+    monitored = OrderedDict([('min_value', 'Minimalwert'),
+                             ('max_value', 'Maximalwert')])
 
     def __init__(self, table_path):
-        #set dict for public attributes, then call super constructor
-        #(there the flags are built out of public dict)
-        self.public.update(super(H5Array, self).public)
+        #set dict for monitored attributes, then call super constructor
+        #(there the flags are built out of monitored dict)
+        d = copy.copy(super(H5Array, self).monitored)
+        d.update(self.monitored)
+        self.monitored = d
         super(H5Array, self).__init__(table_path)
         self.min_value = None
         self.max_value = None
@@ -357,19 +307,11 @@ class H5Array(H5Node):
     def __repr__(self):
         return 'H5Matrix {}'.format(self.table_path)
 
-    def load(self, h5_in):
-        table = h5_in.get_table(self.table_path)
-        if not table:
-            return False
-        table = table.read()
-        self.max_value = table.max()
-        self.min_value = table.min()
-        shape = list(table.shape)
-        #get rid of the L's
-        for i, dim in enumerate(shape):
-            shape[i] = int(dim)
-        self.shape = tuple(shape)
-        return True
+    def update(self, h5_in):
+        table = super(H5Array, self).update(h5_in)
+        if table is not None:
+            self.max_value = table.max()
+            self.min_value = table.min()
 
 class Rule(object):
     def check(self, obj):
@@ -387,17 +329,17 @@ def is_number(s):
         return False
 
 def is_in_list(self, left_list, right_list):
-        '''
-        check if all elements of left list are in right list
-        '''
-        if not isinstance(left_list, list):
-            left_list = [left_list]
-        if not isinstance(right_list, list):
-            right_list = [right_list]
-        for element in left_list:
-            if element not in right_list:
-                return False
-        return True
+    '''
+    check if all elements of left list are in right list
+    '''
+    if not isinstance(left_list, list):
+        left_list = [left_list]
+    if not isinstance(right_list, list):
+        right_list = [right_list]
+    for element in left_list:
+        if element not in right_list:
+            return False
+    return True
 
 class CompareRule(Rule):
     wildcards = ['*', '']

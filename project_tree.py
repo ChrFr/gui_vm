@@ -4,7 +4,7 @@ import time
 from lxml import etree
 from shutil import copytree
 from config import DEFAULT_FOLDER
-from resources import Resource
+from resources import ResourceFile
 
 from traffic_model import Maxem
 TRAFFIC_MODELS = ['Maxem']
@@ -493,7 +493,7 @@ class ResourceNode(ProjectTreeNode):
         #else:
             #self.resource = Resource(self.name)
         simrun = self.get_parent_by_class(SimRun)
-        self.resource = Resource(self.name)
+        self.resource = ResourceFile(self.name)
         if simrun is not None:
             existing_resource = simrun.model.get_resource(self.name)
             #if resource is defined by traffic model -> get it
