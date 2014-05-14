@@ -14,7 +14,7 @@ NOT_FOUND = 3
 MISMATCH = 4
 
 DEFAULT_MESSAGES = ['', 'gefunden', 'ueberprueft',
-                    'nicht vorhanden', 'Fehler']
+                    'nicht gefunden', 'Fehler']
 
 
 class Resource(object):
@@ -46,6 +46,7 @@ class Resource(object):
         self.rules.append(rule)
 
     def update(self, path):
+        self.clear_status()
         for child in self.children:
             child.update(path)
         self.set_overall_status()
@@ -115,8 +116,8 @@ class Resource(object):
 
     def validate(self, path):
         self.update(path)
-        #only check rules if successfully loaded
-        if self.overall_status == FOUND:
+        #only check rules if successfully loaded, removed
+        if self.overall_status != NOT_FOUND:
             self._validate(path)
         self.set_overall_status()
 
@@ -129,6 +130,13 @@ class Resource(object):
                 self.status_flags[rule.field_name] = CHECKED_AND_VALID
         for child in self.children:
             child._validate(path)
+
+    def clear_status(self):
+        self.overall_status = NOT_CHECKED
+        self.status_flags = {k: NOT_CHECKED for k, v in self.monitored.items()}
+        for child in self.children:
+            child.clear_status()
+
 
 
 class ResourceFile(Resource):
@@ -172,6 +180,7 @@ class ResourceFile(Resource):
         base class only checks if file exists, actual reading has to be done
         in the subclasses
         '''
+        self.clear_status()
         if self.file_name != '':
             file_name = os.path.join(path, self.subfolder, self.file_name)
             if os.path.exists(file_name):
@@ -277,8 +286,9 @@ class H5Table(H5Node):
 
     def update(self, h5_in):
         table = super(H5Table, self).update(h5_in)
-        for child in self.children:
-            child.update(table)
+        if table is not None:
+            for child in self.children:
+                child.update(table)
 
     @property
     def column_names(self):
@@ -289,17 +299,17 @@ class H5Table(H5Node):
 
 
 class H5TableColumn(Resource):
-    monitored = OrderedDict([('primary_key', 'Primaerschluessel'),
-                             ('dtype', 'dtype'),
+    monitored = OrderedDict([('dtype', 'dtype'),
+                             ('primary_key', 'Primaerschluessel'),
                              ('max_value', 'Maximum'),
                              ('min_value', 'Minimum')])
 
-    def __init__(self, name, primary_key=True, dtype=None):
+    def __init__(self, name, primary_key=False):
         super(H5TableColumn, self).__init__(name)
         self.max_value = None
         self.min_value = None
         self.primary_key = primary_key
-        self.dtype = dtype
+        self.dtype = None
         self.rules = []
 
     def update(self, table):
@@ -307,6 +317,7 @@ class H5TableColumn(Resource):
             self.status_flags['dtype'] = NOT_FOUND
         else:
             self.dtype = table.dtype[self.name]
+            self.status_flags['dtype'] = FOUND
             col = table[self.name]
             if self.dtype.char != 'S':
                 self.max_value = col.max()

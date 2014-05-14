@@ -325,7 +325,8 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                 status_color = get_status_color(status)
                 item = QtGui.QTreeWidgetItem(parent, [line, message])
                 item.setFont(0, font)
-                item.setTextColor(0, status_color)
+                if status in [2, 3, 4]:
+                    item.setTextColor(0, status_color)
                 item.setTextColor(1, status_color)
                 if level == 0:
                     item.setExpanded(True)

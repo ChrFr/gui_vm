@@ -162,8 +162,12 @@ class TrafficModel(object):
                     dtype = dtypes[row]
                     minimum = minima[row]
                     maximum = maxima[row]
-                    is_primary = primaries[row]
-                    col = H5TableColumn(col_name, dtype=dtype)
+                    primary = primaries[row]
+                    if primary == '1' or primary == 'True':
+                        is_primary = True
+                    else:
+                        is_primary = False
+                    col = H5TableColumn(col_name, is_primary)
                     if minimum != '':
                         if is_number(minimum):
                             reference = None
