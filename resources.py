@@ -13,6 +13,9 @@ CHECKED_AND_VALID = 2
 NOT_FOUND = 3
 MISMATCH = 4
 
+DEFAULT_MESSAGES = ['', 'gefunden', 'ueberprueft',
+                    'nicht vorhanden', 'Fehler']
+
 
 class Resource(object):
     '''
@@ -50,6 +53,8 @@ class Resource(object):
     def set_overall_status(self):
         status = NOT_CHECKED
         for flag in self.status_flags.values():
+            if isinstance(flag, tuple):
+                flag = flag[0]
             if flag > status:
                 status = flag
         for child in self.children:
@@ -70,7 +75,7 @@ class Resource(object):
         ------
         attributes: dict,
                     attribute names as keys
-                    (name of attribute, detail, statusflag) as values
+                    (name of attribute, message, statusflag) as values
         '''
 
         status = OrderedDict()
@@ -80,13 +85,18 @@ class Resource(object):
             value = getattr(self, attr)
             pretty_name = self.monitored[attr]
             status_flag = self.status_flags[attr]
-            detail = ''
-            attr_tuple = (value, detail, status_flag)
+            if isinstance(status_flag, tuple):
+                message = status_flag[1]
+                status_flag = status_flag[0]
+            else:
+                message = DEFAULT_MESSAGES[status_flag]
+            attr_tuple = (value, message, status_flag)
             attributes[pretty_name] = attr_tuple
         #add the status of the children
         for child in self.children:
             attributes.update(child.status)  #, '', child.overall_status)
-        status[self.name] = (attributes, '', self.overall_status)
+        status[self.name] = (attributes, DEFAULT_MESSAGES[self.overall_status],
+                             self.overall_status)
         return status
 
     @property
@@ -119,7 +129,6 @@ class Resource(object):
                 self.status_flags[rule.field_name] = CHECKED_AND_VALID
         for child in self.children:
             child._validate(path)
-
 
 
 class ResourceFile(Resource):
@@ -256,22 +265,26 @@ class H5Node(Resource):
 class H5Table(H5Node):
     monitored = OrderedDict()
 
-    def __init__(self, table_path, dtype=None):
+    def __init__(self, table_path):
         #set dict for monitored attributes, then call super constructor
         #(there the flags are built out of monitored dict)
         self.monitored.update(super(H5Table, self).monitored)
         self.monitored['shape'] = 'Reihen'
         super(H5Table, self).__init__(table_path)
-        self.dtype = dtype
 
     def __repr__(self):
         return 'H5Table {}'.format(self.table_path)
 
+    def update(self, h5_in):
+        table = super(H5Table, self).update(h5_in)
+        for child in self.children:
+            child.update(table)
+
     @property
     def column_names(self):
         column_names = []
-        for col in self.columns:
-            column_names.append(col.name)
+        for col in self.children:
+            col_names.append(col.name)
         return column_names
 
 
@@ -281,13 +294,27 @@ class H5TableColumn(Resource):
                              ('max_value', 'Maximum'),
                              ('min_value', 'Minimum')])
 
-    def __init__(self, name, primary_key=False, dtype=None):
+    def __init__(self, name, primary_key=True, dtype=None):
         super(H5TableColumn, self).__init__(name)
         self.max_value = None
         self.min_value = None
         self.primary_key = primary_key
         self.dtype = dtype
         self.rules = []
+
+    def update(self, table):
+        if self.name not in table.dtype.names:
+            self.status_flags['dtype'] = NOT_FOUND
+        else:
+            self.dtype = table.dtype[self.name]
+            col = table[self.name]
+            if self.dtype.char != 'S':
+                self.max_value = col.max()
+                self.min_value = col.min()
+            #check if all values are unique if primary key
+            if self.primary_key and np.unique(col).size != col.size:
+                self.status_flags['primary_key'] = (MISMATCH,
+                                                    'Werte nicht eindeutig')
 
 
 class H5Array(H5Node):
@@ -297,6 +324,7 @@ class H5Array(H5Node):
     def __init__(self, table_path):
         #set dict for monitored attributes, then call super constructor
         #(there the flags are built out of monitored dict)
+        #copy and update needed here to keep order
         d = copy.copy(super(H5Array, self).monitored)
         d.update(self.monitored)
         self.monitored = d

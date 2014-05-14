@@ -290,8 +290,6 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.show()
 
     def show_attributes(self):
-        status_messages = ['', 'gefunden', 'Werte geprueft',
-                          'nicht vorhanden', 'falsche Werte']
 
         def get_status_color(status):
             green = QtGui.QColor('green')
@@ -311,7 +309,6 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
             bold = QtGui.QFont("Arial", 10-(level), QtGui.QFont.Bold)
             for key in attr:
                 value, message, status = attr[key]
-                status_message = status_messages[status]
                 status_color = get_status_color(status)
 
                 if isinstance(value, dict):
@@ -323,23 +320,23 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                     font = normal
                     has_subdict = False
 
-                line = ('    ' * level + '{name}: {value}   '
+                line = ('{name}: {value}'
                          .format(name=key, value=val))
                 status_color = get_status_color(status)
-                if status == 4 and len(message) > 0:
-                    status_message = 'erwartet: {}'.format(message)
-                item = QtGui.QTreeWidgetItem(parent, [line, status_message])
+                item = QtGui.QTreeWidgetItem(parent, [line, message])
                 item.setFont(0, font)
                 item.setTextColor(0, status_color)
                 item.setTextColor(1, status_color)
+                if level == 0:
+                    item.setExpanded(True)
                 if has_subdict:
                     #recursion if there are sub dictionaries
-                    build_tree(value, level+1, parent=parent)
+                    build_tree(value, level+1, parent=item)
 
         self.resource_tree.clear()
-        header=QtGui.QTreeWidgetItem(['bla', 'Status'])
+        header=QtGui.QTreeWidgetItem(['Resourcebrowser', 'Status'])
         self.resource_tree.setHeaderItem(header)
-        attr = self.node.resource.attributes
+        attr = self.node.resource.status
         build_tree(attr)
         self.resource_tree.resizeColumnToContents(0)
 

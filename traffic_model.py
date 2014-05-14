@@ -1,4 +1,5 @@
-from resources import (H5Array, H5Table, H5Resource, CompareRule)
+from resources import (H5Array, H5Table, H5Resource,
+                       CompareRule, H5TableColumn)
 from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
 import numpy as np
 
@@ -145,14 +146,41 @@ class TrafficModel(object):
                                             self.tables_config_file))
                 n_rows = rows['n_rows'][0]
                 if n_rows != '':
-                    dim_rule = CompareRule('shape', '==', n_rows, reference=self)
+                    dim_rule = CompareRule('shape', '==',
+                                           n_rows, reference=self)
                     node.add_rule(dim_rule)
                 #add check of dtypes
                 table_cols = self.column_table.get_rows_by_entries(
                     resource_name=res_name, subdivision=node_name)
-
-                print
-
+                col_names = table_cols['column_name']
+                dtypes = table_cols['type']
+                minima = table_cols['minimum']
+                maxima = table_cols['maximum']
+                primaries = table_cols['is_primary_key']
+                for row in xrange(table_cols.row_count):
+                    col_name = col_names[row]
+                    dtype = dtypes[row]
+                    minimum = minima[row]
+                    maximum = maxima[row]
+                    is_primary = primaries[row]
+                    col = H5TableColumn(col_name, dtype=dtype)
+                    if minimum != '':
+                        if is_number(minimum):
+                            reference = None
+                        else:
+                            reference = self
+                        min_rule = CompareRule('min_value', '>=', minimum,
+                                        reference=reference)
+                        col.add_rule(min_rule)
+                    if maximum != '':
+                        if is_number(maximum):
+                            reference = None
+                        else:
+                            reference = self
+                        max_rule = CompareRule('max_value', '<=', maximum,
+                                        reference=reference)
+                        col.add_rule(max_rule)
+                    node.add_child(col)
         return node
 
 
