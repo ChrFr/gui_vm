@@ -106,25 +106,28 @@ class TrafficModel(object):
                 minimum = rows['minimum'][0]
                 maximum = rows['maximum'][0]
                 dimension = tuple(rows['dimension'][0].split(' x '))
-                if len(dimension) == 1:
-                    dimension = dimension[0]
-                if is_number(minimum):
-                    reference = None
-                else:
-                    reference = self
-                min_rule = CompareRule('min_value', '>=', minimum,
-                                reference=reference)
-                if is_number(maximum):
-                    reference = None
-                else:
-                    reference = self
-                max_rule = CompareRule('max_value', '<=', maximum,
-                                reference=reference)
-                dim_rule = CompareRule('shape', '==', dimension,
-                                reference=self)
-                node.add_rule(min_rule)
-                node.add_rule(max_rule)
-                node.add_rule(dim_rule)
+                if minimum != '':
+                    if is_number(minimum):
+                        reference = None
+                    else:
+                        reference = self
+                    min_rule = CompareRule('min_value', '>=', minimum,
+                                    reference=reference)
+                    node.add_rule(min_rule)
+                if maximum != '':
+                    if is_number(maximum):
+                        reference = None
+                    else:
+                        reference = self
+                    max_rule = CompareRule('max_value', '<=', maximum,
+                                    reference=reference)
+                    node.add_rule(max_rule)
+                if (np.array(dimension) != '').any():
+                    if len(dimension) == 1:
+                        dimension = dimension[0]
+                    dim_rule = CompareRule('shape', '==', dimension,
+                                    reference=self)
+                    node.add_rule(dim_rule)
         return node
 
     def create_H5TableNode(self, res_name, node_name):
@@ -137,11 +140,10 @@ class TrafficModel(object):
                     raise Exception('{}{} defined more than once in {}'
                                     .format(res_name, node_name,
                                             self.tables_config_file))
-                n_rows = rows['n_rows']
-                if len(n_rows) == 1:
-                    n_rows = n_rows[0]
-                dim_rule = CompareRule('shape', '==', n_rows, reference=self)
-                node.add_rule(dim_rule)
+                n_rows = rows['n_rows'][0]
+                if n_rows != '':
+                    dim_rule = CompareRule('shape', '==', n_rows, reference=self)
+                    node.add_rule(dim_rule)
                 #add check of dtypes
                 table_cols = self.column_table.get_rows_by_entries(
                     resource_name=res_name, subdivision=node_name)

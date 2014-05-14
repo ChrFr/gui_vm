@@ -171,7 +171,11 @@ class H5Resource(Resource):
             self.status_flags['file_name'] = NOT_FOUND
         else:
             for table in self.tables.values():
-                table.load(h5)
+                table_read = table.load(h5)
+                if table_read:
+                    self.status_flags[table.name] = FOUND
+                else:
+                    self.status_flags[table.name] = NOT_FOUND
         del(h5)
 
     def validate(self, path):
@@ -242,8 +246,12 @@ class H5Node(object):
         return (attributes, '', self.overall_status)
 
     def load(self, h5_in):
-        table = h5_in.get_table(self.table_path).read()
+        table = h5_in.get_table(self.table_path)
+        if not table:
+            return False
+        table = table.read()
         self.shape = table.shape
+        return True
 
     def add_rule(self, rule):
         self.rules.append(rule)
@@ -276,7 +284,10 @@ class H5Table(H5Node):
         return 'H5Table {}'.format(self.table_path)
 
     def load(self, h5_in):
-        table = h5_in.get_table(self.table_path).read()
+        table = h5_in.get_table(self.table_path)
+        if not table:
+            return False
+        table = table.read()
         self.shape = table.shape
         for col_name in table.dtype.names:
             dtype = table.dtype[col_name]
@@ -286,7 +297,7 @@ class H5Table(H5Node):
                 col.max_value = table[col_name].max()
                 col.min_value = table[col_name].min()
             self.columns.append(col)
-
+        return True
     @property
     def column_names(self):
         column_names = []
@@ -347,7 +358,10 @@ class H5Array(H5Node):
         return 'H5Matrix {}'.format(self.table_path)
 
     def load(self, h5_in):
-        table = h5_in.get_table(self.table_path).read()
+        table = h5_in.get_table(self.table_path)
+        if not table:
+            return False
+        table = table.read()
         self.max_value = table.max()
         self.min_value = table.min()
         shape = list(table.shape)
@@ -355,6 +369,7 @@ class H5Array(H5Node):
         for i, dim in enumerate(shape):
             shape[i] = int(dim)
         self.shape = tuple(shape)
+        return True
 
 class Rule(object):
     def check(self, obj):

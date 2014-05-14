@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'resource.ui'
 #
-# Created: Wed Apr 30 16:05:33 2014
+# Created: Wed May 14 11:22:30 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -68,12 +68,14 @@ class Ui_DetailsResource(object):
         self.project_copy.setObjectName(_fromUtf8("project_copy"))
         self.gridLayout.addWidget(self.project_copy, 0, 2, 1, 1)
         self.resource_tree = QtGui.QTreeWidget(DetailsResource)
-        self.resource_tree.setRootIsDecorated(True)
+        self.resource_tree.setEditTriggers(QtGui.QAbstractItemView.EditKeyPressed)
+        self.resource_tree.setExpandsOnDoubleClick(False)
         self.resource_tree.setColumnCount(2)
         self.resource_tree.setObjectName(_fromUtf8("resource_tree"))
         self.resource_tree.headerItem().setText(0, _fromUtf8("1"))
         self.resource_tree.headerItem().setText(1, _fromUtf8("2"))
-        self.resource_tree.header().setVisible(False)
+        self.resource_tree.header().setVisible(True)
+        self.resource_tree.header().setMinimumSectionSize(200)
         self.gridLayout.addWidget(self.resource_tree, 4, 2, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
 
