@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Wed Apr 30 16:05:33 2014
+# Created: Wed May 14 11:22:30 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -81,6 +81,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addLayout(self.gridLayout_4, 3, 0, 1, 1)
         self.project_tree_view = QtGui.QTreeView(self.centralwidget)
         self.project_tree_view.setMaximumSize(QtCore.QSize(500, 16777215))
+        self.project_tree_view.setExpandsOnDoubleClick(False)
         self.project_tree_view.setObjectName(_fromUtf8("project_tree_view"))
         self.gridLayout.addWidget(self.project_tree_view, 5, 0, 1, 1)
         self.details_layout = QtGui.QVBoxLayout()

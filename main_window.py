@@ -205,6 +205,13 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
+        label = QtGui.QLabel('\n\nKenngroessen:\n')
+        self.formLayout.addRow(label)
+        for meta in node.meta:
+            label = QtGui.QLabel(meta)
+            edit = QtGui.QLineEdit(str(node.meta[meta]))
+            edit.setReadOnly(True)
+            self.formLayout.addRow(label, edit)
         self.show()
 
     def changeModel(self, name):
@@ -234,6 +241,8 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         self.parent = parent
         self.parent.addWidget(self)
         self.setTitle(node.name)
+        label = QtGui.QLabel('\n\nMetadaten:\n')
+        self.meta_layout.addRow(label)
         for meta in node.meta:
             label = QtGui.QLabel(meta)
             edit = QtGui.QLineEdit(node.meta[meta])
@@ -335,7 +344,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                     build_tree(value, level+1, parent=item)
 
         self.resource_tree.clear()
-        header=QtGui.QTreeWidgetItem(['Resourcebrowser', 'Status'])
+        header=QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
         self.resource_tree.setHeaderItem(header)
         attr = self.node.resource.status
         build_tree(attr)

@@ -63,7 +63,6 @@ class Resource(object):
             child_status = child.overall_status
             if child_status > status:
                 status = child_status
-        print self.name
         self.overall_status = status
 
     @property
@@ -222,7 +221,8 @@ class H5Resource(ResourceFile):
         successful = h5.read()
         if not successful:
             #set a flag for file not found
-            self.status_flags['file_name'] = NOT_FOUND
+            self.status_flags['file_name'] = (MISMATCH,
+                                              'keine gueltige HDF5 Datei')
         else:
             #give child tables the opened h5 file
             #to avoid multiple readings of the same file
@@ -261,6 +261,7 @@ class H5Node(Resource):
     @property
     def status(self):
         status = super(H5Node, self).status
+        #pretty print the dimension (instead of tuple (a, b, c) 'a x b x c')
         if self.shape is not None:
             dim = ''
             for v in self.shape:
@@ -460,5 +461,9 @@ class CompareRule(Rule):
                 continue
             #compare the value with the field of the given object
             if not compare(attr[i], val):
-                is_valid = False
+                #check again if value is number in string
+                if isinstance(val, str) and is_number(val):
+                    val = float(val)
+                if not compare(attr[i], val):
+                    is_valid = False
         return is_valid

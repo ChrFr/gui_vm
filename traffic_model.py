@@ -1,12 +1,14 @@
 from resources import (H5Array, H5Table, H5Resource,
                        CompareRule, H5TableColumn)
 from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
+from collections import OrderedDict
 import numpy as np
 
 class TrafficModel(object):
     '''
     base class for traffic models
     '''
+    monitored = OrderedDict()
 
     def __init__(self, name,
                  input_config_file = None, tables_config_file = None,
@@ -174,7 +176,7 @@ class TrafficModel(object):
                         else:
                             reference = self
                         min_rule = CompareRule('min_value', '>=', minimum,
-                                        reference=reference)
+                                               reference=reference)
                         col.add_rule(min_rule)
                     if maximum != '':
                         if is_number(maximum):
@@ -182,11 +184,22 @@ class TrafficModel(object):
                         else:
                             reference = self
                         max_rule = CompareRule('max_value', '<=', maximum,
-                                        reference=reference)
+                                               reference=reference)
                         col.add_rule(max_rule)
+                    if dtype != '':
+                        type_rule = CompareRule('dtype', '==', dtype)
+                        col.add_rule(type_rule)
                     node.add_child(col)
         return node
 
+    @property
+    def characteristics(self):
+        characteristics = OrderedDict()
+        for i, attr in enumerate(self.monitored):
+            value = getattr(self, attr)
+            pretty_name = self.monitored[attr]
+            characteristics[pretty_name] = value
+        return characteristics
 
 def is_number(s):
     try:
@@ -202,6 +215,10 @@ class Maxem(TrafficModel):
     TABLES_CONFIG_FILE = 'Maxem_tables.csv'
     ARRAYS_CONFIG_FILE = 'Maxem_arrays.csv'
     COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
+
+    monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
+                             ('n_time_series', 'Anzahl Zeitscheiben'),
+                             ('n_activity_pairs', 'Aktivitaetenpaare')])
 
     def __init__(self, path=None, parent=None):
         super(Maxem, self).__init__(
@@ -224,18 +241,25 @@ class Maxem(TrafficModel):
         if shape is None:
             return None
         else:
-            return shape[0]
+            return int(shape[0])
 
     @property
     def n_time_series(self):
         #time series is determined by the number of rows in
         #/activities/time_series
-        shape = self.resources['Parameter']\
-            .tables['/activities/time_series'].shape
+        shape = self.resources['Params'].get_child('time_series').shape
         if shape is None:
             return None
         else:
-            return shape[0]
+            return int(shape[0])
+
+    @property
+    def n_activity_pairs(self):
+        shape = self.resources['Params'].get_child('activitypairs').shape
+        if shape is None:
+            return None
+        else:
+            return int(shape[0])
 
     def update(self, path):
         super(Maxem, self).update(path)

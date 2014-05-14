@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_project.ui'
 #
-# Created: Wed Apr 30 16:05:33 2014
+# Created: Wed May 14 11:22:31 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,30 +27,38 @@ class Ui_NewProject(object):
     def setupUi(self, NewProject):
         NewProject.setObjectName(_fromUtf8("NewProject"))
         NewProject.resize(409, 159)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(NewProject.sizePolicy().hasHeightForWidth())
+        NewProject.setSizePolicy(sizePolicy)
         NewProject.setMinimumSize(QtCore.QSize(409, 159))
-        NewProject.setMaximumSize(QtCore.QSize(409, 16777215))
+        NewProject.setMaximumSize(QtCore.QSize(409, 159))
+        NewProject.setSizeGripEnabled(False)
         NewProject.setModal(True)
+        self.gridLayout = QtGui.QGridLayout(NewProject)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.label_2 = QtGui.QLabel(NewProject)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
+        self.project_edit = QtGui.QLineEdit(NewProject)
+        self.project_edit.setObjectName(_fromUtf8("project_edit"))
+        self.gridLayout.addWidget(self.project_edit, 0, 1, 1, 1)
+        self.label = QtGui.QLabel(NewProject)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
+        self.folder_edit = QtGui.QLineEdit(NewProject)
+        self.folder_edit.setObjectName(_fromUtf8("folder_edit"))
+        self.gridLayout.addWidget(self.folder_edit, 1, 1, 1, 1)
+        self.folder_browse_button = QtGui.QPushButton(NewProject)
+        self.folder_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
+        self.folder_browse_button.setObjectName(_fromUtf8("folder_browse_button"))
+        self.gridLayout.addWidget(self.folder_browse_button, 1, 2, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(NewProject)
-        self.buttonBox.setGeometry(QtCore.QRect(10, 110, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.label = QtGui.QLabel(NewProject)
-        self.label.setGeometry(QtCore.QRect(10, 69, 66, 23))
-        self.label.setObjectName(_fromUtf8("label"))
-        self.folder_browse_button = QtGui.QPushButton(NewProject)
-        self.folder_browse_button.setGeometry(QtCore.QRect(357, 69, 30, 23))
-        self.folder_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
-        self.folder_browse_button.setObjectName(_fromUtf8("folder_browse_button"))
-        self.folder_edit = QtGui.QLineEdit(NewProject)
-        self.folder_edit.setGeometry(QtCore.QRect(90, 70, 261, 20))
-        self.folder_edit.setObjectName(_fromUtf8("folder_edit"))
-        self.project_edit = QtGui.QLineEdit(NewProject)
-        self.project_edit.setGeometry(QtCore.QRect(90, 30, 261, 20))
-        self.project_edit.setObjectName(_fromUtf8("project_edit"))
-        self.label_2 = QtGui.QLabel(NewProject)
-        self.label_2.setGeometry(QtCore.QRect(10, 30, 66, 23))
-        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.gridLayout.addWidget(self.buttonBox, 2, 0, 1, 2)
 
         self.retranslateUi(NewProject)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), NewProject.accept)
@@ -59,8 +67,8 @@ class Ui_NewProject(object):
 
     def retranslateUi(self, NewProject):
         NewProject.setWindowTitle(_translate("NewProject", "Neues Projekt", None))
+        self.label_2.setText(_translate("NewProject", "Projektname", None))
+        self.project_edit.setText(_translate("NewProject", "Neues Projekt", None))
         self.label.setText(_translate("NewProject", "Projektordner", None))
         self.folder_browse_button.setText(_translate("NewProject", "...", None))
-        self.project_edit.setText(_translate("NewProject", "Neues Projekt", None))
-        self.label_2.setText(_translate("NewProject", "Projektname", None))
 

@@ -262,6 +262,10 @@ class SimRun(ProjectTreeNode):
         #simulation runs can be renamed
         self.rename = True
 
+    @property
+    def meta(self):
+        return self.model.characteristics
+
     def get_resource(self, name):
         '''
         get a resource node by name
