@@ -1,5 +1,5 @@
 from resources import (H5Array, H5Table, H5Resource,
-                       CompareRule, H5TableColumn)
+                       CompareRule, H5TableColumn, Rule)
 from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
 from collections import OrderedDict
 import numpy as np
@@ -218,7 +218,9 @@ class Maxem(TrafficModel):
 
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
                              ('n_time_series', 'Anzahl Zeitscheiben'),
-                             ('n_activity_pairs', 'Aktivitaetenpaare')])
+                             ('n_activity_pairs', 'Aktivitaetenpaare'),
+                             ('activity_names', 'Aktivitaeten'),
+                             ('activity_codes', 'Aktivitaetencodes')])
 
     def __init__(self, path=None, parent=None):
         super(Maxem, self).__init__(
@@ -230,6 +232,15 @@ class Maxem(TrafficModel):
 
         self.subfolder = self.DEFAULT_SUBFOLDER
         self.read_config()
+
+        ####special rules#####
+        #track the activities
+        activities = self.resources['Params'].get_child('activities')
+        activities.get_child('code').track_content = True
+        activities.get_child('name').track_content = True
+
+        attraction = 'ZP_?'
+
         if path is not None:
             self.update()
 
@@ -261,8 +272,25 @@ class Maxem(TrafficModel):
         else:
             return int(shape[0])
 
+    @property
+    def activity_codes(self):
+        activities = self.resources['Params'].get_child('activities')
+        return activities.get_child('code').content
+
+    @property
+    def activity_names(self):
+        activities = self.resources['Params'].get_child('activities')
+        return activities.get_child('name').content
+
     def update(self, path):
         super(Maxem, self).update(path)
 
     def process(self):
+        pass
+
+class ActivityRule(CompareRule):
+    def __init__(self, left_list, identifier, activity_list, reference):
+        pass
+
+    def check(self, obj):
         pass

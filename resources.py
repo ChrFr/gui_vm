@@ -300,18 +300,28 @@ class H5Table(H5Node):
 
 
 class H5TableColumn(Resource):
+    '''
+
+    Parameter
+    ---------
+
+    track_content: bool, optional
+                   if True the content of the table will be saved in the
+                   attribute self.content with every update
+    '''
     monitored = OrderedDict([('dtype', 'dtype'),
                              ('primary_key', 'Primaerschluessel'),
                              ('max_value', 'Maximum'),
                              ('min_value', 'Minimum')])
 
-    def __init__(self, name, primary_key=False):
+    def __init__(self, name, primary_key=False, track_content=False):
         super(H5TableColumn, self).__init__(name)
         self.max_value = None
         self.min_value = None
         self.primary_key = primary_key
         self.dtype = None
-        self.rules = []
+        self.track_content = track_content
+        self.content = None
 
     def update(self, table):
         if self.name not in table.dtype.names:
@@ -327,7 +337,8 @@ class H5TableColumn(Resource):
             if self.primary_key and np.unique(col).size != col.size:
                 self.status_flags['primary_key'] = (MISMATCH,
                                                     'Werte nicht eindeutig')
-
+            if self.track_content:
+                self.content = list(col)
 
 class H5Array(H5Node):
     monitored = OrderedDict([('min_value', 'Minimalwert'),

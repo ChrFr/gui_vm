@@ -209,7 +209,12 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.formLayout.addRow(label)
         for meta in node.meta:
             label = QtGui.QLabel(meta)
-            edit = QtGui.QLineEdit(str(node.meta[meta]))
+            txt = node.meta[meta]
+            if isinstance(txt, list):
+                txt = '<br>'.join(txt)
+                edit = QtGui.QTextEdit(txt)
+            else:
+                edit = QtGui.QLineEdit(str(node.meta[meta]))
             edit.setReadOnly(True)
             self.formLayout.addRow(label, edit)
         self.show()
