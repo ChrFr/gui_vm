@@ -365,49 +365,9 @@ class H5Array(H5Node):
             self.min_value = table.min()
 
 class Rule(object):
-    def check(self, obj):
-        return True
-
-class DtypeRule(object):
-    pass
-
-
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-def is_in_list(self, left_list, right_list):
-    '''
-    check if all elements of left list are in right list
-    '''
-    if not isinstance(left_list, list):
-        left_list = [left_list]
-    if not isinstance(right_list, list):
-        right_list = [right_list]
-    for element in left_list:
-        if element not in right_list:
-            return False
-    return True
-
-class CompareRule(Rule):
-    wildcards = ['*', '']
-    mapping = {'>': op.gt,
-               '>=': op.ge,
-               '=>': op.ge,
-               '<': op.lt,
-               '=<': op.le,
-               '<=': op.le,
-               '==': op.eq,
-               '!=': op.ne,
-               'in': is_in_list,
-               }
-
-    def __init__(self, field_name, operator, value, reference=None):
+    def __init__(self, field_name, value, function, reference=None):
         self.reference = reference
-        self.operator = operator
+        self.function = function
         self.field_name = field_name
         if isinstance(value, str) and is_number(value):
             value = float(value)
@@ -449,8 +409,6 @@ class CompareRule(Rule):
 
     def check(self, obj):
         is_valid = True
-        #map the operator string to its function
-        compare = self.mapping[self.operator]
 
         #get the field of the object
         if not hasattr(obj, self.field_name):
@@ -471,10 +429,52 @@ class CompareRule(Rule):
             if val in self.wildcards:
                 continue
             #compare the value with the field of the given object
-            if not compare(attr[i], val):
+            if not self.function(attr[i], val):
                 #check again if value is number in string
                 if isinstance(val, str) and is_number(val):
                     val = float(val)
-                if not compare(attr[i], val):
+                if not self.function(attr[i], val):
                     is_valid = False
         return is_valid
+
+class DtypeRule(object):
+    pass
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def is_in_list(self, left_list, right_list):
+    '''
+    check if all elements of left list are in right list
+    '''
+    if not isinstance(left_list, list):
+        left_list = [left_list]
+    if not isinstance(right_list, list):
+        right_list = [right_list]
+    for element in left_list:
+        if element not in right_list:
+            return False
+    return True
+
+class CompareRule(Rule):
+    wildcards = ['*', '']
+    mapping = {'>': op.gt,
+               '>=': op.ge,
+               '=>': op.ge,
+               '<': op.lt,
+               '=<': op.le,
+               '<=': op.le,
+               '==': op.eq,
+               '!=': op.ne,
+               'in': is_in_list,
+               }
+
+    def __init__(self, field_name, operator, value, reference=None):
+        function = self.mapping[operator]
+        super(CompareRule, self).__init__(field_name, value,
+                                          function, reference)

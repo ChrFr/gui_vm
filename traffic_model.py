@@ -288,8 +288,16 @@ class Maxem(TrafficModel):
     def process(self):
         pass
 
-class ActivityRule(CompareRule):
-    def __init__(self, left_list, identifier, activity_list, reference):
+
+class ActivityTrack(Rule):
+
+    def __init__(self, field_name, identifier, value, reference):
+        self.identifier = identifier
+
+        super(ActivityTrack, self).__init__(field_name, value,
+                                            compare, reference)
+
+    def compare(self, left_list, activity_list):
         pass
 
     def check(self, obj):
