@@ -126,14 +126,20 @@
      </item>
      <item row="4" column="2">
       <widget class="QTreeWidget" name="resource_tree">
-       <property name="rootIsDecorated">
-        <bool>true</bool>
+       <property name="editTriggers">
+        <set>QAbstractItemView::EditKeyPressed</set>
+       </property>
+       <property name="expandsOnDoubleClick">
+        <bool>false</bool>
        </property>
        <property name="columnCount">
         <number>2</number>
        </property>
        <attribute name="headerVisible">
-        <bool>false</bool>
+        <bool>true</bool>
+       </attribute>
+       <attribute name="headerMinimumSectionSize">
+        <number>200</number>
        </attribute>
        <column>
         <property name="text">
