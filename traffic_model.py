@@ -4,20 +4,41 @@ from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
 from collections import OrderedDict
 import numpy as np
 
+
 class TrafficModel(object):
     '''
     base class for traffic models
+
+    Parameter
+    ---------
+    input_config_file: String, optional
+                       name of the csv file that holds information about all
+                       input files, tables etc.
+    tables_config_file: String, optional
+                        name of the csv file that holds information about all
+                        tables and their target values
+    arrays_config_file: String, optional
+                        name of the csv file that holds information about all
+                        tables and their target values
+    columns_config_file: String, optional
+                         name of the csv file that holds information about all
+                         tablecolumns and their target values
+
     '''
+    #names of the fields that can be displayed outside the model
     monitored = OrderedDict()
 
     def __init__(self, name,
-                 input_config_file = None, tables_config_file = None,
-                 arrays_config_file = None, columns_config_file=None):
+                 input_config_file=None, tables_config_file=None,
+                 arrays_config_file=None, columns_config_file=None):
         self.name = name
+        #names of the config files containing the
+        #target status of all input data
         self.input_config_file = input_config_file
         self.tables_config_file = tables_config_file
         self.arrays_config_file = arrays_config_file
         self.columns_config_file = columns_config_file
+        #create empty tables for the target data and fill them
         self.input_table = InputTable()
         self.tables_table = TableTable()
         self.array_table = ArrayTable()
@@ -30,6 +51,7 @@ class TrafficModel(object):
             self.array_table.from_csv(self.arrays_config_file)
         if self.columns_config_file:
             self.column_table.from_csv(self.columns_config_file)
+
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
@@ -38,6 +60,9 @@ class TrafficModel(object):
         pass
 
     def update(self, path):
+        '''
+        update all resources in the given project path
+        '''
         for resource in self.resources.values():
             resource.update(path)
 
@@ -66,6 +91,9 @@ class TrafficModel(object):
             self.resources[resource.name] = resource
 
     def validate(self, path):
+        '''
+        validate all resources in the given project path
+        '''
         self.update(path)
         for resource in self.resources:
             resource.validate()
@@ -101,10 +129,23 @@ class TrafficModel(object):
                     self.add_resources(resource)
 
     def create_H5ArrayNode(self, res_name, node_name):
+        '''
+        create a resource array node
+
+        Parameter
+        ---------
+        res_name: String, name of the resource the node belongs to
+        node_name: String, the name the node will get
+
+        Return
+        ------
+        node: H5Array, the new node with all target values and rules
+              (as defined in the array config)
+        '''
         node = H5Array(node_name)
         if self.array_table.row_count > 0:
-            rows = self.array_table.get_rows_by_entries(resource_name=res_name,
-                                                   subdivision=node_name)
+            rows = self.array_table.get_rows_by_entries(
+                resource_name=res_name, subdivision=node_name)
             if rows.row_count > 1:
                 raise Exception('{}{} defined more than once in {}'.format(
                     res_name, node_name, self.arrays_config_file))
@@ -118,7 +159,7 @@ class TrafficModel(object):
                     else:
                         reference = self
                     min_rule = CompareRule('min_value', '>=', minimum,
-                                    reference=reference)
+                                           reference=reference)
                     node.add_rule(min_rule)
                 if maximum != '':
                     if is_number(maximum):
@@ -126,17 +167,30 @@ class TrafficModel(object):
                     else:
                         reference = self
                     max_rule = CompareRule('max_value', '<=', maximum,
-                                    reference=reference)
+                                           reference=reference)
                     node.add_rule(max_rule)
                 if (np.array(dimension) != '').any():
                     if len(dimension) == 1:
                         dimension = dimension[0]
                     dim_rule = CompareRule('shape', '==', dimension,
-                                    reference=self)
+                                           reference=self)
                     node.add_rule(dim_rule)
         return node
 
     def create_H5TableNode(self, res_name, node_name):
+        '''
+        create a resource table node
+
+        Parameter
+        ---------
+        res_name: String, name of the resource the node belongs to
+        node_name: String, the name the node will get
+
+        Return
+        ------
+        node: H5Array, the new node with all target values, rules and columns
+              (as defined in the array config)
+        '''
         node = H5Table(node_name)
         if self.tables_table.row_count > 0:
             rows = self.tables_table.get_rows_by_entries(
@@ -159,6 +213,7 @@ class TrafficModel(object):
                 minima = table_cols['minimum']
                 maxima = table_cols['maximum']
                 primaries = table_cols['is_primary_key']
+                #add the columns with their rules
                 for row in xrange(table_cols.row_count):
                     col_name = col_names[row]
                     dtype = dtypes[row]
@@ -194,6 +249,14 @@ class TrafficModel(object):
 
     @property
     def characteristics(self):
+        '''
+        create a dictionary out of the monitored attributes
+
+        Return
+        ------
+        characteristics: OrderedDict, contains information about the monitored
+                         attributes
+        '''
         characteristics = OrderedDict()
         for i, attr in enumerate(self.monitored):
             value = getattr(self, attr)
@@ -201,39 +264,47 @@ class TrafficModel(object):
             characteristics[pretty_name] = value
         return characteristics
 
+
 def is_number(s):
+    '''
+    check if String represents a number
+    '''
     try:
         float(s)
         return True
     except ValueError:
         return False
 
-class Maxem(TrafficModel):
 
-    DEFAULT_SUBFOLDER = 'Maxem'
+class Maxem(TrafficModel):
+    '''
+    Maxem traffic model
+    '''
+
+    #names of the config files containing the target status of all input data
     INPUT_CONFIG_FILE = 'Maxem_input.csv'
     TABLES_CONFIG_FILE = 'Maxem_tables.csv'
     ARRAYS_CONFIG_FILE = 'Maxem_arrays.csv'
     COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
 
+    #names of the fields that can be displayed outside the model
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
                              ('n_time_series', 'Anzahl Zeitscheiben'),
                              ('n_activity_pairs', 'Aktivitaetenpaare'),
                              ('activity_names', 'Aktivitaeten'),
                              ('activity_codes', 'Aktivitaetencodes')])
 
-    def __init__(self, path=None, parent=None):
+    def __init__(self, path=None):
         super(Maxem, self).__init__(
             'Maxem',
-            input_config_file = self.INPUT_CONFIG_FILE,
-            tables_config_file = self.TABLES_CONFIG_FILE,
-            arrays_config_file = self.ARRAYS_CONFIG_FILE,
-            columns_config_file = self.COLUMNS_CONFIG_FILE)
+            input_config_file=self.INPUT_CONFIG_FILE,
+            tables_config_file=self.TABLES_CONFIG_FILE,
+            arrays_config_file=self.ARRAYS_CONFIG_FILE,
+            columns_config_file=self.COLUMNS_CONFIG_FILE)
 
-        self.subfolder = self.DEFAULT_SUBFOLDER
         self.read_config()
 
-        ####special rules#####
+        ####special rules for the maxem model#####
 
         #track the activities
         activities = self.resources['Params'].get_child('activities')
@@ -242,7 +313,7 @@ class Maxem(TrafficModel):
 
         attraction = self.resources['Zonen'].get_child('attraction')
         activity_track = ActivityTracking('column_names', 'ZP_?',
-                                       'activity_codes', reference=self)
+                                          'activity_codes', reference=self)
         attraction.add_rule(activity_track)
 
         activity_kf = self.resources['Zonen'].get_child('activity_kf')
@@ -299,13 +370,29 @@ class Maxem(TrafficModel):
 
 
 class ActivityTracking(Rule):
+    '''
+    special rule to determine if the activity codes are represented in
+    a table
 
-    def __init__(self, field_name, identifier, value, reference):
+    Parameter
+    --------
+    field_name: String, name of the field that contains the column names
+    identifier: String, common name of the columns, the ? will be replaced
+                with the activity code
+    referenced_field: String, name of the field of the referenced object that
+                      holds the activities
+    reference: object, the object that holds the activities
+    '''
+
+    def __init__(self, field_name, identifier, referenced_field, reference):
         self.identifier = identifier
-        super(ActivityTracking, self).__init__(field_name, value,
-                                            self.is_in, reference)
+        super(ActivityTracking, self).__init__(field_name, referenced_field,
+                                               self.is_in, reference=reference)
 
     def is_in(self, column_names, activity_list):
+        '''
+        check if activity is represented in the columns
+        '''
         #make activity list iterable (e.g. if only one activity)
         if not hasattr(activity_list, '__iter__'):
             activity_list = [activity_list]

@@ -19,7 +19,15 @@ DEFAULT_MESSAGES = ['', 'gefunden', 'ueberprueft',
 
 class Resource(object):
     '''
-    base class for resource files and their subdivisions
+    base class for resource files and their subdivisions, may have further
+    subdivisions of this resource as children
+
+    important: represents the target resources as needed by the traffic models,
+    actual status will be verified by updating and validating all resources
+
+    Parameter
+    ---------
+    name: String, the name this resource gets
     '''
     #dictionary for monitored attributes
     monitored = OrderedDict()
@@ -34,26 +42,44 @@ class Resource(object):
                                  for k, v in self.monitored.items()}
 
     def add_child(self, child):
+        '''
+        add a child resource
+        '''
         self.children.append(child)
         self.status_flags[child.name] = (NOT_CHECKED,
                                          DEFAULT_MESSAGES[NOT_CHECKED])
 
     def get_child(self, name):
+        '''
+        get a child resource by name, return None if not found
+        '''
         for child in self.children:
             if child.name == name:
                 return child
         return None
 
     def add_rule(self, rule):
+        '''
+        add a rule to this resource
+        '''
         self.rules.append(rule)
 
     def update(self, path):
+        '''
+        update the resource and all of its children recursive
+        in the given project path
+        '''
         self.clear_status()
         for child in self.children:
             child.update(path)
         self.set_overall_status()
 
     def set_overall_status(self):
+        '''
+        calculate and set the status of this resource by checking the
+        status of its children, the highest status will be taken
+        (ascending hierarchical order of status)
+        '''
         status = (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
         for flag in self.status_flags.values():
             if not isinstance(flag, tuple):
@@ -72,19 +98,21 @@ class Resource(object):
         '''
         dictionary with pretty attributes as keys and a tuple as values
         with the actual value, a message and a status flag
+        can be nested if there are child resources, their status will
+        appear instead of the message
 
         Return
         ------
         attributes: dict,
-                    attribute names as keys
-                    (name of attribute, message, statusflag) as values
+                    attribute names as keys, tuple (name of attribute, message
+                    or child status, statusflag) as values
         '''
 
         status = OrderedDict()
         attributes = OrderedDict()
         #add the status of the monitored attributes
         for i, attr in enumerate(self.monitored):
-            value = getattr(self, attr)
+            target = getattr(self, attr)
             pretty_name = self.monitored[attr]
             status_flag = self.status_flags[attr]
             if isinstance(status_flag, tuple):
@@ -92,7 +120,7 @@ class Resource(object):
                 status_flag = status_flag[0]
             else:
                 message = DEFAULT_MESSAGES[status_flag]
-            attr_tuple = (value, message, status_flag)
+            attr_tuple = (target, message, status_flag)
             attributes[pretty_name] = attr_tuple
         #add the status of the children
         for child in self.children:
@@ -116,6 +144,9 @@ class Resource(object):
             return False
 
     def validate(self, path):
+        '''
+        validate the resource and set the status
+        '''
         self.update(path)
         #only check rules if successfully loaded, removed
         if self.overall_status[0] != NOT_FOUND:
@@ -123,16 +154,24 @@ class Resource(object):
         self.set_overall_status()
 
     def _validate(self, path):
+        '''
+        recursive validation of the children by checking the rules,
+        set the status according to the results of the check of the rules
+        '''
         for rule in self.rules:
             is_valid, message = rule.check(self)
             if not is_valid:
                 self.status_flags[rule.field_name] = (MISMATCH, message)
             else:
-                self.status_flags[rule.field_name] = (CHECKED_AND_VALID, message)
+                self.status_flags[rule.field_name] = (CHECKED_AND_VALID,
+                                                      message)
         for child in self.children:
             child._validate(path)
 
     def clear_status(self):
+        '''
+        reset the status flags of the resource and its children recursive
+        '''
         self.overall_status = NOT_CHECKED
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
                                  for k, v in self.monitored.items()}
@@ -151,6 +190,8 @@ class ResourceFile(Resource):
           the name of the resource
     category: String, optional
               the category of the resource (e.g. matrices)
+    subfolder: String, optional
+               the subfolder the file is in
     file_name: String, optional
                the name of the resource file
     file_path: String, optional
@@ -161,19 +202,17 @@ class ResourceFile(Resource):
                              ('file_modified', 'Datum')])
 
     def __init__(self, name, subfolder='', category=None,
-                 file_name=None, do_show=True):
+                 file_name=None):
         self.monitored.update(super(ResourceFile, self).monitored)
         super(ResourceFile, self).__init__(name)
         self.subfolder = subfolder
         self.file_name = file_name
-        #category is the folder as it is displayed later
-        if do_show:
-            if category is None:
-                category = self.subfolder
-            self.category = category
         self.file_modified = ''
 
     def set_source(self, file_name, subfolder):
+        '''
+        set the filename and the subpath of the resource
+        '''
         self.file_name = file_name
         self.subfolder = subfolder
 
@@ -202,17 +241,28 @@ class ResourceFile(Resource):
 
 class H5Resource(ResourceFile):
     '''
+    Resource holding information about a HDF5 resource file
 
+    Parameters
+    ----------
+    name: String,
+          the name the resource gets
+    subfolder: String, optional
+               the subfolder the file is in
+    category: String, optional
+              the category of the resource (e.g. matrices)
+    file_name: String, optional
+               the name of the h5 resource file
     '''
     def __init__(self, name, subfolder='', category=None,
-                 file_name=None, do_show=True):
+                 file_name=None):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder, category=category,
-            file_name=file_name, do_show=do_show)
+            file_name=file_name)
 
     def update(self, path):
         '''
-        reads and sets the attributes of all set tables
+        reads and sets the attributes of all child nodes
 
         Parameter
         ---------
@@ -237,6 +287,13 @@ class H5Resource(ResourceFile):
 
 
 class H5Node(Resource):
+    '''
+    Resource holding information about a node inside HDF5 resource file
+
+    Parameter
+    ---------
+    table_path: path of the table inside the h5 file
+    '''
     monitored = OrderedDict([('table_path', 'Pfad'),
                              ('shape', 'Dimension')])
 
@@ -252,6 +309,14 @@ class H5Node(Resource):
         return "H5Node {} - {}".format(self.name, self.table_path)
 
     def update(self, h5_in):
+        '''
+        read and set the attributes of this node
+
+        Parameter
+        ---------
+        path: String, name of the working directory,
+                      where the file is in (without subfolder)
+        '''
         table = h5_in.get_table(self.table_path)
         if not table:
             self.status_flags['table_path'] = NOT_FOUND
@@ -263,6 +328,10 @@ class H5Node(Resource):
 
     @property
     def status(self):
+        '''
+        adds a pretty representation of the dimension to the status gotten from
+        the base class
+        '''
         status = super(H5Node, self).status
         #pretty print the dimension (instead of tuple (a, b, c) 'a x b x c')
         if self.shape is not None:
@@ -276,6 +345,13 @@ class H5Node(Resource):
         return status
 
 class H5Table(H5Node):
+    '''
+    Resource holding information about a table inside a HDF5 resource file
+
+    Parameter
+    ---------
+    table_path: path of the table inside the h5 file
+    '''
     monitored = OrderedDict([('column_names', 'Spalten')])
 
     def __init__(self, table_path):
@@ -289,6 +365,14 @@ class H5Table(H5Node):
         return "H5Table {} - {}".format(self.name, self.table_path)
 
     def update(self, h5_in):
+        '''
+        read and set the attributes of the child columns
+
+        Parameter
+        ---------
+        path: String, name of the working directory,
+                      where the file is in (without subfolder)
+        '''
         table = super(H5Table, self).update(h5_in)
         if table is not None:
             for child in self.children:
@@ -296,6 +380,9 @@ class H5Table(H5Node):
 
     @property
     def column_names(self):
+        '''
+        return the names of all child columns
+        '''
         column_names = []
         for col in self.children:
             column_names.append(col.name)
@@ -304,10 +391,14 @@ class H5Table(H5Node):
 
 class H5TableColumn(Resource):
     '''
+    Resource holding information about a table inside a HDF5 resource file
 
     Parameter
     ---------
-
+    name: the name the column gets
+    primary_key: bool, optional
+                 if True the column is assumed to contain only unique values
+                 will be checked at update
     track_content: bool, optional
                    if True the content of the table will be saved in the
                    attribute self.content with every update
@@ -327,6 +418,11 @@ class H5TableColumn(Resource):
         self.content = None
 
     def update(self, table):
+        '''
+        look for the column in the given table, the success will be shown
+        by the dtype flag
+        check for uniqueness of primary keys
+        '''
         if self.name not in table.dtype.names:
             self.status_flags['dtype'] = NOT_FOUND
         else:
@@ -344,6 +440,13 @@ class H5TableColumn(Resource):
                 self.content = list(col)
 
 class H5Array(H5Node):
+    '''
+    Resource holding information about an array inside a HDF5 resource file
+
+    Parameter
+    ---------
+    table_path: path of the array inside the h5 file
+    '''
     monitored = OrderedDict([('min_value', 'Minimalwert'),
                              ('max_value', 'Maximalwert')])
 
@@ -362,40 +465,68 @@ class H5Array(H5Node):
         return "H5Array {} - {}".format(self.name, self.table_path)
 
     def update(self, h5_in):
+        '''
+        add the minima/maxima
+        '''
         table = super(H5Array, self).update(h5_in)
         if table is not None:
             self.max_value = table.max()
             self.min_value = table.min()
 
 class Rule(object):
+    '''
+    monitor a field (by name), not bound to a specific object,
+    the given function determines if a given target is reached,
+    target values may be referenced to another object (then the fields
+    that should be taken from the referenced object have
+    to appear as strings in the target_value)
+
+    Parameter
+    ---------
+    field_name: String,
+                the name of the field that will be monitored, contains
+                the actual value
+    function: monitoring method that will be applied to the monitored field
+              has to look like: function(actual_value, target_value)
+    target: String or list of Strings,
+            the target value(s) that the monitored
+            field will be tested to, wildcards ('' and '*') will be ignored
+    reference: object, optional
+               a referenced object, if set all strings in target with a
+               field name will be taken from this referenced object
+    '''
     wildcards = ['*', '']
 
-    def __init__(self, field_name, value, function, reference=None):
+    def __init__(self, field_name, target_value,
+                 function, reference=None):
         self.reference = reference
         self.function = function
         self.field_name = field_name
-        if isinstance(value, str) and is_number(value):
-            value = float(value)
-            if value % 1 == 0:
-                value = int(value)
-        self._value = value
+        #cast represented number in target values to float or int
+        if isinstance(target_value, str) and is_number(target_value):
+            target_value = float(target_value)
+            if target_value % 1 == 0:
+                target_value = int(target_value)
+        self._target = target_value
 
     @property
-    def value(self):
+    def target(self):
         '''
-        if referenced:
-        get the fields from the referenced object and return it's value
+        return the targeted values
+
+        if referenced: strings in target representing a referenced field name
+        will be replaced by the actual values of the field
         '''
         #copy needed (otherwise side effect is caused)
-        value = copy.copy(self._value)
-        ref_value = []
-        former_type = value.__class__
+        target = copy.copy(self._target)
+        ref_target = []
+        former_type = target.__class__
         cast = False
         #look if value is iterable (like lists, arrays, tuples)
-        if not hasattr(value, '__iter__'):
-            value = [value]
+        if not hasattr(target, '__iter__'):
+            target = [target]
         #iterate over the values
-        for i, val in enumerate(value):
+        for i, val in enumerate(target):
             #ignore wildcards
             if val not in self.wildcards:
                 #strings may be references to a field
@@ -412,24 +543,36 @@ class Rule(object):
                     val = float(val)
                     if val % 1 == 0:
                         val = int(val)
-            ref_value.append(val)
+            ref_target.append(val)
         #cast back if list is unnecessary
-        if len(ref_value) == 1:
-            ref_value = ref_value[0]
-        return ref_value
+        if len(ref_target) == 1:
+            ref_target = ref_target[0]
+        return ref_target
 
     def check(self, obj):
-        if self.__class__.__name__ == 'ActivityTrack':
-            print
+        '''
+        check if defined rule is met
 
-        #get the field of the object
+        Parameter
+        ---------
+        obj: object,
+             the object holding the monitored field
+
+        Return
+        ------
+        result: bool,
+                True if rule is met, False else
+        message: String,
+                 details of the check
+        '''
+        #get the field of the given object
         if not hasattr(obj, self.field_name):
             raise Exception('The object {} does not own a field {}'
                             .format(obj, self.field_name))
         attr_value = getattr(obj, self.field_name)
         #wrap all values with a list (if they are not already)
-        value = self.value
-        result = self.function(attr_value, value)
+        target = self.target
+        result = self.function(attr_value, target)
         #check if there is a message sent with, if not, append default messages
         if isinstance(result, tuple):
             message = result[1]
@@ -448,6 +591,9 @@ class DtypeRule(object):
 
 
 def is_number(s):
+    '''
+    check if String represents a number
+    '''
     if isinstance(s, list) or isinstance(s, tuple) or s is None:
         return False
     try:
@@ -470,6 +616,24 @@ def is_in_list(self, left_list, right_list):
     return True
 
 class CompareRule(Rule):
+    '''
+    compare the actual value of a monitored field
+    with a target value (may be referenced)
+    possible operators: '>', '>=', '=>', '<', '=<', '<=', '==', '!='
+
+    Parameter
+    ---------
+    field_name: String,
+                the name of the field that will be checked
+    operator: String,
+              represents the compare operator
+    target: String or list of Strings,
+            the target value(s) that the monitored
+            field will be tested to, wildcards ('' and '*') will be ignored
+    reference: object, optional
+               a referenced object, if set all strings in 'value' with a
+               field name will be taken from this referenced object
+    '''
     mapping = {'>': op.gt,
                '>=': op.ge,
                '=>': op.ge,
@@ -480,12 +644,15 @@ class CompareRule(Rule):
                '!=': op.ne
                }
 
-    def __init__(self, field_name, operator, value, reference=None):
-        super(CompareRule, self).__init__(field_name, value,
+    def __init__(self, field_name, operator, target, reference=None):
+        super(CompareRule, self).__init__(field_name, target,
                                           self.compare, reference)
         self.operator = operator
 
     def compare(self, left, right):
+        '''
+        compare two values (or lists of values)
+        '''
         operator = self.mapping[self.operator]
         #make both values iterable
         if not hasattr(left, '__iter__'):

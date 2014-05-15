@@ -160,6 +160,9 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         self.show()
 
     def browse_folder(self):
+        '''
+        open a file browser to set the project name and folder
+        '''
         folder = str(
             QtGui.QFileDialog.getExistingDirectory(
                 self, 'Projektverzeichnis wählen', '.'))
@@ -220,6 +223,9 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.show()
 
     def changeModel(self, name):
+        '''
+        change the traffic model
+        '''
         self.node.set_model(str(name))
         self.value_changed.emit()
 
@@ -260,10 +266,16 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         self.show()
 
     def update(self):
+        '''
+        update the project view if sth was changed
+        '''
         self.node.project_folder = (str(self.folder_edit.text()))
         self.value_changed.emit()
 
     def browse_folder(self):
+        '''
+        open a file browser to set the project folder
+        '''
         folder = str(
             QtGui.QFileDialog.getExistingDirectory(
                 self, 'Projektverzeichnis wählen', '.'))
@@ -304,8 +316,19 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.show()
 
     def show_attributes(self):
+        '''
+        show all available information of the resource node
+        (incl. all child resources)
+        '''
 
         def get_status_color(status):
+            '''
+            get a status color depending on given the status flag
+
+            Return
+            ------
+            status_color: QtGui.QColor
+            '''
             green = QtGui.QColor('green')
             red = QtGui.QColor('red')
             black = QtGui.QColor('black')
@@ -319,6 +342,9 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
             return status_color
 
         def build_tree(attr, level=0, parent=self.resource_tree):
+            '''
+            build a resource tree out of a nested dictionary and view it
+            '''
             normal = QtGui.QFont("Arial", 10-(level))
             bold = QtGui.QFont("Arial", 10-(level), QtGui.QFont.Bold)
             for key in attr:
@@ -354,20 +380,31 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         attr = self.node.resource.status
         build_tree(attr)
         self.resource_tree.resizeColumnToContents(0)
+        #update the project view
+        self.value_changed.emit()
 
     def browse_files(self):
+        '''
+        open a file browser to change the source of the resource file
+        '''
         fileinput = str(
             QtGui.QFileDialog.getOpenFileName(
-                self, 'Ressourcenatei öffnen', '.'))
+                self, 'Ressourcendatei öffnen', '.'))
         #filename is '' if aborted
         if len(fileinput) > 0:
             self.file_edit.setText(fileinput)
 
     def update(self):
+        '''
+        update the project view if sth was changed
+        '''
         self.node.set_source(str(self.file_edit.text()))
         self.value_changed.emit()
 
     def get_status(self):
+        '''
+        validate the resource files
+        '''
         self.node.resource.validate(self.node.simrun_path)
         self.show_attributes()
 
