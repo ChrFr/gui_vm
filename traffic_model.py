@@ -1,6 +1,6 @@
 from resources import (H5Array, H5Table, H5Resource,
                        CompareRule, H5TableColumn, Rule)
-from backend import (TableTable, InputTable, ArrayTable, ColumnTable)
+from resource_parser import (TableTable, InputTable, ArrayTable, ColumnTable)
 from collections import OrderedDict
 import numpy as np
 

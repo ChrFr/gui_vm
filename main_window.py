@@ -170,7 +170,6 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         if len(folder) > 0:
             self.folder_edit.setText(folder)
 
-
     @staticmethod
     def getValues(parent=None):
         dialog = NewProjectDialog(parent)
@@ -361,7 +360,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                     has_subdict = False
 
                 line = ('{name}: {value}'
-                         .format(name=key, value=val))
+                        .format(name=key, value=val))
                 status_color = get_status_color(status)
                 item = QtGui.QTreeWidgetItem(parent, [line, message])
                 item.setFont(0, font)
@@ -375,7 +374,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                     build_tree(value, level+1, parent=item)
 
         self.resource_tree.clear()
-        header=QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
+        header = QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
         self.resource_tree.setHeaderItem(header)
         attr = self.node.resource.status
         build_tree(attr)

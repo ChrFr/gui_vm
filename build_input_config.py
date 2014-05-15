@@ -1,8 +1,9 @@
 from argparse import ArgumentParser
 import os
 import numpy as np
-from backend import (H5ConfigParser, InputTable, TableTable,
-                     ArrayTable, ColumnTable, ConfigParser)
+from resource_parser import (H5ConfigParser, InputTable, TableTable,
+                             ArrayTable, ColumnTable, ConfigParser)
+
 
 def main(folder, model):
     """

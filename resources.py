@@ -39,7 +39,7 @@ class Resource(object):
         self.overall_status = NOT_CHECKED
         #add status flags for the monitored attributes
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
-                                 for k, v in self.monitored.items()}
+                             for k, v in self.monitored.items()}
 
     def add_child(self, child):
         '''
@@ -174,10 +174,9 @@ class Resource(object):
         '''
         self.overall_status = NOT_CHECKED
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
-                                 for k, v in self.monitored.items()}
+                             for k, v in self.monitored.items()}
         for child in self.children:
             child.clear_status()
-
 
 
 class ResourceFile(Resource):
@@ -344,6 +343,7 @@ class H5Node(Resource):
             status[self.name][0][self.monitored['shape']] = tuple(dim_status)
         return status
 
+
 class H5Table(H5Node):
     '''
     Resource holding information about a table inside a HDF5 resource file
@@ -439,6 +439,7 @@ class H5TableColumn(Resource):
             if self.track_content:
                 self.content = list(col)
 
+
 class H5Array(H5Node):
     '''
     Resource holding information about an array inside a HDF5 resource file
@@ -472,6 +473,7 @@ class H5Array(H5Node):
         if table is not None:
             self.max_value = table.max()
             self.min_value = table.min()
+
 
 class Rule(object):
     '''
@@ -586,6 +588,7 @@ class Rule(object):
             message += " (in '{}')".format(obj.name)
         return result, message
 
+
 class DtypeRule(object):
     pass
 
@@ -602,6 +605,7 @@ def is_number(s):
     except ValueError:
         return False
 
+
 def is_in_list(self, left_list, right_list):
     '''
     check if all elements of left list are in right list
@@ -614,6 +618,7 @@ def is_in_list(self, left_list, right_list):
         if element not in right_list:
             return False
     return True
+
 
 class CompareRule(Rule):
     '''
