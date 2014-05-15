@@ -30,11 +30,13 @@ class Resource(object):
         self.rules = []
         self.overall_status = NOT_CHECKED
         #add status flags for the monitored attributes
-        self.status_flags = {k: NOT_CHECKED for k, v in self.monitored.items()}
+        self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
+                                 for k, v in self.monitored.items()}
 
     def add_child(self, child):
         self.children.append(child)
-        self.status_flags[child.name] = NOT_CHECKED
+        self.status_flags[child.name] = (NOT_CHECKED,
+                                         DEFAULT_MESSAGES[NOT_CHECKED])
 
     def get_child(self, name):
         for child in self.children:
@@ -52,16 +54,16 @@ class Resource(object):
         self.set_overall_status()
 
     def set_overall_status(self):
-        status = NOT_CHECKED
+        status = (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
         for flag in self.status_flags.values():
-            if isinstance(flag, tuple):
-                flag = flag[0]
-            if flag > status:
+            if not isinstance(flag, tuple):
+                flag = (flag, DEFAULT_MESSAGES[flag])
+            if flag[0] > status[0]:
                 status = flag
         for child in self.children:
             child.set_overall_status()
             child_status = child.overall_status
-            if child_status > status:
+            if child_status[0] > status[0]:
                 status = child_status
         self.overall_status = status
 
@@ -94,21 +96,21 @@ class Resource(object):
             attributes[pretty_name] = attr_tuple
         #add the status of the children
         for child in self.children:
-            attributes.update(child.status)  #, '', child.overall_status)
-        status[self.name] = (attributes, DEFAULT_MESSAGES[self.overall_status],
-                             self.overall_status)
+            attributes.update(child.status)
+        status[self.name] = (attributes, self.overall_status[1],
+                             self.overall_status[0])
         return status
 
     @property
     def is_checked(self):
-        if self.overall_status > 1:
+        if self.overall_status[0] > 1:
             return True
         else:
             return False
 
     @property
     def is_valid(self):
-        if self.overall_status == 2:
+        if self.overall_status[0] == 2:
             return True
         else:
             return False
@@ -116,23 +118,24 @@ class Resource(object):
     def validate(self, path):
         self.update(path)
         #only check rules if successfully loaded, removed
-        if self.overall_status != NOT_FOUND:
+        if self.overall_status[0] != NOT_FOUND:
             self._validate(path)
         self.set_overall_status()
 
     def _validate(self, path):
         for rule in self.rules:
-            if not rule.check(self):
-                is_valid = False
-                self.status_flags[rule.field_name] = MISMATCH
+            is_valid, message = rule.check(self)
+            if not is_valid:
+                self.status_flags[rule.field_name] = (MISMATCH, message)
             else:
-                self.status_flags[rule.field_name] = CHECKED_AND_VALID
+                self.status_flags[rule.field_name] = (CHECKED_AND_VALID, message)
         for child in self.children:
             child._validate(path)
 
     def clear_status(self):
         self.overall_status = NOT_CHECKED
-        self.status_flags = {k: NOT_CHECKED for k, v in self.monitored.items()}
+        self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
+                                 for k, v in self.monitored.items()}
         for child in self.children:
             child.clear_status()
 
@@ -246,7 +249,7 @@ class H5Node(Resource):
         self.status_flags = {k: NOT_CHECKED for k, v in self.monitored.items()}
 
     def __repr__(self):
-        return 'H5Node {}'.format(self.table_path)
+        return "H5Node {} - {}".format(self.name, self.table_path)
 
     def update(self, h5_in):
         table = h5_in.get_table(self.table_path)
@@ -273,7 +276,7 @@ class H5Node(Resource):
         return status
 
 class H5Table(H5Node):
-    monitored = OrderedDict()
+    monitored = OrderedDict([('column_names', 'Spalten')])
 
     def __init__(self, table_path):
         #set dict for monitored attributes, then call super constructor
@@ -283,7 +286,7 @@ class H5Table(H5Node):
         super(H5Table, self).__init__(table_path)
 
     def __repr__(self):
-        return 'H5Table {}'.format(self.table_path)
+        return "H5Table {} - {}".format(self.name, self.table_path)
 
     def update(self, h5_in):
         table = super(H5Table, self).update(h5_in)
@@ -295,7 +298,7 @@ class H5Table(H5Node):
     def column_names(self):
         column_names = []
         for col in self.children:
-            col_names.append(col.name)
+            column_names.append(col.name)
         return column_names
 
 
@@ -356,7 +359,7 @@ class H5Array(H5Node):
         self.max_value = None
 
     def __repr__(self):
-        return 'H5Matrix {}'.format(self.table_path)
+        return "H5Array {} - {}".format(self.name, self.table_path)
 
     def update(self, h5_in):
         table = super(H5Array, self).update(h5_in)
@@ -365,6 +368,8 @@ class H5Array(H5Node):
             self.min_value = table.min()
 
 class Rule(object):
+    wildcards = ['*', '']
+
     def __init__(self, field_name, value, function, reference=None):
         self.reference = reference
         self.function = function
@@ -383,65 +388,68 @@ class Rule(object):
         '''
         #copy needed (otherwise side effect is caused)
         value = copy.copy(self._value)
-        if self.reference:
-            cast = False
-            if isinstance(value, tuple):
-                value = list(value)
-                cast = True
-            if (not isinstance(value, list)):
-                value = [value]
-                cast = True
-            for i, val in enumerate(value):
-                #ignore wildcards
-                if val in self.wildcards:
-                    continue
-                if isinstance(val, str):
-                    #look if the referenced object has a field with the name
+        ref_value = []
+        former_type = value.__class__
+        cast = False
+        #look if value is iterable (like lists, arrays, tuples)
+        if not hasattr(value, '__iter__'):
+            value = [value]
+        #iterate over the values
+        for i, val in enumerate(value):
+            #ignore wildcards
+            if val not in self.wildcards:
+                #strings may be references to a field
+                #(if there is a reference at all)
+                if self.reference is not None and isinstance(val, str):
+                    #look if the referenced object has a field with this name
+                    #and get the referenced value
                     if (self.reference is not None) and \
                        hasattr(self.reference, val):
-                        attr = getattr(self.reference, val)
-                        if attr is not None:
-                            attr = int(attr)
-                        value[i] = attr
-            if cast:
-                value = tuple(value)
-        return value
+                        field = getattr(self.reference, val)
+                        val = field
+                #cast to number if string wraps a number
+                if is_number(val):
+                    val = float(val)
+                    if val % 1 == 0:
+                        val = int(val)
+            ref_value.append(val)
+        #cast back if list is unnecessary
+        if len(ref_value) == 1:
+            ref_value = ref_value[0]
+        return ref_value
 
     def check(self, obj):
-        is_valid = True
+        if self.__class__.__name__ == 'ActivityTrack':
+            print
 
         #get the field of the object
         if not hasattr(obj, self.field_name):
             raise Exception('The object {} does not own a field {}'
                             .format(obj, self.field_name))
-        attr = getattr(obj, self.field_name)
+        attr_value = getattr(obj, self.field_name)
         #wrap all values with a list (if they are not already)
         value = self.value
-        if (not isinstance(value, list)) and (not isinstance(value, tuple)):
-            value = [value]
-        if (not isinstance(attr, list)) and (not isinstance(attr, tuple)):
-            attr = [attr]
-        if len(attr) != len(value):
-            return False
-        #compare the field of the given object with the defined value
-        for i, val in enumerate(value):
-            #ignore wildcards
-            if val in self.wildcards:
-                continue
-            #compare the value with the field of the given object
-            if not self.function(attr[i], val):
-                #check again if value is number in string
-                if isinstance(val, str) and is_number(val):
-                    val = float(val)
-                if not self.function(attr[i], val):
-                    is_valid = False
-        return is_valid
+        result = self.function(attr_value, value)
+        #check if there is a message sent with, if not, append default messages
+        if isinstance(result, tuple):
+            message = result[1]
+            result = result[0]
+        elif result:
+            message = DEFAULT_MESSAGES[CHECKED_AND_VALID]
+        else:
+            message = DEFAULT_MESSAGES[MISMATCH]
+        #append place where mismatch happened to message
+        if not result:
+            message += " (in '{}')".format(obj.name)
+        return result, message
 
 class DtypeRule(object):
     pass
 
 
 def is_number(s):
+    if isinstance(s, list) or isinstance(s, tuple) or s is None:
+        return False
     try:
         float(s)
         return True
@@ -462,7 +470,6 @@ def is_in_list(self, left_list, right_list):
     return True
 
 class CompareRule(Rule):
-    wildcards = ['*', '']
     mapping = {'>': op.gt,
                '>=': op.ge,
                '=>': op.ge,
@@ -470,11 +477,38 @@ class CompareRule(Rule):
                '=<': op.le,
                '<=': op.le,
                '==': op.eq,
-               '!=': op.ne,
-               'in': is_in_list,
+               '!=': op.ne
                }
 
     def __init__(self, field_name, operator, value, reference=None):
-        function = self.mapping[operator]
         super(CompareRule, self).__init__(field_name, value,
-                                          function, reference)
+                                          self.compare, reference)
+        self.operator = operator
+
+    def compare(self, left, right):
+        operator = self.mapping[self.operator]
+        #make both values iterable
+        if not hasattr(left, '__iter__'):
+            left = [left]
+        if not hasattr(right, '__iter__'):
+            right = [right]
+        #elementwise compare -> same number of elements needed
+        if len(right) != len(left):
+            return False
+        #compare left and right elementwise
+        for i in xrange(len(left)):
+            l = left[i]
+            r = right[i]
+            #ignore wildcards
+            if left[i] or right[i] in self.wildcards:
+                continue
+            #compare the value with the field of the given object
+            if not operator(left[i], right[i]):
+                #check again if value is number in string
+                if isinstance(l, str) and is_number(l):
+                    l = float(l)
+                if isinstance(r, str) and is_number(r):
+                    r = float(r)
+                if not operator(l, r):
+                    return False
+        return True

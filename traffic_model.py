@@ -234,12 +234,21 @@ class Maxem(TrafficModel):
         self.read_config()
 
         ####special rules#####
+
         #track the activities
         activities = self.resources['Params'].get_child('activities')
         activities.get_child('code').track_content = True
         activities.get_child('name').track_content = True
 
-        attraction = 'ZP_?'
+        attraction = self.resources['Zonen'].get_child('attraction')
+        activity_track = ActivityTracking('column_names', 'ZP_?',
+                                       'activity_codes', reference=self)
+        attraction.add_rule(activity_track)
+
+        activity_kf = self.resources['Zonen'].get_child('activity_kf')
+        activity_track = ActivityTracking('column_names', 'KF_?',
+                                          'activity_codes', reference=self)
+        activity_kf.add_rule(activity_track)
 
         if path is not None:
             self.update()
@@ -289,16 +298,21 @@ class Maxem(TrafficModel):
         pass
 
 
-class ActivityTrack(Rule):
+class ActivityTracking(Rule):
 
     def __init__(self, field_name, identifier, value, reference):
         self.identifier = identifier
+        super(ActivityTracking, self).__init__(field_name, value,
+                                            self.is_in, reference)
 
-        super(ActivityTrack, self).__init__(field_name, value,
-                                            compare, reference)
+    def is_in(self, column_names, activity_list):
+        #make activity list iterable (e.g. if only one activity)
+        if not hasattr(activity_list, '__iter__'):
+            activity_list = [activity_list]
 
-    def compare(self, left_list, activity_list):
-        pass
-
-    def check(self, obj):
-        pass
+        for activity in activity_list:
+            col_name = self.identifier
+            col_name = col_name.replace('?', activity)
+            if col_name not in column_names:
+                return False, 'Spalte {} fehlt'.format(col_name)
+        return True
