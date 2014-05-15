@@ -6,6 +6,7 @@ from resource_ui import Ui_DetailsResource
 from simrun_ui import Ui_DetailsSimRun
 from project_ui import Ui_DetailsProject
 from new_project_ui import Ui_NewProject
+from progress_ui import Ui_ProgressDialog
 from config import DEFAULT_FOLDER
 import os
 
@@ -141,16 +142,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
 class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     '''
-    display the details of a simrun node in the given layout
-    input to change the traffic model
-
-    Parameters
-    ----------
-    node: SimRun,
-          node, that contains the
-    layout: QVBoxLayout,
-            the elements showing the details are added as children of this
-            layout
+    open a dialog to set the project name and folder and afterwards create
+    a new project
     '''
 
     def __init__(self, parent):
@@ -161,7 +154,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
 
     def browse_folder(self):
         '''
-        open a file browser to set the project name and folder
+        open a file browser to set the project folder
         '''
         folder = str(
             QtGui.QFileDialog.getExistingDirectory(
@@ -305,11 +298,12 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.parent = parent
         self.parent.addWidget(self)
         self.node = node
-        self.project_copy.setText(self.node.full_source)
-        self.file_edit.setText(self.node.original_source)
+        self.project_copy.setText(str(self.node.full_source))
+        self.file_edit.setText(str(self.node.original_source))
         self.setTitle(node.name)
         self.browse_button.clicked.connect(self.browse_files)
-        self.file_edit.textChanged.connect(self.update)
+        #self.file_edit.textChanged.connect(self.update)
+        self.copy_button.clicked.connect(self.update_source)
         self.status_button.clicked.connect(self.get_status)
         self.show_attributes()
         self.show()
@@ -393,12 +387,16 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         if len(fileinput) > 0:
             self.file_edit.setText(fileinput)
 
-    def update(self):
+    def update_source(self):
         '''
-        update the project view if sth was changed
+        change the resource, copy the file
         '''
         self.node.set_source(str(self.file_edit.text()))
+        self.project_copy.setText(str(self.node.full_source))
         self.value_changed.emit()
+        dialog = CopyFilesDialog(str(self.file_edit.text()),
+                                 self.node.full_path,
+                                 parent=self)
 
     def get_status(self):
         '''
@@ -409,6 +407,75 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
 
     def __del__(self):
         pass
+
+class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
+    '''
+
+    Parameter
+    ---------
+    filenames: list of Strings,
+           filenames of the files to be copied
+    destinations: list of Strings,
+                  folders where the files shall be copied
+    '''
+
+    def __init__(self, filenames, destinations, parent=None):
+        super(CopyFilesDialog, self).__init__(parent=parent)
+        self.setupUi(self)
+        self.setMaximumHeight(420)
+        self.show()
+        if not hasattr(filenames, '__iter__'):
+            filenames = [filenames]
+        if not hasattr(destinations, '__iter__'):
+            destinations = [destinations]
+        for i in xrange(len(filenames)):
+            self.copy(filenames[i], destinations[i])
+
+    def copy(self, filename, directory, callback=None, block_size=512):
+        d, fn = os.path.split(filename)
+        status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
+            fn, directory)
+        self.log_edit.insertHtml(status_txt)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        dest_filename = os.path.join(directory, fn)
+        src = open(filename, "rb")
+        dest = open(dest_filename, "wb")
+        src_size = os.stat(filename).st_size
+        self.progress_bar.setValue(0)
+        # Start copying file
+        cur_block_pos = 0 # a running total of current position
+        while True:
+            cur_block = src.read(block_size)
+            cur_block_pos += block_size
+            progress = (float(cur_block_pos) / float(src_size) * 100)
+            self.progress_bar.setValue(progress)
+
+            # If it's the end of file
+            if not cur_block:
+                # ..write new line to prevent messing up terminal
+                sys.stderr.write('\n')
+                break
+            else:
+                # ..if not, write the block and continue
+                dest.write(cur_block)
+        #end while
+
+        # Close files
+        src.close()
+        dest.close()
+
+        # Check output file is same size as input one!
+        dest_size = os.stat(dest_filename).st_size
+
+        if dest_size != src_size:
+            raise IOError(
+                "New file-size does not match original (src: %s, dest: %s)" % (
+                src_size, dest_size)
+            )
+
+        status_txt = '{} erfolgreich kopiert<br>'.format(fn)
+        self.log_edit.insertHtml(status_txt)
 
 
 def startmain():

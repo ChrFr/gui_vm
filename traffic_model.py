@@ -110,8 +110,7 @@ class TrafficModel(object):
                 category = str(res_table['category'][0])
                 if res_table['type'][0].startswith('H5'):
                     resource = H5Resource(str(res_name),
-                                          subfolder='',
-                                          category=category,
+                                          subfolder=category,
                                           file_name='')
                     node_names = res_table['subdivision']
                     node_types = res_table['type']

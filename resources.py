@@ -200,20 +200,20 @@ class ResourceFile(Resource):
     monitored = OrderedDict([('file_name', 'Datei'),
                              ('file_modified', 'Datum')])
 
-    def __init__(self, name, subfolder='', category=None,
-                 file_name=None):
+    def __init__(self, name, subfolder='', file_name=None):
         self.monitored.update(super(ResourceFile, self).monitored)
         super(ResourceFile, self).__init__(name)
         self.subfolder = subfolder
         self.file_name = file_name
         self.file_modified = ''
 
-    def set_source(self, file_name, subfolder):
+    def set_source(self, file_name, subfolder=None):
         '''
         set the filename and the subpath of the resource
         '''
         self.file_name = file_name
-        self.subfolder = subfolder
+        if subfolder is not None:
+            self.subfolder = subfolder
 
     def update(self, path):
         '''
@@ -253,10 +253,10 @@ class H5Resource(ResourceFile):
     file_name: String, optional
                the name of the h5 resource file
     '''
-    def __init__(self, name, subfolder='', category=None,
+    def __init__(self, name, subfolder='',
                  file_name=None):
         super(H5Resource, self).__init__(
-            name, subfolder=subfolder, category=category,
+            name, subfolder=subfolder,
             file_name=file_name)
 
     def update(self, path):
@@ -273,7 +273,7 @@ class H5Resource(ResourceFile):
         successful = h5.read()
         if not successful:
             #set a flag for file not found
-            self.status_flags['file_name'] = (MISMATCH,
+            self.status_flags['file_name'] = (NOT_FOUND,
                                               'keine gueltige HDF5 Datei')
         else:
             #give child tables the opened h5 file

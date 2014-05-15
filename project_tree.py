@@ -321,14 +321,14 @@ class SimRun(ProjectTreeNode):
             res_dict = {}
             resources = self.model.resources.values()
             for resource in resources:
-                if not res_dict.has_key(resource.category):
-                    res_dict[resource.category] = []
-                res_dict[resource.category].append(resource)
+                if not res_dict.has_key(resource.subfolder):
+                    res_dict[resource.subfolder] = []
+                res_dict[resource.subfolder].append(resource)
             #add the resources needed by the traffic model, categorized
-            for category in res_dict:
-                layer_node = ProjectTreeNode(category)
+            for subfolder in res_dict:
+                layer_node = ProjectTreeNode(subfolder)
                 self.add_child(layer_node)
-                for resource in res_dict[category]:
+                for resource in res_dict[subfolder]:
                     layer_node.add_child(ResourceNode(resource.name,
                                                       resource=resource,
                                                       parent=self))
@@ -470,10 +470,6 @@ class ResourceNode(ProjectTreeNode):
                 this node will be added to it
         '''
         xml_element = super(ResourceNode, self).add_to_xml(parent)
-        #if self.resource is not None:
-            #res_type = etree.SubElement(xml_element, 'Typ')
-            #if self.resource.__class__ == H5Resource:
-                #res_type.text = 'H5'
         etree.SubElement(
             xml_element, 'Quelle').text = self.original_source
         source = self.source
@@ -508,27 +504,6 @@ class ResourceNode(ProjectTreeNode):
         if source is None:
             source = ''
         self.source = source
-        ##look if resource is already existing after initializing traffic model
-        #found = simrun.find_all(self.name)
-        #res_nodes = []
-        #for node in found:
-            #if isinstance(node, ResourceNode):
-                #res_nodes.append(node)
-        #if len(res_nodes) > 2:
-            #raise Exception('Multiple Definition of resource {}'
-                            #.format(self.name))
-        #if len(res_nodes) == 1:
-            #res_node = res_nodes[0]
-            ##set the attributes to the already existing resource
-            #res_node.original_source = self.original_source
-            #res_node.source = self.source
-            ##remove the reference to the parent to remove this resource from
-            ##the project tree (because it already exists)
-            #self.parent = None
-        #else:
-            ##resource in xml file, that is not defined by traffic model will
-            ##be added (different handling possible)
-            #self.parent.add_child(self)
 
     @property
     def model(self):
@@ -560,18 +535,24 @@ class ResourceNode(ProjectTreeNode):
         ------
         path of the resource file within the project folder
         '''
-        if self.resource is None:
-            return None
-        if self.resource.file_name is None:
+        if (self.resource is None or
+            self.resource.file_name is None or
+            self.resource.file_name == ''):
             return None
         source = os.path.join(self.resource.subfolder,
                               self.resource.file_name)
         return source
 
+    @property
+    def full_path(self):
+        return os.path.join(self.run_path, self.resource.subfolder)
+
     @source.setter
     def source(self, subpath):
         subfolder, filename = os.path.split(subpath)
-        self.resource.set_source(filename, subfolder)
+        #only set filename, because subfolder will be determined
+        #by the category
+        self.resource.set_source(filename)
         self.resource.update(self.simrun_path)
 
     @property

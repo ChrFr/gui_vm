@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'resource.ui'
 #
-# Created: Wed May 14 11:22:30 2014
+# Created: Thu May 15 19:19:04 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_DetailsResource(object):
     def setupUi(self, DetailsResource):
         DetailsResource.setObjectName(_fromUtf8("DetailsResource"))
-        DetailsResource.resize(770, 707)
+        DetailsResource.resize(803, 707)
         self.verticalLayout_2 = QtGui.QVBoxLayout(DetailsResource)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.gridLayout = QtGui.QGridLayout()
@@ -77,6 +77,10 @@ class Ui_DetailsResource(object):
         self.resource_tree.header().setVisible(True)
         self.resource_tree.header().setMinimumSectionSize(200)
         self.gridLayout.addWidget(self.resource_tree, 4, 2, 1, 1)
+        self.copy_button = QtGui.QPushButton(DetailsResource)
+        self.copy_button.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.copy_button.setObjectName(_fromUtf8("copy_button"))
+        self.gridLayout.addWidget(self.copy_button, 1, 4, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
 
         self.retranslateUi(DetailsResource)
@@ -90,4 +94,5 @@ class Ui_DetailsResource(object):
         self.browse_button.setText(_translate("DetailsResource", "...", None))
         self.status_button.setText(_translate("DetailsResource", "Status prüfen", None))
         self.label_3.setText(_translate("DetailsResource", "Details", None))
+        self.copy_button.setText(_translate("DetailsResource", "copy", None))
 
