@@ -8,9 +8,16 @@ from gui_vm.view.qt_designed.simrun_ui import Ui_DetailsSimRun
 from gui_vm.view.qt_designed.project_ui import Ui_DetailsProject
 from gui_vm.view.qt_designed.new_project_ui import Ui_NewProject
 from gui_vm.view.qt_designed.progress_ui import Ui_ProgressDialog
+from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
 from gui_vm.config.config import DEFAULT_FOLDER
 from gui_vm.model.backend import hard_copy
 import os
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
@@ -21,26 +28,107 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.project_tree = ProjectTreeModel()
         self.project_tree_view.setModel(self.project_tree)
-        #self.project_tree_view.expandAll()
         self.refresh_view()
         self.details = None
 
         #connect the buttons
-        self.plus_button.clicked.connect(self.add_run)
+        self.minus_button.clicked.connect(self.add_run)
         self.plus_button.clicked.connect(self.refresh_view)
         self.save_button.clicked.connect(self.save_project)
+        self.open_button.clicked.connect(self.load_project)
+
+        for button in self.context_button_group.children():
+            button.setEnabled(False)
 
         #connect the tool bar
         self.actionProjekt_speichern.triggered.connect(self.save_project)
         self.actionProjekt_ffnen.triggered.connect(self.load_project)
+        self.actionNeues_Szenario.triggered.connect(self.add_run)
         self.actionNeues_Projekt.triggered.connect(self.create_project)
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
         self.row_index = 0
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
-            self.row_clicked)
+            self.row_changed)
         self.project_tree.dataChanged.connect(self.refresh_view)
         self.project_changed.connect(self.refresh_view)
+        welcome = WelcomeDialog(self)
+
+    def row_changed(self, index):
+        '''
+        show details when row of project tree is clicked
+        details shown depend on type of node that is behind the clicked row
+        '''
+        node = self.project_tree_view.model().data(index, QtCore.Qt.UserRole)
+        #clicked highlighted row
+        if self.row_index == index:
+            #rename node if allowed
+            self.rename()
+        #clicked another row
+        else:
+            self.row_index = index
+            #clear the old details
+            if self.details:
+                self.details.close()
+            #reset all context dependent buttons
+            self.button_group_label.setText('')
+            for button in self.context_button_group.children():
+                button.setEnabled(False)
+                button.setToolTip('')
+                try:
+                    button.clicked.disconnect()
+                except:
+                    pass
+
+            if node.rename:
+                self.edit_button.setEnabled(True)
+                self.edit_button.clicked.connect(self.rename)
+                self.edit_button.setToolTip('Umbenennen')
+
+            #show details and set buttons depending on type of node
+            if node.__class__.__name__ == 'Project':
+                self.button_group_label.setText('Projekt bearbeiten')
+
+                self.plus_button.setEnabled(True)
+                self.plus_button.setToolTip(_fromUtf8('Szenario hinzufügen'))
+                self.plus_button.clicked.connect(self.add_run)
+
+                self.details = ProjectDetails(node, self.details_layout)
+
+            elif node.__class__.__name__ == 'SimRun':
+                self.button_group_label.setText('Szenario bearbeiten')
+
+                self.minus_button.setEnabled(True)
+                self.minus_button.setToolTip(_fromUtf8('Szenario löschen'))
+                self.minus_button.clicked.connect(self.remove_run)
+
+                self.plus_button.setEnabled(True)
+                self.plus_button.setToolTip(_fromUtf8('Szenario hinzufügen'))
+                self.plus_button.clicked.connect(self.add_run)
+
+                self.reset_button.setEnabled(True)
+                self.reset_button.clicked.connect(self.reset_simrun)
+                self.reset_button.setToolTip(
+                    _fromUtf8('Default wiederherstellen'))
+
+                self.details = SimRunDetails(node, self.details_layout)
+
+            elif node.__class__.__name__ == 'ResourceNode':
+                self.button_group_label.setText('Ressource bearbeiten')
+
+                self.minus_button.setEnabled(True)
+                self.minus_button.setToolTip(_fromUtf8('Ressource löschen'))
+                self.minus_button.clicked.connect(self.remove_resource)
+
+                self.reset_button.setEnabled(True)
+                self.reset_button.clicked.connect(self.reset_resource)
+                self.reset_button.setToolTip(
+                    _fromUtf8('Default wiederherstellen'))
+
+                self.details = ResourceDetails(node, self.details_layout)
+
+            if self.details:
+                self.details.value_changed.connect(self.refresh_view)
 
     def add_run(self):
         project = self.project_tree.project
@@ -53,13 +141,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             project.add_run(model='Maxem', name=name)
             self.refresh_view()
 
+    def remove_run(self):
+        node_name = self.project_tree_view.model().data(
+            self.row_index, QtCore.Qt.UserRole).name
+        project = self.project_tree.project.remove_run(node_name)
+        self.project_changed.emit()
+
     def create_project(self):
         '''
         create a new project
+        return True if new project was created
         '''
         project_name, project_folder, ok = NewProjectDialog.getValues()
         if ok:
-            self.project_tree = ProjectTreeModel(name=project_name)
+            self.project_tree.create_project(project_name)
             self.project_tree.project.project_folder = project_folder
             self.project_tree_view.setModel(self.project_tree)
             self.refresh_view()
@@ -67,14 +162,18 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             root_index = self.project_tree.createIndex(
                 0, 0, self.project_tree.project)
             self.project_tree_view.setCurrentIndex(root_index)
-            self.row_clicked(root_index)
+            self.row_changed(root_index)
+            return True
+        else:
+            return False
 
     def load_project(self):
         '''
         load a project
+        return True if project was loaded
         '''
         fileinput = str(QtGui.QFileDialog.getOpenFileName(
-            self, 'Projekt öffnen', '.', '*.xml'))
+            self, _fromUtf8('Projekt öffnen'), '.', '*.xml'))
         if len(fileinput) > 0:
             self.project_tree.read_project(fileinput)
             self.refresh_view()
@@ -82,7 +181,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             root_index = self.project_tree.createIndex(
                 0, 0, self.project_tree.project)
             self.project_tree_view.setCurrentIndex(root_index)
-            self.row_clicked(root_index)
+            self.row_changed(root_index)
+            return True
+        else:
+            return False
 
     def save_project(self):
         '''
@@ -90,7 +192,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         '''
         filename = str(QtGui.QFileDialog.getSaveFileName(
             self, 'Projekt speichern', '.', '*.xml'))
-        #filename is '' if aborted
+        #filename is '' if aborted (file dialog returns no status)
         if len(filename) > 0:
             #get first project (by now only 1 project is displayed)
             #need to change, if there are more
@@ -109,37 +211,42 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                             .columnCount(QtCore.QModelIndex())):
             self.project_tree_view.resizeColumnToContents(column)
 
-    def row_clicked(self, index):
+    def rename(self):
+        node = self.project_tree_view.model().data(self.row_index,
+                                                   QtCore.Qt.UserRole)
+        if node.rename:
+            text, ok = QtGui.QInputDialog.getText(
+                self, 'Umbenennen', 'Neuen Namen eingeben:',
+                QtGui.QLineEdit.Normal, node.name)
+            if ok:
+                node.name = str(text)
+                self.project_changed.emit()
+
+    def remove_resource(self):
+        pass
+
+    def reset_simrun(self, node):
         '''
-        show details when row of project tree is clicked
-        details shown depend on type of node that is behind the clicked row
+        set the simrun to default, copy all files from the default folder
+        to the project/scenario folder and link the project tree to those
+        files
         '''
-        node = self.project_tree_view.model().data(index, QtCore.Qt.UserRole)
-        #clicked highlighted row
-        if self.row_index == index:
-            #rename node if allowed
-            if node.rename:
-                text, ok = QtGui.QInputDialog.getText(
-                    self, 'Umbenennen', 'Neuen Namen eingeben:',
-                    QtGui.QLineEdit.Normal, node.name)
-                if ok:
-                    node.name = str(text)
-                    self.project_changed.emit()
-        #clicked another row
-        else:
-            self.row_index = index
-            #clear the old details
-            if self.details:
-                self.details.close()
-            #show details depending on type of node
-            if node.__class__.__name__ == 'Project':
-                self.details = ProjectDetails(node, self.details_layout)
-            elif node.__class__.__name__ == 'SimRun':
-                self.details = SimRunDetails(node, self.details_layout)
-            elif node.__class__.__name__ == 'ResourceNode':
-                self.details = ResourceDetails(node, self.details_layout)
-            if self.details:
-                self.details.value_changed.connect(self.refresh_view)
+        node = self.project_tree_view.model().data(self.row_index,
+                                                   QtCore.Qt.UserRole)
+        model_name = node.model.name
+        model_default_folder = os.path.join(DEFAULT_FOLDER, model_name)
+        default_project_file = os.path.join(model_default_folder,
+                                            'default.xml')
+        default_project = ProjectTreeModel()
+        default_project.read_project(default_project_file)
+        default_model = default_project.root.find_all(model_name)[0]
+        resource_nodes = default_model.find_all_by_classname('ResourceNode')
+        for res_node in resource_nodes:
+            res_name = res_node.name
+            #node = self.project_tree.f
+
+    def reset_resource(self):
+        pass
 
 
 class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
@@ -148,8 +255,8 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     a new project
     '''
 
-    def __init__(self, parent):
-        super(NewProjectDialog, self).__init__()
+    def __init__(self, parent=None):
+        super(NewProjectDialog, self).__init__(parent)
         self.setupUi(self)
         self.folder_browse_button.clicked.connect(self.browse_folder)
         self.show()
@@ -158,7 +265,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         '''
         open a file browser to set the project folder
         '''
-        folder = str(
+        folder, ok = str(
             QtGui.QFileDialog.getExistingDirectory(
                 self, 'Projektverzeichnis wählen', '.'))
         #filename is '' if aborted
@@ -166,12 +273,47 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             self.folder_edit.setText(folder)
 
     @staticmethod
-    def getValues(parent=None):
-        dialog = NewProjectDialog(parent)
+    def getValues():
+        dialog = NewProjectDialog()
         ok = dialog.exec_()
         project_name = str(dialog.project_edit.text())
         project_folder = str(dialog.folder_edit.text())
-        return (project_name, project_folder, ok == QtGui.QDialog.Accepted)
+        if ok == QtGui.QDialog.Accepted:
+            if os.path.exists(project_folder):
+                return (project_name, project_folder,
+                        True)
+            else:
+                QtGui.QMessageBox.about(
+                    dialog, "Warnung!", "Verzeichnis {} existiert nicht!"
+                    .format(project_folder))
+        return (project_name, project_folder, False)
+
+
+class WelcomeDialog(QtGui.QDialog, Ui_Welcome):
+    '''
+    open a dialog to set the project name and folder and afterwards create
+    a new project
+    '''
+
+    def __init__(self, parent):
+        super(WelcomeDialog, self).__init__(parent=parent)
+        self.parent = parent
+        self.setupUi(self)
+        self.exit_button.clicked.connect(QtGui.qApp.quit)
+        self.open_button.clicked.connect(self.load_project)
+        self.new_button.clicked.connect(self.create_project)
+        self.cancel_button.clicked.connect(self.close)
+        self.show()
+
+    def load_project(self):
+        loaded = self.parent.load_project()
+        if loaded:
+            self.close()
+
+    def create_project(self):
+        created = self.parent.create_project()
+        if created:
+            self.close()
 
 
 class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
@@ -383,7 +525,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         fileinput = str(
             QtGui.QFileDialog.getOpenFileName(
-                self, 'Ressourcendatei öffnen', DEFAULT_FOLDER))
+                self, _fromUtf8('Ressourcendatei öffnen'), DEFAULT_FOLDER))
         #filename is '' if aborted
         if len(fileinput) > 0:
             self.file_edit.setText(fileinput)

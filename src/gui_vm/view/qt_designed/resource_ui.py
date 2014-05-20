@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'resource.ui'
 #
-# Created: Tue May 20 12:19:41 2014
+# Created: Tue May 20 18:37:10 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -77,6 +77,20 @@ class Ui_DetailsResource(object):
         self.resource_tree.header().setVisible(True)
         self.resource_tree.header().setMinimumSectionSize(200)
         self.gridLayout.addWidget(self.resource_tree, 4, 2, 1, 1)
+        self.remove_button = QtGui.QToolButton(DetailsResource)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.remove_button.sizePolicy().hasHeightForWidth())
+        self.remove_button.setSizePolicy(sizePolicy)
+        self.remove_button.setMinimumSize(QtCore.QSize(0, 0))
+        self.remove_button.setMaximumSize(QtCore.QSize(25, 25))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/minus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.remove_button.setIcon(icon)
+        self.remove_button.setIconSize(QtCore.QSize(30, 30))
+        self.remove_button.setObjectName(_fromUtf8("remove_button"))
+        self.gridLayout.addWidget(self.remove_button, 0, 3, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
 
         self.retranslateUi(DetailsResource)
@@ -90,4 +104,7 @@ class Ui_DetailsResource(object):
         self.label.setText(_translate("DetailsResource", "Quelle", None))
         self.label_2.setText(_translate("DetailsResource", "Projektdatei", None))
         self.label_3.setText(_translate("DetailsResource", "Details", None))
+        self.remove_button.setToolTip(_translate("DetailsResource", "Projektdatei entfernen", None))
+        self.remove_button.setText(_translate("DetailsResource", "...", None))
 
+import gui_rc

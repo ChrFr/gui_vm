@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_project.ui'
 #
-# Created: Tue May 20 12:19:41 2014
+# Created: Tue May 20 18:37:10 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,27 +38,31 @@ class Ui_NewProject(object):
         NewProject.setModal(True)
         self.gridLayout = QtGui.QGridLayout(NewProject)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.label_2 = QtGui.QLabel(NewProject)
-        self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
-        self.project_edit = QtGui.QLineEdit(NewProject)
-        self.project_edit.setObjectName(_fromUtf8("project_edit"))
-        self.gridLayout.addWidget(self.project_edit, 0, 1, 1, 1)
         self.label = QtGui.QLabel(NewProject)
         self.label.setObjectName(_fromUtf8("label"))
-        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
+        self.project_edit = QtGui.QLineEdit(NewProject)
+        self.project_edit.setObjectName(_fromUtf8("project_edit"))
+        self.gridLayout.addWidget(self.project_edit, 1, 1, 1, 1)
         self.folder_edit = QtGui.QLineEdit(NewProject)
         self.folder_edit.setObjectName(_fromUtf8("folder_edit"))
-        self.gridLayout.addWidget(self.folder_edit, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.folder_edit, 2, 1, 1, 1)
+        self.label_2 = QtGui.QLabel(NewProject)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
         self.folder_browse_button = QtGui.QPushButton(NewProject)
         self.folder_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
         self.folder_browse_button.setObjectName(_fromUtf8("folder_browse_button"))
-        self.gridLayout.addWidget(self.folder_browse_button, 1, 2, 1, 1)
+        self.gridLayout.addWidget(self.folder_browse_button, 2, 2, 1, 1)
         self.buttonBox = QtGui.QDialogButtonBox(NewProject)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
-        self.gridLayout.addWidget(self.buttonBox, 2, 0, 1, 2)
+        self.gridLayout.addWidget(self.buttonBox, 4, 0, 1, 2)
+        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.gridLayout.addItem(spacerItem, 0, 1, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.gridLayout.addItem(spacerItem1, 3, 1, 1, 1)
 
         self.retranslateUi(NewProject)
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), NewProject.accept)
@@ -67,8 +71,8 @@ class Ui_NewProject(object):
 
     def retranslateUi(self, NewProject):
         NewProject.setWindowTitle(_translate("NewProject", "Neues Projekt", None))
-        self.label_2.setText(_translate("NewProject", "Projektname", None))
-        self.project_edit.setText(_translate("NewProject", "Neues Projekt", None))
         self.label.setText(_translate("NewProject", "Projektordner", None))
+        self.project_edit.setText(_translate("NewProject", "Neues Projekt", None))
+        self.label_2.setText(_translate("NewProject", "Projektname", None))
         self.folder_browse_button.setText(_translate("NewProject", "...", None))
 

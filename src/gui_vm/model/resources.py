@@ -269,20 +269,21 @@ class H5Resource(ResourceFile):
                       where the file is in (without subfolder)
         '''
         super(H5Resource, self).update(path)
-        h5 = HDF5(os.path.join(path, self.subfolder, self.file_name))
-        successful = h5.read()
-        if not successful:
-            #set a flag for file not found
-            self.status_flags['file_name'] = (NOT_FOUND,
-                                              'keine gueltige HDF5 Datei')
-        else:
-            #give child tables the opened h5 file
-            #to avoid multiple readings of the same file
-            for child in self.children:
-                child.update(h5)
+        if self.status_flags['file_name'] == FOUND:
+            h5 = HDF5(os.path.join(path, self.subfolder, self.file_name))
+            successful = h5.read()
+            if not successful:
+                #set a flag for file not found
+                self.status_flags['file_name'] = (NOT_FOUND,
+                                                  'keine gueltige HDF5 Datei')
+            else:
+                #give child tables the opened h5 file
+                #to avoid multiple readings of the same file
+                for child in self.children:
+                    child.update(h5)
+            #close file
+            del(h5)
         self.set_overall_status()
-        #close file
-        del(h5)
 
 
 class H5Node(Resource):

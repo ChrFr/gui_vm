@@ -4,12 +4,9 @@ from gui_vm.model.project_tree import (Project, ProjectTreeNode,
 
 
 class ProjectTreeModel(QtCore.QAbstractItemModel):
-    def __init__(self, name=None, filename=None, parent=None):
+    def __init__(self, parent=None):
         super(ProjectTreeModel, self).__init__(parent)
         self.root = ProjectTreeNode('root')
-        if name is None:
-            name = 'Neues Projekt'
-        self.root.add_child(Project(name, filename))
         self.header = ('Projektbrowser', 'Details')
 
     @property
@@ -31,6 +28,11 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
 
     def write_project(self, filename):
         XMLParser.write_xml(self.project, filename)
+
+    def create_project(self, name):
+        if name is None:
+            name = 'Neues Projekt'
+        self.root.add_child(Project(name))
 
     def read_project(self, filename):
         self.root = XMLParser.read_xml('root', filename)
@@ -165,7 +167,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         #return True
 
 
-    #def removeRow(self, row, parentIndex):
+    #def remove_row(self, row, parentIndex):
         #return self.removeRows(row, 1, parentIndex)
 
 

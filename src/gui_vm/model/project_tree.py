@@ -109,11 +109,30 @@ class ProjectTreeNode(object):
         children = []
         if self.name == name:
             children.extend([self])
-        if len(self.children) == 0:
-            return []
         for child in self.children:
             children.extend(child.find_all(name))
         return children
+
+    def find_all_by_classname(self, classname):
+            '''
+            find all children by name (deep traversal)
+
+            Parameters
+            ----------
+            classname: String,
+                       name of the class of the nodes to look for
+
+            Return
+            ------
+            children: list of ProjectTreeNodes
+            '''
+            children = []
+            print '{}: {}'.format(self.name, self.__class__.__name__)
+            if self.__class__.__name__ == classname:
+                children.extend([self])
+            for child in self.children:
+                children.extend(child.find_all_by_classname(classname))
+            return children
 
     def has_child(self, name):
         '''
@@ -197,6 +216,8 @@ class ProjectTreeNode(object):
         ------
         child: ProjectTreeNode
         '''
+        if len(self.children) == 0:
+            return None
         return self.children[row]
 
     def child_count(self):
@@ -286,6 +307,8 @@ class SimRun(ProjectTreeNode):
 
     @property
     def path(self):
+        if self.get_parent_by_class(Project).project_folder is None:
+            return None
         return os.path.join(
             self.get_parent_by_class(Project).project_folder, self.name)
 
@@ -440,8 +463,8 @@ class Project(ProjectTreeNode):
         new_run = SimRun(model, name, parent=self)
         self.add_child(new_run)
 
-    def remove_run(self, index):
-        self.remove_child(index)
+    def remove_run(self, name):
+        self.remove_child(name)
 
 
 class ResourceNode(ProjectTreeNode):
@@ -486,12 +509,6 @@ class ResourceNode(ProjectTreeNode):
                  xml node containing informations about this project node
         '''
         super(ResourceNode, self).from_xml(element)
-        #simrun = self.get_parent_by_class(SimRun)
-        #res_type = element.find('Typ').text
-        #if res_type == 'H5':
-            #self.resource = H5Resource(self.name)
-        #else:
-            #self.resource = Resource(self.name)
         simrun = self.get_parent_by_class(SimRun)
         self.resource = ResourceFile(self.name)
         if simrun is not None:
@@ -553,7 +570,7 @@ class ResourceNode(ProjectTreeNode):
         #only set filename, because subfolder will be determined
         #by the category
         self.resource.set_source(filename)
-        self.resource.update(self.simrun_path)
+        #self.resource.update(self.simrun_path)
 
     @property
     def full_source(self):
