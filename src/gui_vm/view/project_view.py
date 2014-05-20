@@ -1,5 +1,6 @@
 from PyQt4 import (QtCore, QtGui)
-from project_tree import (Project, ProjectTreeNode, XMLParser)
+from gui_vm.model.project_tree import (Project, ProjectTreeNode,
+                                                XMLParser)
 
 
 class ProjectTreeModel(QtCore.QAbstractItemModel):

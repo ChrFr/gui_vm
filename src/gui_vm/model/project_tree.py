@@ -3,10 +3,10 @@ import os
 import time
 from lxml import etree
 from shutil import copytree
-from config import DEFAULT_FOLDER
+from gui_vm.config.config import DEFAULT_FOLDER
 from resources import ResourceFile
+from gui_vm.config.maxem import Maxem
 
-from traffic_model import Maxem
 TRAFFIC_MODELS = ['Maxem']
 
 #dictionary defines how classes are called when written to xml
@@ -584,6 +584,9 @@ class ResourceNode(ProjectTreeNode):
         self.original_source = filename
         #####hard copy missing by now#####
         self.source = filename
+
+    def update(self):
+        self.resource.update(self.run_path)
 
 
 class XMLParser(object):

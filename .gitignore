@@ -1,7 +1,3 @@
+default/
 /gui.wpr
 /gui.wpu
-/main_window_ui.pyc
-/project.pyc
-/project_view.pyc
-/traffic_models.pyc
-/*.pyc
