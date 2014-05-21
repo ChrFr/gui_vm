@@ -1,6 +1,7 @@
 from PyQt4 import (QtCore, QtGui)
 from gui_vm.model.project_tree import (Project, ProjectTreeNode,
                                                 XMLParser)
+import sys
 
 
 class ProjectTreeModel(QtCore.QAbstractItemModel):
@@ -8,6 +9,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         super(ProjectTreeModel, self).__init__(parent)
         self.root = ProjectTreeNode('root')
         self.header = ('Projektbrowser', 'Details')
+        self.count = 0
 
     @property
     def project(self):
@@ -15,16 +17,6 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
 
     def add_run(self, model):
         self.project.add_run(model)
-
-    #def flags(self, index):
-        #defaultFlags = QAbstractItemModel.flags(self, index)
-
-        #if index.isValid():
-            #return Qt.ItemIsEditable | Qt.ItemIsDragEnabled | \
-                    #Qt.ItemIsDropEnabled | defaultFlags
-
-        #else:
-            #return Qt.ItemIsDropEnabled | defaultFlags
 
     def write_project(self, filename):
         XMLParser.write_xml(self.project, filename)
@@ -37,8 +29,29 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
     def read_project(self, filename):
         self.root = XMLParser.read_xml('root', filename)
 
-    #def get_details(self, index):
-        #node = self.model().data(index, QtCore.Qt.UserRole)
+    #def reset(self, index):
+        #'''
+        #set the simrun to default, copy all files from the default folder
+        #to the project/scenario folder and link the project tree to those
+        #files
+        #'''
+        #node = self.nodeFromIndex(index)
+        #if node.__class__ == 'SimRun':
+            #simrun_node = self.project_tree_view.model().data(self.row_index,
+                                                            #QtCore.Qt.UserRole)
+            #node = simrun_node.reset_to_default()
+            #filenames = []
+            #destinations = []
+            #default_model_folder = os.path.join(DEFAULT_FOLDER,
+                                                #simrun_node.model.name)
+            #for res_node in simrun_node.get_resources():
+                #filenames.append(res_node.original_source)
+                #destinations.append(os.path.join(res_node.full_path))
+            ##dialog = CopyFilesDialog(filenames, destinations, parent=self)
+            #node.update()
+
+    def replace(self, index, new_node):
+        pass
 
     def headerData(self, section, orientation, role):
         if (orientation == QtCore.Qt.Horizontal and
@@ -56,6 +69,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         return data to the tableview depending on the requested role
         '''
         node = self.nodeFromIndex(index)
+        #print '{} - {}'.format(node.name, sys.getrefcount(node))
         is_valid = True
         is_checked = False
         if hasattr(node, 'resource'):
@@ -102,21 +116,23 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         node = self.nodeFromIndex(parent)
         if node is None:
             return 0
-        return node.child_count()
+        return node.child_count
 
     def parent(self, child):
+        #self.count += 1
+        #print(self.count)
         if not child.isValid():
             return QModelIndex()
 
         node = self.nodeFromIndex(child)
 
-        if node is None:
-            return QModelIndex()
+        if node is None:  #or not isinstance(node, ProjectTreeNode):
+            return QtCore.QModelIndex()
 
         parent = node.parent
 
         if parent is None:
-            return QModelIndex()
+            return QtCore.QModelIndex()
 
         grandparent = parent.parent
         if grandparent is None:
@@ -128,6 +144,18 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
 
     def nodeFromIndex(self, index):
         return index.internalPointer() if index.isValid() else self.root
+
+
+
+    #def flags(self, index):
+        #defaultFlags = QAbstractItemModel.flags(self, index)
+
+        #if index.isValid():
+            #return Qt.ItemIsEditable | Qt.ItemIsDragEnabled | \
+                    #Qt.ItemIsDropEnabled | defaultFlags
+
+        #else:
+            #return Qt.ItemIsDropEnabled | defaultFlags
 
 
     #def mimeTypes(self):
@@ -157,24 +185,21 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         #return True
 
 
-    #def insertRow(self, row, parent):
-        #return self.insertRows(row, 1, parent)
+    def insertRow(self, row, parent):
+        return self.insertRows(row, 1, parent)
 
+    def insertRows(self, row, count, parent):
+        self.beginInsertRows(parent, row, (row + (count - 1)))
+        self.endInsertRows()
+        return True
 
-    #def insertRows(self, row, count, parent):
-        #self.beginInsertRows(parent, row, (row + (count - 1)))
-        #self.endInsertRows()
-        #return True
+    def remove_row(self, row, parentIndex):
+        return self.removeRows(row, 1, parentIndex)
 
+    def removeRows(self, row, count, parentIndex):
+        self.beginRemoveRows(parentIndex, row, row)
+        node = self.nodeFromIndex(parentIndex)
+        node.remove_child_at(row)
+        self.endRemoveRows()
 
-    #def remove_row(self, row, parentIndex):
-        #return self.removeRows(row, 1, parentIndex)
-
-
-    #def removeRows(self, row, count, parentIndex):
-        #self.beginRemoveRows(parentIndex, row, row)
-        #node = self.nodeFromIndex(parentIndex)
-        #node.removeChild(row)
-        #self.endRemoveRows()
-
-        #return True
+        return True

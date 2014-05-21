@@ -1,6 +1,7 @@
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.resources import Rule
 from collections import OrderedDict
+import os
 
 class Maxem(TrafficModel):
     '''
@@ -8,10 +9,11 @@ class Maxem(TrafficModel):
     '''
 
     #names of the config files containing the target status of all input data
-    INPUT_CONFIG_FILE = 'config/Maxem_input.csv'
-    TABLES_CONFIG_FILE = 'config/Maxem_tables.csv'
-    ARRAYS_CONFIG_FILE = 'config/Maxem_arrays.csv'
-    COLUMNS_CONFIG_FILE = 'config/Maxem_columns.csv'
+    #relative to the directory this file is in
+    INPUT_CONFIG_FILE = 'Maxem_input.csv'
+    TABLES_CONFIG_FILE = 'Maxem_tables.csv'
+    ARRAYS_CONFIG_FILE = 'Maxem_arrays.csv'
+    COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
 
     #names of the fields that can be displayed outside the model
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
@@ -21,12 +23,20 @@ class Maxem(TrafficModel):
                              ('activity_codes', 'Aktivitaetencodes')])
 
     def __init__(self, path=None):
+        input_config_file = os.path.join(os.path.dirname(__file__),
+                                         self.INPUT_CONFIG_FILE)
+        tables_config_file = os.path.join(os.path.dirname(__file__),
+                                         self.TABLES_CONFIG_FILE)
+        arrays_config_file = os.path.join(os.path.dirname(__file__),
+                                         self.ARRAYS_CONFIG_FILE)
+        columns_config_file = os.path.join(os.path.dirname(__file__),
+                                         self.COLUMNS_CONFIG_FILE)
         super(Maxem, self).__init__(
             'Maxem',
-            input_config_file=self.INPUT_CONFIG_FILE,
-            tables_config_file=self.TABLES_CONFIG_FILE,
-            arrays_config_file=self.ARRAYS_CONFIG_FILE,
-            columns_config_file=self.COLUMNS_CONFIG_FILE)
+            input_config_file=input_config_file,
+            tables_config_file=tables_config_file,
+            arrays_config_file=arrays_config_file,
+            columns_config_file=columns_config_file)
 
         self.read_config()
 
@@ -49,6 +59,10 @@ class Maxem(TrafficModel):
 
         if path is not None:
             self.update()
+
+    def __del__(self):
+        print 'traffic model deleted'
+
 
     @property
     def n_zones(self):

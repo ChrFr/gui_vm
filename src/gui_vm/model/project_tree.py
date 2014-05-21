@@ -27,6 +27,14 @@ class ProjectTreeNode(object):
         self.children = []
         self.rename = False
 
+    def __del__(self):
+        print '{} geloescht'.format(self.name)
+
+    def remove(self):
+        self.parent = None
+        for i in xrange(self.child_count):
+            self.children.pop(0).remove()
+
     def add_to_xml(self, parent):
         '''
         converts all needed information of this node and recursive of
@@ -113,7 +121,7 @@ class ProjectTreeNode(object):
             children.extend(child.find_all(name))
         return children
 
-    def find_all_by_classname(self, classname):
+    def find_all_by_class(self, node_class):
             '''
             find all children by name (deep traversal)
 
@@ -127,11 +135,11 @@ class ProjectTreeNode(object):
             children: list of ProjectTreeNodes
             '''
             children = []
-            print '{}: {}'.format(self.name, self.__class__.__name__)
-            if self.__class__.__name__ == classname:
+            #print '{}: {}'.format(self.name, self.__class__.__name__)
+            if isinstance(self, node_class):
                 children.extend([self])
             for child in self.children:
-                children.extend(child.find_all_by_classname(classname))
+                children.extend(child.find_all_by_class(node_class))
             return children
 
     def has_child(self, name):
@@ -180,7 +188,8 @@ class ProjectTreeNode(object):
               name of the child node
         '''
         row = self.get_row(name)
-        self.children.pop(row)
+        child = self.children.pop(row)
+        child.remove()
 
     def remove_child_at(self, row):
         '''
@@ -191,7 +200,12 @@ class ProjectTreeNode(object):
         row: int,
              place in list of children
         '''
-        self.children.pop(row)
+        child = self.children.pop(row)
+        child.remove()
+
+    def remove_all_children(self):
+        for i in xrange(len(self.children)):
+            self.children.pop(0).remove()
 
     def get_children(self):
         '''
@@ -216,10 +230,11 @@ class ProjectTreeNode(object):
         ------
         child: ProjectTreeNode
         '''
-        if len(self.children) == 0:
+        if len(self.children) <= row:
             return None
         return self.children[row]
 
+    @property
     def child_count(self):
         '''
         get number of children
@@ -268,6 +283,37 @@ class ProjectTreeNode(object):
                 return node
         return None
 
+    def replace_child(self, child, node):
+        '''
+        replace a child with another one
+
+        Parameters
+        ----------
+        child: ProjectTreeNode,
+               the child to be removed
+        node:  ProjectTreeNode,
+               the node to be inserted at place the child was before
+        '''
+        row = self.row_of_child(child)
+        self.children.pop(row).remove()
+        self.children.insert(row, node)
+        node.parent = self
+
+    def update(self):
+        '''
+        update the the node and its children, if sth shall happen, it has to
+        be defined in the subclasses
+        '''
+        for child in self.children:
+            child.update()
+
+    @property
+    def children_names(self):
+        names = []
+        for child in self.children:
+            names.append(child.name)
+        return names
+
 
 class SimRun(ProjectTreeNode):
     '''
@@ -287,6 +333,28 @@ class SimRun(ProjectTreeNode):
     def meta(self):
         return self.model.characteristics
 
+    def reset_to_default(self):
+        '''
+        reset the simrun to the defaults
+        '''
+        model_name = self.model.name
+        model_default_folder = os.path.join(DEFAULT_FOLDER, self.model.name)
+        default_project_file = os.path.join(model_default_folder,
+                                            'default.xml')
+        #get the default simrun(scenario) for the traffic model
+        #from the default file
+        defaults = XMLParser.read_xml('default_root', default_project_file)
+        default_model = defaults.find_all(self.model.name)[0]
+        #set the original sources to the files in the default folder
+        for res_node in default_model.get_resources():
+            res_node.original_source = os.path.join(model_default_folder,
+                                                    res_node.source)
+        #swap this node with the default one
+        parent = self.parent
+        parent.replace_child(self, default_model)
+        default_model.name = self.name
+        return default_model
+
     def get_resource(self, name):
         '''
         get a resource node by name
@@ -304,6 +372,9 @@ class SimRun(ProjectTreeNode):
             raise Exception('Multiple Definition of resource {}'
                             .format(self.name))
         return res_nodes[0]
+
+    def get_resources(self):
+        return self.find_all_by_class(ResourceNode)
 
     @property
     def path(self):
@@ -337,7 +408,7 @@ class SimRun(ProjectTreeNode):
             self.model = globals()[name]()
             self.model.update(self.path)
             #remove the old children of the sim run (including resources)
-            for i in reversed(range(self.child_count())):
+            for i in reversed(range(self.child_count)):
                 self.remove_child_at(i)
 
             #categorize resources
@@ -457,7 +528,7 @@ class Project(ProjectTreeNode):
 
     def add_run(self, model, name=None):
         if name is None:
-            name = 'Szenario {}'.format(self.child_count())
+            name = 'Szenario {}'.format(self.child_count)
         #copytree(os.path.join(DEFAULT_FOLDER, 'Maxem'),
                  #os.path.join(self.project_folder, name))
         new_run = SimRun(model, name, parent=self)
@@ -581,6 +652,8 @@ class ResourceNode(ProjectTreeNode):
         '''
         #join path with simrun path to get full source
         source = self.source
+        if self.run_path is None:
+            return None
         if self.source is not None:
             source = os.path.join(
                 self.run_path, self.source)

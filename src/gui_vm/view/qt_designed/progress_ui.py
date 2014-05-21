@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'progress.ui'
 #
-# Created: Tue May 20 18:37:10 2014
+# Created: Wed May 21 18:05:58 2014
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,7 +32,7 @@ class Ui_ProgressDialog(object):
         ProgressDialog.setMaximumSize(QtCore.QSize(410, 10000))
         self.progress_bar = QtGui.QProgressBar(ProgressDialog)
         self.progress_bar.setGeometry(QtCore.QRect(29, 130, 381, 21))
-        self.progress_bar.setProperty("value", 24)
+        self.progress_bar.setProperty("value", 0)
         self.progress_bar.setObjectName(_fromUtf8("progress_bar"))
         self.buttonBox = QtGui.QDialogButtonBox(ProgressDialog)
         self.buttonBox.setGeometry(QtCore.QRect(220, 170, 156, 23))

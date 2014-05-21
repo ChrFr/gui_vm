@@ -41,7 +41,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'gui_vm=main:main',
+            'gui_vm=gui_vm.main:startmain',
         ],
     },
 )

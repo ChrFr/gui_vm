@@ -28,12 +28,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.project_tree = ProjectTreeModel()
         self.project_tree_view.setModel(self.project_tree)
-        self.refresh_view()
+        self.update_view()
         self.details = None
 
         #connect the buttons
         self.minus_button.clicked.connect(self.add_run)
-        self.plus_button.clicked.connect(self.refresh_view)
+        self.plus_button.clicked.connect(self.update_view)
         self.save_button.clicked.connect(self.save_project)
         self.open_button.clicked.connect(self.load_project)
 
@@ -50,8 +50,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.row_index = 0
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
             self.row_changed)
-        self.project_tree.dataChanged.connect(self.refresh_view)
-        self.project_changed.connect(self.refresh_view)
+        self.project_tree.dataChanged.connect(self.update_view)
+        self.project_changed.connect(self.update_view)
         welcome = WelcomeDialog(self)
 
     def row_changed(self, index):
@@ -67,6 +67,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #clicked another row
         else:
             self.row_index = index
+            #print '{} - {}'.format(self.row_index.row(),
+            #                       self.row_index.column())
             #clear the old details
             if self.details:
                 self.details.close()
@@ -128,24 +130,35 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.details = ResourceDetails(node, self.details_layout)
 
             if self.details:
-                self.details.value_changed.connect(self.refresh_view)
+                self.details.value_changed.connect(self.update_view)
 
     def add_run(self):
         project = self.project_tree.project
         text, ok = QtGui.QInputDialog.getText(
             self, 'Neues Szenario', 'Name des neuen Szenarios:',
             QtGui.QLineEdit.Normal,
-            'Szenario {}'.format(project.child_count()))
+            'Szenario {}'.format(project.child_count))
         if ok:
             name = str(text)
-            project.add_run(model='Maxem', name=name)
-            self.refresh_view()
+            if name in project.children_names:
+                QtGui.QMessageBox.about(
+                    self, "Fehler",
+                    _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
+                              .format(name)))
+            else:
+                project.add_run(model='Maxem', name=name)
+                self.update_view()
 
     def remove_run(self):
         node_name = self.project_tree_view.model().data(
             self.row_index, QtCore.Qt.UserRole).name
         project = self.project_tree.project.remove_run(node_name)
         self.project_changed.emit()
+        #select first row
+        root_index = self.project_tree.createIndex(
+            0, 0, self.project_tree.project)
+        self.project_tree_view.setCurrentIndex(root_index)
+        self.row_changed(root_index)
 
     def create_project(self):
         '''
@@ -154,10 +167,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         '''
         project_name, project_folder, ok = NewProjectDialog.getValues()
         if ok:
+            #close old project
+            self.project_tree = ProjectTreeModel()
             self.project_tree.create_project(project_name)
             self.project_tree.project.project_folder = project_folder
             self.project_tree_view.setModel(self.project_tree)
-            self.refresh_view()
+            self.update_view()
             #select first row
             root_index = self.project_tree.createIndex(
                 0, 0, self.project_tree.project)
@@ -175,8 +190,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         fileinput = str(QtGui.QFileDialog.getOpenFileName(
             self, _fromUtf8('Projekt öffnen'), '.', '*.xml'))
         if len(fileinput) > 0:
+            if self.project_tree.project:
+                self.project_tree.project.remove()
             self.project_tree.read_project(fileinput)
-            self.refresh_view()
+            self.project_tree.project.update()
+            self.project_changed.emit()
             #select first row
             root_index = self.project_tree.createIndex(
                 0, 0, self.project_tree.project)
@@ -202,10 +220,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 'Die Speicherung des Projektes\n{}\n war erfolgreich'.
                 format(filename))
 
-    def refresh_view(self):
+    def update_view(self):
         '''
         refresh the view on the project tree
         '''
+        #self.project_tree_view.setModel(self.project_tree)
         self.project_tree_view.expandAll()
         for column in range(self.project_tree_view.model()
                             .columnCount(QtCore.QModelIndex())):
@@ -225,25 +244,26 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def remove_resource(self):
         pass
 
-    def reset_simrun(self, node):
+    def reset_simrun(self, simrun_node):
         '''
         set the simrun to default, copy all files from the default folder
         to the project/scenario folder and link the project tree to those
         files
         '''
-        node = self.project_tree_view.model().data(self.row_index,
-                                                   QtCore.Qt.UserRole)
-        model_name = node.model.name
-        model_default_folder = os.path.join(DEFAULT_FOLDER, model_name)
-        default_project_file = os.path.join(model_default_folder,
-                                            'default.xml')
-        default_project = ProjectTreeModel()
-        default_project.read_project(default_project_file)
-        default_model = default_project.root.find_all(model_name)[0]
-        resource_nodes = default_model.find_all_by_classname('ResourceNode')
-        for res_node in resource_nodes:
-            res_name = res_node.name
-            #node = self.project_tree.f
+        #self.project_tree_view.reset(self.row_index)
+        simrun_node = self.project_tree_view.model().data(self.row_index,
+                                                          QtCore.Qt.UserRole)
+        simrun_node = simrun_node.reset_to_default()
+        filenames = []
+        destinations = []
+        default_model_folder = os.path.join(DEFAULT_FOLDER,
+                                            simrun_node.model.name)
+        for res_node in simrun_node.get_resources():
+            filenames.append(res_node.original_source)
+            destinations.append(os.path.join(res_node.full_path))
+        dialog = CopyFilesDialog(filenames, destinations, parent=self)
+        simrun_node.update()
+        self.update_view()
 
     def reset_resource(self):
         pass
@@ -265,10 +285,10 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         '''
         open a file browser to set the project folder
         '''
-        folder, ok = str(
+        folder = str(
             QtGui.QFileDialog.getExistingDirectory(
                 self, 'Projektverzeichnis wählen', '.'))
-        #filename is '' if aborted
+        #filename is '' if canceled
         if len(folder) > 0:
             self.folder_edit.setText(folder)
 
@@ -332,28 +352,28 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
 
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, node, parent):
+    def __init__(self, simrun_node, parent):
         super(SimRunDetails, self).__init__()
         self.setupUi(self)
         self.parent = parent
         self.parent.addWidget(self)
-        self.setTitle(node.name)
-        self.node = node
-        self.combo_model.addItems(self.node._available)
-        index = self.combo_model.findText(self.node.model.name)
+        self.setTitle(simrun_node.name)
+        self.simrun_node = simrun_node
+        self.combo_model.addItems(self.simrun_node._available)
+        index = self.combo_model.findText(self.simrun_node.model.name)
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
         label = QtGui.QLabel('\n\nKenngroessen:\n')
         self.formLayout.addRow(label)
-        for meta in node.meta:
+        for meta in simrun_node.meta:
             label = QtGui.QLabel(meta)
-            txt = node.meta[meta]
+            txt = simrun_node.meta[meta]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
                 edit = QtGui.QTextEdit(txt)
             else:
-                edit = QtGui.QLineEdit(str(node.meta[meta]))
+                edit = QtGui.QLineEdit(str(simrun_node.meta[meta]))
             edit.setReadOnly(True)
             self.formLayout.addRow(label, edit)
         self.show()
@@ -362,7 +382,7 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         '''
         change the traffic model
         '''
-        self.node.set_model(str(name))
+        self.simrun_node.set_model(str(name))
         self.value_changed.emit()
 
 
@@ -381,21 +401,21 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
     '''
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, node, parent):
+    def __init__(self, project_node, parent):
         super(ProjectDetails, self).__init__()
         self.setupUi(self)
-        self.node = node
+        self.project_node = project_node
         self.parent = parent
         self.parent.addWidget(self)
-        self.setTitle(node.name)
+        self.setTitle(project_node.name)
         label = QtGui.QLabel('\n\nMetadaten:\n')
         self.meta_layout.addRow(label)
-        for meta in node.meta:
+        for meta in project_node.meta:
             label = QtGui.QLabel(meta)
-            edit = QtGui.QLineEdit(node.meta[meta])
+            edit = QtGui.QLineEdit(project_node.meta[meta])
             edit.setReadOnly(True)
             self.meta_layout.addRow(label, edit)
-        self.folder_edit.setText(self.node.project_folder)
+        self.folder_edit.setText(str(self.project_node.project_folder))
 
         self.folder_browse_button.clicked.connect(self.browse_folder)
         self.folder_edit.textChanged.connect(self.update)
@@ -405,7 +425,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         '''
         update the project view if sth was changed
         '''
-        self.node.project_folder = (str(self.folder_edit.text()))
+        self.project_node.project_folder = (str(self.folder_edit.text()))
         self.value_changed.emit()
 
     def browse_folder(self):
@@ -436,15 +456,15 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, node, parent):
+    def __init__(self, resource_node, parent):
         super(ResourceDetails, self).__init__()
         self.setupUi(self)
         self.parent = parent
         self.parent.addWidget(self)
-        self.node = node
-        self.project_copy.setText(str(self.node.full_source))
-        self.file_edit.setText(str(self.node.original_source))
-        self.setTitle(node.name)
+        self.project_copy.setText(str(resource_node.full_source))
+        self.file_edit.setText(str(resource_node.original_source))
+        self.setTitle(resource_node.name)
+        self.resource_node = resource_node
         self.browse_button.clicked.connect(self.browse_files)
         #self.file_edit.textChanged.connect(self.update)
         self.status_button.clicked.connect(self.get_status)
@@ -513,7 +533,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.resource_tree.clear()
         header = QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
         self.resource_tree.setHeaderItem(header)
-        attr = self.node.resource.status
+        attr = self.resource_node.resource.status
         build_tree(attr)
         self.resource_tree.resizeColumnToContents(0)
         #update the project view
@@ -535,20 +555,20 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         change the resource, copy the file
         '''
-        self.node.set_source(str(self.file_edit.text()))
-        self.project_copy.setText(str(self.node.full_source))
+        self.resource_node.set_source(str(self.file_edit.text()))
+        self.project_copy.setText(str(self.resource_node.full_source))
         self.value_changed.emit()
         dialog = CopyFilesDialog(str(self.file_edit.text()),
-                                 self.node.full_path,
+                                 self.resource_node.full_path,
                                  parent=self)
-        self.node.update()
+        self.resource_node.update()
         self.show_attributes()
 
     def get_status(self):
         '''
         validate the resource files
         '''
-        self.node.resource.validate(self.node.simrun_path)
+        self.resource_node.resource.validate(self.resource_node.simrun_path)
         self.show_attributes()
 
     def __del__(self):
@@ -577,6 +597,20 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
             destinations = [destinations]
         for i in xrange(len(filenames)):
             d, filename = os.path.split(filenames[i])
+            #if os.path.exists(filenames[i]):
+                #msg = QtGui.QMessageBox(parent=self)
+                #msg.setWindowTitle(_fromUtf8("Überschreiben"))
+                #msg.setText("Die Datei {} existiert bereits."
+                            #.format(filename) +
+                            #"\nWollen Sie sie überschreiben?")
+                #reply = QtGui.QMessageBox.question(
+                    #None, _fromUtf8("Überschreiben"),
+                    #_fromUtf8("Die Datei {} existiert bereits."
+                    #.format(filename) + "\nWollen Sie sie überschreiben?"),
+                    #QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                #do_overwrite == QtGui.QMessageBox.Yes
+
+
             status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
                 filename, destinations[i])
             self.log_edit.insertHtml(status_txt)
