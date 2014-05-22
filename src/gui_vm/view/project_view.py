@@ -1,18 +1,24 @@
+# -*- coding: utf-8 -*-
 '''
 determine how to react on user input, layer between gui and the project
 '''
 
 from PyQt4 import (QtCore, QtGui)
-from gui_vm.model.project_tree import (Project, ProjectTreeNode, XMLParser)
+from details import (SimRunDetails, ProjectDetails, ResourceDetails)
+from gui_vm.model.project_tree import (Project, ProjectTreeNode, SimRun,
+                                       ResourceNode, XMLParser)
 import sys
 
 
 class ProjectTreeControl(QtCore.QAbstractItemModel):
+    details_changed = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         super(ProjectTreeControl, self).__init__(parent)
         self.root = ProjectTreeNode('root')
         self.header = ('Projektbrowser', 'Details')
         self.count = 0
+        self.details = None
 
     @property
     def project(self):
@@ -32,26 +38,84 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def read_project(self, filename):
         self.root = XMLParser.read_xml('root', filename)
 
-    #def reset(self, index):
-        #'''
-        #set the simrun to default, copy all files from the default folder
-        #to the project/scenario folder and link the project tree to those
-        #files
-        #'''
-        #node = self.nodeFromIndex(index)
-        #if node.__class__ == 'SimRun':
-            #simrun_node = self.project_tree_view.model().data(self.row_index,
-                                                            #QtCore.Qt.UserRole)
-            #node = simrun_node.reset_to_default()
-            #filenames = []
-            #destinations = []
-            #default_model_folder = os.path.join(DEFAULT_FOLDER,
-                                                #simrun_node.model.name)
-            #for res_node in simrun_node.get_resources():
-                #filenames.append(res_node.original_source)
-                #destinations.append(os.path.join(res_node.full_path))
-            ##dialog = CopyFilesDialog(filenames, destinations, parent=self)
-            #node.update()
+
+    def row_changed(self, index):
+        '''
+        show details when row of project tree is clicked
+        details shown depend on type of node that is behind the clicked row
+        '''
+        node = self.nodeFromIndex(index)
+        #clicked highlighted row
+        #if self.row_index == index:
+            ##rename node if allowed
+            #self.rename()
+        ##clicked another row
+        #else:
+        self.row_index = index
+        #clear the old details
+        if self.details:
+            self.details.close()
+            self.details = None
+        #reset all context dependent buttons
+        #self.button_group_label.setText('')
+        #for button in self.context_button_group.children():
+            #button.setEnabled(False)
+            #button.setToolTip('')
+            #try:
+                #button.clicked.disconnect()
+            #except:
+                #pass
+
+        #if node.rename:
+            #self.edit_button.setEnabled(True)
+            #self.edit_button.clicked.connect(self.rename)
+            #self.edit_button.setToolTip('Umbenennen')
+
+        #show details and set buttons depending on type of node
+        if isinstance(node, Project):
+            #self.button_group_label.setText('Projekt bearbeiten')
+
+            #self.plus_button.setEnabled(True)
+            #self.plus_button.setToolTip(_fromUtf8('Szenario hinzufügen'))
+            #self.plus_button.clicked.connect(self.add_run)
+
+            self.details = ProjectDetails(node)
+
+        elif isinstance(node, SimRun):
+            #self.button_group_label.setText('Szenario bearbeiten')
+
+            #self.minus_button.setEnabled(True)
+            #self.minus_button.setToolTip(_fromUtf8('Szenario löschen'))
+            #self.minus_button.clicked.connect(self.remove_run)
+
+            #self.plus_button.setEnabled(True)
+            #self.plus_button.setToolTip(_fromUtf8('Szenario hinzufügen'))
+            #self.plus_button.clicked.connect(self.add_run)
+
+            #self.reset_button.setEnabled(True)
+            #self.reset_button.clicked.connect(self.reset_simrun)
+            #self.reset_button.setToolTip(
+                #_fromUtf8('Default wiederherstellen'))
+
+            self.details = SimRunDetails(node)
+
+        elif isinstance(node, ResourceNode):
+            #self.button_group_label.setText('Ressource bearbeiten')
+
+            #self.minus_button.setEnabled(True)
+            #self.minus_button.setToolTip(_fromUtf8('Ressource löschen'))
+            #self.minus_button.clicked.connect(self.remove_resource)
+
+            #self.reset_button.setEnabled(True)
+            #self.reset_button.clicked.connect(self.reset_resource)
+            #self.reset_button.setToolTip(
+                #_fromUtf8('Default wiederherstellen'))
+
+            self.details = ResourceDetails(node)
+
+        if self.details:
+            self.details.value_changed.connect(self.details_changed)
+        self.dataChanged.emit(index, index)
 
     def replace(self, index, new_node):
         pass

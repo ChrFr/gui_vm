@@ -3,13 +3,9 @@ import sys
 from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeControl
-from gui_vm.view.qt_designed.resource_ui import Ui_DetailsResource
-from gui_vm.view.qt_designed.simrun_ui import Ui_DetailsSimRun
-from gui_vm.view.qt_designed.project_ui import Ui_DetailsProject
 from gui_vm.view.qt_designed.new_project_ui import Ui_NewProject
 from gui_vm.view.qt_designed.progress_ui import Ui_ProgressDialog
 from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
-from gui_vm.config.config import DEFAULT_FOLDER
 from gui_vm.model.backend import hard_copy
 import os
 
@@ -49,86 +45,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.row_index = 0
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
-            self.row_changed)
+            self.project_tree_control.row_changed)
         self.project_tree_control.dataChanged.connect(self.update_view)
+        self.project_tree_control.details_changed.connect(self.update_view)
         self.project_changed.connect(self.update_view)
         welcome = WelcomeDialog(self)
-
-    def row_changed(self, index):
-        '''
-        show details when row of project tree is clicked
-        details shown depend on type of node that is behind the clicked row
-        '''
-        node = self.project_tree_view.model().data(index, QtCore.Qt.UserRole)
-        #clicked highlighted row
-        if self.row_index == index:
-            #rename node if allowed
-            self.rename()
-        #clicked another row
-        else:
-            self.row_index = index
-            #clear the old details
-            if self.details:
-                self.details.close()
-            #reset all context dependent buttons
-            self.button_group_label.setText('')
-            for button in self.context_button_group.children():
-                button.setEnabled(False)
-                button.setToolTip('')
-                try:
-                    button.clicked.disconnect()
-                except:
-                    pass
-
-            if node.rename:
-                self.edit_button.setEnabled(True)
-                self.edit_button.clicked.connect(self.rename)
-                self.edit_button.setToolTip('Umbenennen')
-
-            #show details and set buttons depending on type of node
-            if node.__class__.__name__ == 'Project':
-                self.button_group_label.setText('Projekt bearbeiten')
-
-                self.plus_button.setEnabled(True)
-                self.plus_button.setToolTip(_fromUtf8('Szenario hinzufügen'))
-                self.plus_button.clicked.connect(self.add_run)
-
-                self.details = ProjectDetails(node, self.details_layout)
-
-            elif node.__class__.__name__ == 'SimRun':
-                self.button_group_label.setText('Szenario bearbeiten')
-
-                self.minus_button.setEnabled(True)
-                self.minus_button.setToolTip(_fromUtf8('Szenario löschen'))
-                self.minus_button.clicked.connect(self.remove_run)
-
-                self.plus_button.setEnabled(True)
-                self.plus_button.setToolTip(_fromUtf8('Szenario hinzufügen'))
-                self.plus_button.clicked.connect(self.add_run)
-
-                self.reset_button.setEnabled(True)
-                self.reset_button.clicked.connect(self.reset_simrun)
-                self.reset_button.setToolTip(
-                    _fromUtf8('Default wiederherstellen'))
-
-                self.details = SimRunDetails(node, self.details_layout)
-
-            elif node.__class__.__name__ == 'ResourceNode':
-                self.button_group_label.setText('Ressource bearbeiten')
-
-                self.minus_button.setEnabled(True)
-                self.minus_button.setToolTip(_fromUtf8('Ressource löschen'))
-                self.minus_button.clicked.connect(self.remove_resource)
-
-                self.reset_button.setEnabled(True)
-                self.reset_button.clicked.connect(self.reset_resource)
-                self.reset_button.setToolTip(
-                    _fromUtf8('Default wiederherstellen'))
-
-                self.details = ResourceDetails(node, self.details_layout)
-
-            if self.details:
-                self.details.value_changed.connect(self.update_view)
 
     def add_run(self):
         project = self.project_tree_control.project
@@ -193,11 +114,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.project_tree_control.read_project(fileinput)
             self.project_tree_control.project.update()
             self.project_changed.emit()
-            #select first row
-            root_index = self.project_tree_control.createIndex(
-                0, 0, self.project_tree_control.project)
-            self.project_tree_view.setCurrentIndex(root_index)
-            self.row_changed(root_index)
             return True
         else:
             return False
@@ -227,6 +143,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for column in range(self.project_tree_view.model()
                             .columnCount(QtCore.QModelIndex())):
             self.project_tree_view.resizeColumnToContents(column)
+        details = self.project_tree_control.details
+        if details is not None:
+            self.details_layout.addWidget(details)
+            details.show()
 
     def rename(self):
         node = self.project_tree_view.model().data(self.row_index,
@@ -360,245 +280,6 @@ class WelcomeDialog(QtGui.QDialog, Ui_Welcome):
         created = self.parent.create_project()
         if created:
             self.close()
-
-
-class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
-    '''
-    display the details of a simrun node in the given layout
-    input to change the traffic model
-
-    Parameters
-    ----------
-    node: SimRun,
-          node, that contains the
-    layout: QVBoxLayout,
-            the elements showing the details are added as children of this
-            layout
-    '''
-
-    value_changed = QtCore.pyqtSignal()
-
-    def __init__(self, simrun_node, parent):
-        super(SimRunDetails, self).__init__()
-        self.setupUi(self)
-        self.parent = parent
-        self.parent.addWidget(self)
-        self.setTitle(simrun_node.name)
-        self.simrun_node = simrun_node
-        self.combo_model.addItems(self.simrun_node._available)
-        index = self.combo_model.findText(self.simrun_node.model.name)
-        self.combo_model.setCurrentIndex(index)
-        self.combo_model.currentIndexChanged['QString'].connect(
-            self.changeModel)
-        label = QtGui.QLabel('\n\nKenngroessen:\n')
-        self.formLayout.addRow(label)
-        for meta in simrun_node.meta:
-            label = QtGui.QLabel(meta)
-            txt = simrun_node.meta[meta]
-            if isinstance(txt, list):
-                txt = '<br>'.join(txt)
-                edit = QtGui.QTextEdit(txt)
-            else:
-                edit = QtGui.QLineEdit(str(simrun_node.meta[meta]))
-            edit.setReadOnly(True)
-            self.formLayout.addRow(label, edit)
-        self.show()
-
-    def changeModel(self, name):
-        '''
-        change the traffic model
-        '''
-        self.simrun_node.set_model(str(name))
-        self.value_changed.emit()
-
-
-class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
-    '''
-    display the details of a resource node in the given layout
-    change the traffic model
-
-    Parameters
-    ----------
-    node: Project,
-          node, that contains the project information
-    layout: QVBoxLayout,
-            the elements showing the details are added as children of this
-            layout
-    '''
-    value_changed = QtCore.pyqtSignal()
-
-    def __init__(self, project_node, parent):
-        super(ProjectDetails, self).__init__()
-        self.setupUi(self)
-        self.project_node = project_node
-        self.parent = parent
-        self.parent.addWidget(self)
-        self.setTitle(project_node.name)
-        label = QtGui.QLabel('\n\nMetadaten:\n')
-        self.meta_layout.addRow(label)
-        for meta in project_node.meta:
-            label = QtGui.QLabel(meta)
-            edit = QtGui.QLineEdit(project_node.meta[meta])
-            edit.setReadOnly(True)
-            self.meta_layout.addRow(label, edit)
-        self.folder_edit.setText(str(self.project_node.project_folder))
-
-        self.folder_browse_button.clicked.connect(self.browse_folder)
-        self.folder_edit.textChanged.connect(self.update)
-        self.show()
-
-    def update(self):
-        '''
-        update the project view if sth was changed
-        '''
-        self.project_node.project_folder = (str(self.folder_edit.text()))
-        self.value_changed.emit()
-
-    def browse_folder(self):
-        '''
-        open a file browser to set the project folder
-        '''
-        folder = str(
-            QtGui.QFileDialog.getExistingDirectory(
-                self, 'Projektverzeichnis wählen', '.'))
-        #filename is '' if aborted
-        if len(folder) > 0:
-            self.folder_edit.setText(folder)
-
-
-class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
-    '''
-    display the details of a resource node
-    input to change the source of the resource
-
-    Parameters
-    ----------
-    node: ResourceNode,
-          node, that wraps a resource and contains the file path of the
-          resource
-    layout: QVBoxLayout,
-            the elements showing the details are added as children of this
-            layout
-    '''
-    value_changed = QtCore.pyqtSignal()
-
-    def __init__(self, resource_node, parent):
-        super(ResourceDetails, self).__init__()
-        self.setupUi(self)
-        self.parent = parent
-        self.parent.addWidget(self)
-        self.project_copy.setText(str(resource_node.full_source))
-        self.file_edit.setText(str(resource_node.original_source))
-        self.setTitle(resource_node.name)
-        self.resource_node = resource_node
-        self.browse_button.clicked.connect(self.browse_files)
-        #self.file_edit.textChanged.connect(self.update)
-        self.status_button.clicked.connect(self.get_status)
-        self.show_attributes()
-        self.show()
-
-    def show_attributes(self):
-        '''
-        show all available information of the resource node
-        (incl. all child resources)
-        '''
-
-        def get_status_color(status):
-            '''
-            get a status color depending on given the status flag
-
-            Return
-            ------
-            status_color: QtGui.QColor
-            '''
-            green = QtGui.QColor('green')
-            red = QtGui.QColor('red')
-            black = QtGui.QColor('black')
-            if status in [3, 4]:
-                status_color = red
-            elif status in [1, 2]:
-                status_color = green
-            else:
-                status_color = black
-
-            return status_color
-
-        def build_tree(attr, level=0, parent=self.resource_tree):
-            '''
-            build a resource tree out of a nested dictionary and view it
-            '''
-            normal = QtGui.QFont("Arial", 10-(level))
-            bold = QtGui.QFont("Arial", 10-(level), QtGui.QFont.Bold)
-            for key in attr:
-                value, message, status = attr[key]
-                status_color = get_status_color(status)
-
-                if isinstance(value, dict):
-                    val = ''
-                    font = bold
-                    has_subdict = True
-                else:
-                    val = value
-                    font = normal
-                    has_subdict = False
-
-                line = ('{name}: {value}'
-                        .format(name=key, value=val))
-                status_color = get_status_color(status)
-                item = QtGui.QTreeWidgetItem(parent, [line, message])
-                item.setFont(0, font)
-                if status in [2, 3, 4]:
-                    item.setTextColor(0, status_color)
-                item.setTextColor(1, status_color)
-                if level == 0:
-                    item.setExpanded(True)
-                if has_subdict:
-                    #recursion if there are sub dictionaries
-                    build_tree(value, level+1, parent=item)
-
-        self.resource_tree.clear()
-        header = QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
-        self.resource_tree.setHeaderItem(header)
-        attr = self.resource_node.resource.status
-        build_tree(attr)
-        self.resource_tree.resizeColumnToContents(0)
-        #update the project view
-        self.value_changed.emit()
-
-    def browse_files(self):
-        '''
-        open a file browser to change the source of the resource file
-        '''
-        fileinput = str(
-            QtGui.QFileDialog.getOpenFileName(
-                self, _fromUtf8('Ressourcendatei öffnen'), DEFAULT_FOLDER))
-        #filename is '' if aborted
-        if len(fileinput) > 0:
-            self.file_edit.setText(fileinput)
-            self.update_source()
-
-    def update_source(self):
-        '''
-        change the resource, copy the file
-        '''
-        self.resource_node.set_source(str(self.file_edit.text()))
-        self.project_copy.setText(str(self.resource_node.full_source))
-        self.value_changed.emit()
-        dialog = CopyFilesDialog(str(self.file_edit.text()),
-                                 self.resource_node.full_path,
-                                 parent=self)
-        self.resource_node.update()
-        self.show_attributes()
-
-    def get_status(self):
-        '''
-        validate the resource files
-        '''
-        self.resource_node.resource.validate(self.resource_node.simrun_path)
-        self.show_attributes()
-
-    def __del__(self):
-        pass
 
 
 class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
