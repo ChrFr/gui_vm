@@ -64,6 +64,14 @@ class Resource(object):
         '''
         self.rules.append(rule)
 
+    #def set_model(self, model):
+        #'''
+        #add this node to a model and reference the rules to this model
+        #'''
+        #model.resources[self.name]=...
+        #for child in self.children:
+            #child.set_model(model)
+
     def update(self, path):
         '''
         update the resource and all of its children recursive
@@ -221,7 +229,7 @@ class ResourceFile(Resource):
         in the subclasses
         '''
         self.clear_status()
-        if self.file_name != '':
+        if self.file_name != '' and self.file_name is not None:
             file_name = os.path.join(path, self.subfolder, self.file_name)
             if os.path.exists(file_name):
                 stats = os.stat(file_name)
@@ -269,6 +277,7 @@ class H5Resource(ResourceFile):
                       where the file is in (without subfolder)
         '''
         super(H5Resource, self).update(path)
+        h5 = None
         if self.status_flags['file_name'] == FOUND:
             h5 = HDF5(os.path.join(path, self.subfolder, self.file_name))
             successful = h5.read()
@@ -276,13 +285,10 @@ class H5Resource(ResourceFile):
                 #set a flag for file not found
                 self.status_flags['file_name'] = (NOT_FOUND,
                                                   'keine gueltige HDF5 Datei')
-            else:
-                #give child tables the opened h5 file
-                #to avoid multiple readings of the same file
-                for child in self.children:
-                    child.update(h5)
-            #close file
-            del(h5)
+        for child in self.children:
+            child.update(h5)
+        #close file
+        del(h5)
         self.set_overall_status()
 
 
@@ -317,9 +323,12 @@ class H5Node(Resource):
         path: String, name of the working directory,
                       where the file is in (without subfolder)
         '''
-        table = h5_in.get_table(self.table_path)
+        table = None
+        if h5_in is not None:
+            table = h5_in.get_table(self.table_path)
         if not table:
             self.status_flags['table_path'] = NOT_FOUND
+            self.shape = None
             return None
         self.status_flags['table_path'] = FOUND
         table = table.read()
@@ -375,9 +384,8 @@ class H5Table(H5Node):
                       where the file is in (without subfolder)
         '''
         table = super(H5Table, self).update(h5_in)
-        if table is not None:
-            for child in self.children:
-                child.update(table)
+        for child in self.children:
+            child.update(table)
 
     @property
     def column_names(self):
@@ -424,8 +432,12 @@ class H5TableColumn(Resource):
         by the dtype flag
         check for uniqueness of primary keys
         '''
-        if self.name not in table.dtype.names:
+        if table is None or self.name not in table.dtype.names:
             self.status_flags['dtype'] = NOT_FOUND
+            self.max_value = None
+            self.min_value = None
+            self.dtype = None
+            self.content = None
         else:
             self.dtype = table.dtype[self.name]
             self.status_flags['dtype'] = FOUND
@@ -474,6 +486,9 @@ class H5Array(H5Node):
         if table is not None:
             self.max_value = table.max()
             self.min_value = table.min()
+        else:
+            self.max_value = None
+            self.min_value = None
 
 
 class Rule(object):

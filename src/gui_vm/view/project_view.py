@@ -1,12 +1,15 @@
+'''
+determine how to react on user input, layer between gui and the project
+'''
+
 from PyQt4 import (QtCore, QtGui)
-from gui_vm.model.project_tree import (Project, ProjectTreeNode,
-                                                XMLParser)
+from gui_vm.model.project_tree import (Project, ProjectTreeNode, XMLParser)
 import sys
 
 
-class ProjectTreeModel(QtCore.QAbstractItemModel):
+class ProjectTreeControl(QtCore.QAbstractItemModel):
     def __init__(self, parent=None):
-        super(ProjectTreeModel, self).__init__(parent)
+        super(ProjectTreeControl, self).__init__(parent)
         self.root = ProjectTreeNode('root')
         self.header = ('Projektbrowser', 'Details')
         self.count = 0
@@ -69,6 +72,8 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         return data to the tableview depending on the requested role
         '''
         node = self.nodeFromIndex(index)
+        if node is None:
+            return QtCore.QVariant()
         #print '{} - {}'.format(node.name, sys.getrefcount(node))
         is_valid = True
         is_checked = False
@@ -86,6 +91,7 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         if role == QtCore.Qt.UserRole:
             return node
 
+        #color the the 2nd column of a node depending on its status
         if role == QtCore.Qt.TextColorRole and index.column() == 1:
             if is_checked:
                 if is_valid:
@@ -119,14 +125,14 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
         return node.child_count
 
     def parent(self, child):
-        #self.count += 1
-        #print(self.count)
+        print self.count
+        self.count += 1
         if not child.isValid():
             return QModelIndex()
 
         node = self.nodeFromIndex(child)
 
-        if node is None:  #or not isinstance(node, ProjectTreeNode):
+        if node is None or not isinstance(node, ProjectTreeNode):
             return QtCore.QModelIndex()
 
         parent = node.parent
@@ -144,8 +150,6 @@ class ProjectTreeModel(QtCore.QAbstractItemModel):
 
     def nodeFromIndex(self, index):
         return index.internalPointer() if index.isValid() else self.root
-
-
 
     #def flags(self, index):
         #defaultFlags = QAbstractItemModel.flags(self, index)

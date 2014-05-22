@@ -38,7 +38,6 @@ class Maxem(TrafficModel):
             arrays_config_file=arrays_config_file,
             columns_config_file=columns_config_file)
 
-        self.read_config()
 
         ####special rules for the maxem model#####
 

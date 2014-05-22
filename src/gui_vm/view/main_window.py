@@ -2,7 +2,7 @@
 import sys
 from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
-from project_view import ProjectTreeModel
+from project_view import ProjectTreeControl
 from gui_vm.view.qt_designed.resource_ui import Ui_DetailsResource
 from gui_vm.view.qt_designed.simrun_ui import Ui_DetailsSimRun
 from gui_vm.view.qt_designed.project_ui import Ui_DetailsProject
@@ -26,8 +26,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
-        self.project_tree = ProjectTreeModel()
-        self.project_tree_view.setModel(self.project_tree)
+        self.project_tree_control = ProjectTreeControl()
+        self.project_tree_view.setModel(self.project_tree_control)
         self.update_view()
         self.details = None
 
@@ -50,7 +50,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.row_index = 0
         self.project_tree_view.clicked[QtCore.QModelIndex].connect(
             self.row_changed)
-        self.project_tree.dataChanged.connect(self.update_view)
+        self.project_tree_control.dataChanged.connect(self.update_view)
         self.project_changed.connect(self.update_view)
         welcome = WelcomeDialog(self)
 
@@ -67,8 +67,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #clicked another row
         else:
             self.row_index = index
-            #print '{} - {}'.format(self.row_index.row(),
-            #                       self.row_index.column())
             #clear the old details
             if self.details:
                 self.details.close()
@@ -133,7 +131,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.details.value_changed.connect(self.update_view)
 
     def add_run(self):
-        project = self.project_tree.project
+        project = self.project_tree_control.project
         text, ok = QtGui.QInputDialog.getText(
             self, 'Neues Szenario', 'Name des neuen Szenarios:',
             QtGui.QLineEdit.Normal,
@@ -152,11 +150,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def remove_run(self):
         node_name = self.project_tree_view.model().data(
             self.row_index, QtCore.Qt.UserRole).name
-        project = self.project_tree.project.remove_run(node_name)
+        project = self.project_tree_control.project.remove_run(node_name)
         self.project_changed.emit()
         #select first row
-        root_index = self.project_tree.createIndex(
-            0, 0, self.project_tree.project)
+        root_index = self.project_tree_control.createIndex(
+            0, 0, self.project_tree_control.project)
         self.project_tree_view.setCurrentIndex(root_index)
         self.row_changed(root_index)
 
@@ -168,14 +166,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         project_name, project_folder, ok = NewProjectDialog.getValues()
         if ok:
             #close old project
-            self.project_tree = ProjectTreeModel()
-            self.project_tree.create_project(project_name)
-            self.project_tree.project.project_folder = project_folder
-            self.project_tree_view.setModel(self.project_tree)
+            self.project_tree_control = ProjectTreeControl()
+            self.project_tree_control.create_project(project_name)
+            self.project_tree_control.project.project_folder = project_folder
+            self.project_tree_view.setModel(self.project_tree_control)
             self.update_view()
             #select first row
-            root_index = self.project_tree.createIndex(
-                0, 0, self.project_tree.project)
+            root_index = self.project_tree_control.createIndex(
+                0, 0, self.project_tree_control.project)
             self.project_tree_view.setCurrentIndex(root_index)
             self.row_changed(root_index)
             return True
@@ -190,14 +188,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         fileinput = str(QtGui.QFileDialog.getOpenFileName(
             self, _fromUtf8('Projekt öffnen'), '.', '*.xml'))
         if len(fileinput) > 0:
-            if self.project_tree.project:
-                self.project_tree.project.remove()
-            self.project_tree.read_project(fileinput)
-            self.project_tree.project.update()
+            if self.project_tree_control.project:
+                self.project_tree_control.project.remove()
+            self.project_tree_control.read_project(fileinput)
+            self.project_tree_control.project.update()
             self.project_changed.emit()
             #select first row
-            root_index = self.project_tree.createIndex(
-                0, 0, self.project_tree.project)
+            root_index = self.project_tree_control.createIndex(
+                0, 0, self.project_tree_control.project)
             self.project_tree_view.setCurrentIndex(root_index)
             self.row_changed(root_index)
             return True
@@ -214,7 +212,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if len(filename) > 0:
             #get first project (by now only 1 project is displayed)
             #need to change, if there are more
-            self.project_tree.write_project(filename)
+            self.project_tree_control.write_project(filename)
             QtGui.QMessageBox.about(
                 self, "Speichern erfolgreich",
                 'Die Speicherung des Projektes\n{}\n war erfolgreich'.
@@ -242,9 +240,27 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.project_changed.emit()
 
     def remove_resource(self):
-        pass
+        '''
+        remove the source of the resource node and optionally remove it from
+        the disk
+        '''
+        node = self.project_tree_view.model().data(
+            self.row_index, QtCore.Qt.UserRole)
+        if os.path.exists(node.full_source):
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Löschen"),
+                _fromUtf8("Soll die Datei {} \nin {}\n".format(
+                    node.resource.file_name, node.full_path) +
+                          "ebenfalls entfernt werden?"),
+                QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            do_delete = reply == QtGui.QMessageBox.Yes
+            if do_delete:
+                os.remove(node.full_source)
+        node.set_source(None)
+        node.update()
+        self.project_changed.emit()
 
-    def reset_simrun(self, simrun_node):
+    def reset_simrun(self):
         '''
         set the simrun to default, copy all files from the default folder
         to the project/scenario folder and link the project tree to those
@@ -256,17 +272,27 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         simrun_node = simrun_node.reset_to_default()
         filenames = []
         destinations = []
-        default_model_folder = os.path.join(DEFAULT_FOLDER,
-                                            simrun_node.model.name)
         for res_node in simrun_node.get_resources():
             filenames.append(res_node.original_source)
             destinations.append(os.path.join(res_node.full_path))
+
+        self.project_tree_view.setUpdatesEnabled(False)
         dialog = CopyFilesDialog(filenames, destinations, parent=self)
+        self.project_tree_view.setUpdatesEnabled(True)
+        #dialog.deleteLater()
         simrun_node.update()
         self.update_view()
 
     def reset_resource(self):
-        pass
+        res_node = self.project_tree_view.model().data(self.row_index,
+                                                       QtCore.Qt.UserRole)
+        res_node.reset_to_default()
+        filename = res_node.original_source
+        destination = res_node.full_path
+        dialog = CopyFilesDialog(filename, destination, parent=self)
+        #dialog.deleteLater()
+        res_node.update()
+        self.update_view()
 
 
 class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
@@ -588,39 +614,53 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
 
     def __init__(self, filenames, destinations, parent=None):
         super(CopyFilesDialog, self).__init__(parent=parent)
+        self.parent = parent
         self.setupUi(self)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setMaximumHeight(420)
+        self.buttonBox.clicked.connect(self.close)
         self.show()
+        self.copy(filenames, destinations)
+
+    def copy(self, filenames, destinations):
+
+        #todo: store changed filenames in this dict
+        self.changed_filenames = {}
+
         if not hasattr(filenames, '__iter__'):
             filenames = [filenames]
         if not hasattr(destinations, '__iter__'):
             destinations = [destinations]
         for i in xrange(len(filenames)):
             d, filename = os.path.split(filenames[i])
-            #if os.path.exists(filenames[i]):
-                #msg = QtGui.QMessageBox(parent=self)
-                #msg.setWindowTitle(_fromUtf8("Überschreiben"))
-                #msg.setText("Die Datei {} existiert bereits."
-                            #.format(filename) +
-                            #"\nWollen Sie sie überschreiben?")
-                #reply = QtGui.QMessageBox.question(
-                    #None, _fromUtf8("Überschreiben"),
-                    #_fromUtf8("Die Datei {} existiert bereits."
-                    #.format(filename) + "\nWollen Sie sie überschreiben?"),
-                    #QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-                #do_overwrite == QtGui.QMessageBox.Yes
-
-
-            status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
-                filename, destinations[i])
-            self.log_edit.insertHtml(status_txt)
             dest_filename = os.path.join(destinations[i], filename)
-            success = hard_copy(filenames[i], dest_filename,
-                                callback=self.progress_bar.setValue)
-            if success:
-                status_txt = '{} erfolgreich kopiert<br>'.format(filename)
+            do_copy = True
+            if os.path.exists(dest_filename):
+                reply = QtGui.QMessageBox.question(
+                    self, _fromUtf8("Überschreiben"),
+                    _fromUtf8("Die Datei {} existiert bereits."
+                              .format(filename) +
+                              "\nWollen Sie sie überschreiben?"),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                do_copy = reply == QtGui.QMessageBox.Yes
+            if do_copy:
+                status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
+                    filename, destinations[i])
+                self.log_edit.insertHtml(status_txt)
+                success = hard_copy(filenames[i], dest_filename,
+                                    callback=self.progress_bar.setValue)
+                if success:
+                    status_txt = '{} erfolgreich kopiert<br>'.format(filename)
+                else:
+                    status_txt = ('<b>Fehler</b> beim Kopieren von {}<br>'
+                                  .format(filename))
+                self.log_edit.insertHtml(status_txt)
             else:
-                status_txt = ('<b>Fehler</b> beim Kopieren von {}<br>'
-                              .format(filename))
-            self.log_edit.insertHtml(status_txt)
+                status_txt = '<b>{}</b> nicht kopiert<br>'.format(
+                    filename, destinations[i])
+                self.log_edit.insertHtml(status_txt)
+        self.progress_bar.setValue(100)
+
+    def __del__(self):
+        print 'messagebox geloescht'
 

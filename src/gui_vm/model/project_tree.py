@@ -27,8 +27,8 @@ class ProjectTreeNode(object):
         self.children = []
         self.rename = False
 
-    def __del__(self):
-        print '{} geloescht'.format(self.name)
+    #def __del__(self):
+        #print '{} geloescht'.format(self.name)
 
     def remove(self):
         self.parent = None
@@ -333,21 +333,30 @@ class SimRun(ProjectTreeNode):
     def meta(self):
         return self.model.characteristics
 
-    def reset_to_default(self):
+    @property
+    def default_folder(self):
+        return os.path.join(DEFAULT_FOLDER, self.model.name)
+
+    def get_default_model(self):
         '''
-        reset the simrun to the defaults
+        get the defaults from the default xml depending on the model
         '''
-        model_name = self.model.name
-        model_default_folder = os.path.join(DEFAULT_FOLDER, self.model.name)
-        default_project_file = os.path.join(model_default_folder,
+        default_project_file = os.path.join(self.default_folder,
                                             'default.xml')
         #get the default simrun(scenario) for the traffic model
         #from the default file
         defaults = XMLParser.read_xml('default_root', default_project_file)
         default_model = defaults.find_all(self.model.name)[0]
+        return default_model
+
+    def reset_to_default(self):
+        '''
+        reset the simrun to the defaults
+        '''
+        default_model = self.get_default_model()
         #set the original sources to the files in the default folder
         for res_node in default_model.get_resources():
-            res_node.original_source = os.path.join(model_default_folder,
+            res_node.original_source = os.path.join(self.default_folder,
                                                     res_node.source)
         #swap this node with the default one
         parent = self.parent
@@ -363,7 +372,7 @@ class SimRun(ProjectTreeNode):
         ----------
         name: String, name of the resource
         '''
-        found = simrun.find_all(self.name)
+        found = self.find_all(name)
         res_nodes = []
         for node in found:
             if isinstance(node, ResourceNode):
@@ -540,18 +549,45 @@ class Project(ProjectTreeNode):
 
 class ResourceNode(ProjectTreeNode):
     '''
-    wrap a resource in a node
+    wrap a resource in a node, link to the resource held by the
+    traffic model
 
     Parameters
     ----------
     resource: Resource,
               resource of the traffic model
     '''
-    def __init__(self, name, resource=None,
+    def __init__(self, name,
                  parent=None):
-        self.resource = resource
+        self.resource_name = name
         super(ResourceNode, self).__init__(name, parent=parent)
         self.original_source = self.full_source
+
+    #@property
+    #def name(self):
+        #'''
+        #name and resource name are the same in this case
+        #'''
+        #return self.resource_name
+
+    #@setter
+    #def name(self, name):
+        #'''
+        #name can't be set to avoid messing up the resource reference
+        #by accident
+        #'''
+        #pass
+
+    @property
+    def resource(self):
+        '''
+        the resources are held by the traffic model, this node only
+        holds a kind of reference to it (via the dict)
+        '''
+        if self.resource_name in self.model.resources.keys():
+            return self.model.resources[self.resource_name]
+        else:
+            return None
 
     def add_to_xml(self, parent):
         '''
@@ -580,17 +616,12 @@ class ResourceNode(ProjectTreeNode):
                  xml node containing informations about this project node
         '''
         super(ResourceNode, self).from_xml(element)
-        simrun = self.get_parent_by_class(SimRun)
-        self.resource = ResourceFile(self.name)
-        if simrun is not None:
-            existing_resource = simrun.model.get_resource(self.name)
-            #if resource is defined by traffic model -> get it
-            if existing_resource is not None:
-                self.resource = existing_resource
+        if self.model is None:
+            raise Exception('The traffic model of the simrun has to be'+
+                            'defined before defining its resources!')
+        self.resource_name = self.name
         self.original_source = element.find('Quelle').text
         source = element.find('Projektdatei').text
-        if source is None:
-            source = ''
         self.source = source
 
     @property
@@ -637,7 +668,10 @@ class ResourceNode(ProjectTreeNode):
 
     @source.setter
     def source(self, subpath):
-        subfolder, filename = os.path.split(subpath)
+        if subpath is not None:
+            subfolder, filename = os.path.split(subpath)
+        else:
+            filename = None
         #only set filename, because subfolder will be determined
         #by the category
         self.resource.set_source(filename)
@@ -672,11 +706,27 @@ class ResourceNode(ProjectTreeNode):
         filename: String, path + name of file
         '''
         self.original_source = filename
-        #####hard copy missing by now#####
         self.source = filename
 
     def update(self):
         self.resource.update(self.run_path)
+
+    def reset_to_default(self):
+        '''
+        reset the simrun to the defaults
+        no real reset, only setting of source, because the resource can't be
+        set to the old model (incl. references of rules and resource list
+        of model) at the moment
+        '''
+        sim_run = self.get_parent_by_class(SimRun)
+        default_model = sim_run.get_default_model()
+        #find corresponding default resource node
+        res_default = default_model.get_resource(self.name)
+        #rename source
+        self.resource.file_name = res_default.resource.file_name
+        self.resource.subfolder = res_default.resource.subfolder
+        self.original_source = os.path.join(sim_run.default_folder,
+                                            self.source)
 
 
 class XMLParser(object):
@@ -707,7 +757,14 @@ class XMLParser(object):
             #create new nodes, if the xmltag describes a project nodes
             if (xmltag in self.inversed_names):
                 classname = self.inversed_names[xmltag]
-                node = globals()[classname](name='', parent=parent)
+                glob_class = globals()[classname]
+                #check if class is subclass of ProjectTreeNode
+                #to avoid injection from xml
+                if issubclass(glob_class, ProjectTreeNode):
+                    node = glob_class(name='', parent=parent)
+                else:
+                    raise Exception('wrong class definition in xml file! '+
+                                    "'{}' is unknown".format(classname))
                 #assign attributes to node
                 node.from_xml(subelement)
                 #add child to project tree (resources handle this itself)

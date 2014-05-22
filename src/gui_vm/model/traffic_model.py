@@ -55,6 +55,7 @@ class TrafficModel(object):
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
+        self.read_config()
 
     def process(self):
         pass
@@ -88,6 +89,10 @@ class TrafficModel(object):
         resource: Resource
         '''
         for resource in args:
+            if resource.name in self.resources.keys():
+                raise Exception("Resource '{}' defined more than once, "
+                                .format(resource.name) +
+                                'but the names have to be unique!')
             self.resources[resource.name] = resource
 
     def validate(self, path):
