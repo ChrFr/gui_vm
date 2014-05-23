@@ -433,7 +433,6 @@ class SimRun(ProjectTreeNode):
                 self.add_child(layer_node)
                 for resource in res_dict[subfolder]:
                     layer_node.add_child(ResourceNode(resource.name,
-                                                      resource=resource,
                                                       parent=self))
         else:
             raise Exception('Traffic Model {0} not available'.format(name))

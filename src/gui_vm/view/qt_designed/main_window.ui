@@ -18,7 +18,7 @@
     <item>
      <layout class="QGridLayout" name="gridLayout">
       <item row="5" column="0">
-       <widget class="QTreeView" name="project_tree_view">
+       <widget class="QTreeView" name="qtreeview">
         <property name="maximumSize">
          <size>
           <width>500</width>
