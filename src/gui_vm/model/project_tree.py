@@ -31,9 +31,9 @@ class ProjectTreeNode(object):
         #print '{} geloescht'.format(self.name)
 
     def remove(self):
+        self.parent.remove_child(self.name)
         self.parent = None
-        for i in xrange(self.child_count):
-            self.children.pop(0).remove()
+        self.remove_all_children()
 
     def add_to_xml(self, parent):
         '''
@@ -188,8 +188,9 @@ class ProjectTreeNode(object):
               name of the child node
         '''
         row = self.get_row(name)
-        child = self.children.pop(row)
-        child.remove()
+        if row > -1:
+            child = self.children.pop(row)
+            child.remove()
 
     def remove_child_at(self, row):
         '''
@@ -204,8 +205,9 @@ class ProjectTreeNode(object):
         child.remove()
 
     def remove_all_children(self):
-        for i in xrange(len(self.children)):
-            self.children.pop(0).remove()
+        if len(self.children) > 0:
+            for i in xrange(len(self.children)):
+                self.children.pop(0).remove()
 
     def get_children(self):
         '''

@@ -229,13 +229,24 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def write_project(self, filename):
         XMLParser.write_xml(self.project, filename)
 
-    def create_project(self, name):
+    def create_project(self, name, folder):
         if name is None:
             name = 'Neues Projekt'
+        if self.project:
+            self.project.remove()
         self.root.add_child(Project(name))
+        #select first row
+        index = self.createIndex(
+            0, 0, self.project)
+        self.item_clicked(index)
+        self.project.project_folder = folder
 
     def read_project(self, filename):
+        if self.project:
+            self.project.remove()
         self.root = XMLParser.read_xml('root', filename)
+        self.project.update()
+        self.project_changed.emit()
 
     def item_clicked(self, index):
         '''
