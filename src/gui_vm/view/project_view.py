@@ -93,6 +93,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     parent: the window, where the dialogs will be shown in
     '''
     project_changed = QtCore.pyqtSignal()
+    view_changed = QtCore.pyqtSignal()
     editable = QtCore.pyqtSignal(bool)
     addable = QtCore.pyqtSignal(bool)
     removable = QtCore.pyqtSignal(bool)
@@ -246,7 +247,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.project.remove()
         self.root = XMLParser.read_xml('root', filename)
         self.project.update()
-        self.project_changed.emit()
+        self.view_changed.emit()
 
     def item_clicked(self, index):
         '''
