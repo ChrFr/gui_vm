@@ -1,7 +1,9 @@
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.resources import Rule
 from collections import OrderedDict
+import subprocess
 import os
+import imp
 
 class Maxem(TrafficModel):
     '''
@@ -104,8 +106,81 @@ class Maxem(TrafficModel):
     def update(self, path):
         super(Maxem, self).update(path)
 
-    def process(self):
-        pass
+    def process(self, name, main_path,
+                zonal_file, put_file,
+                prt_file, nmt_file, param_file,
+                modal_split, correction,
+                callback=None):
+        '''
+        run the traffic model
+
+        Parameters
+        ----------
+        path: String,
+              the path to the main.py
+        zonal_file: String,
+                    path and filename of the h5 containing the zonal data
+        put_file, prt_file, nmt_file : String,
+                                       h5 files with transportation data
+        param_file: String,
+                    path and filename of the h5 containing the parameters
+        modal_split, correction: bool, optional
+                                 do preprocessing (or don't)
+        callback: function,
+                  function to track the progress
+        '''
+        #if not os.path.exists('main.py'):
+            #pass
+        #main_file = os.path.join(main_path, 'main.py')
+        #cmd = r'python -m {}'.format(main_file)
+        cmd = r'C:\Anaconda\python -m tdmks.main'
+
+        cmd_name = name
+        #if not zonal_file:
+        cmd_zonal = '--zd %s' % zonal_file
+        cmd_put = '--pp_put --put %s' % put_file
+        cmd_prt = '--pp_prt --prt %s' % prt_file
+        cmd_nmt = '--pp_nmt --nmt %s' % nmt_file
+        cmd_par = '--par %s' % param_file
+
+        if modal_split:
+            cmd_cal = '-c'
+        else:
+            cmd_cal=''
+
+        if correction:
+            cmd_kor = '--update_kf'
+        else:
+            cmd_kor=''
+
+        # create full command
+        full_cmd = ' '.join([cmd, cmd_name, cmd_put, cmd_prt,
+                             cmd_nmt, cmd_zonal, cmd_par, cmd_cal, cmd_kor])
+        process = subprocess.Popen(full_cmd, stderr=subprocess.PIPE)
+        message = process.stderr.readline()
+        group = None
+        while len(message) > 0:
+            #addIn.ReportMessage(message)
+            l = message.split("INFO->['")
+            if len(l)>1:
+                l2 = l[1].split("'")
+                new_group = l2[0]
+                l3 = l[1].split(',')
+                to_do = int(l3[1].strip())
+                if group != new_group:
+                    group = new_group
+                    progressMax = to_do
+                    msg = 'Ziel und Verkehrmittelwahl'
+                    print(msg + "Gruppe %s" % group + progressMax)
+                already_done = progressMax - to_do
+
+                addIn.UpdateProgressDialog(already_done)
+            message = process.stderr.readline()
+
+        returnvalue = process.wait()
+        if returnvalue == 1:
+            print 'Fehler'
+
 
 
 class ActivityTracking(Rule):

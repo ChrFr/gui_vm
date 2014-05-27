@@ -36,6 +36,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.reset_button.clicked.connect(self.project_view.reset)
         self.save_button.clicked.connect(self.save_project)
         self.open_button.clicked.connect(self.load_project)
+        self.start_button.clicked.connect(self.project_view.run)
 
         #activation of buttons depending on the selected item
         self.project_view.editable[bool].connect(
@@ -46,8 +47,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.minus_button.setEnabled)
         self.project_view.resetable[bool].connect(
             self.reset_button.setEnabled)
+        self.project_view.resetable[bool].connect(
+            self.start_button.setEnabled)
+
         for button in self.context_button_group.children():
             button.setEnabled(False)
+        self.start_button.setEnabled(False)
         #self.project_view.refreshable[bool].connect(
             #self.edit_button.setEnabled)
 
@@ -69,7 +74,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         '''
         refresh the view on the project tree
         '''
-        self.qtreeview.expandAll()
+        #self.qtreeview.expandAll()
         for column in range(self.qtreeview.model()
                             .columnCount(QtCore.QModelIndex())):
             self.qtreeview.resizeColumnToContents(column)
@@ -153,7 +158,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             saved = self.save_project()
             if saved:
                 do_continue = True
-                dialog.close()
             else:
                 do_continue = False
         elif reply == QtGui.QMessageBox.Discard:

@@ -99,10 +99,11 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     removable = QtCore.pyqtSignal(bool)
     resetable = QtCore.pyqtSignal(bool)
     refreshable = QtCore.pyqtSignal(bool)
+    executable = QtCore.pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__()
-        self.parent = parent
+        #self.parent = parent
         self.root = ProjectTreeNode('root')
         self.header = ('Projektbrowser', 'Details')
         self.count = 0
@@ -124,12 +125,17 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         elif isinstance(node, SimRun):
             self.add_run()
 
-    def remove(self):
-        node = self.selected_item
+    def remove(self, node=None):
+        if node is None:
+            node = self.selected_item
         if isinstance(node, SimRun):
-            self.remove_run()
+            self.remove_run(node)
+        elif isinstance(node, Project):
+            self.remove_project(node)
         elif isinstance(node, ResourceNode):
-            self.remove_resource()
+            self.remove_resource(node)
+        self.remove_row(self.current_index.row(),
+                        self.parent(self.current_index))
 
     def edit(self):
         node = self.selected_item
@@ -148,6 +154,11 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         elif isinstance(node, ResourceNode):
             self.reset_resource()
 
+    def run(self):
+        node = self.selected_item
+        if isinstance(node, SimRun):
+            node.run()
+
     def add_run(self):
         project = self.project
         text, ok = QtGui.QInputDialog.getText(
@@ -165,33 +176,34 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
                 project.add_run(model='Maxem', name=name)
                 self.project_changed.emit()
 
-    def remove_run(self):
-        node = self.selected_item
-        parent = node.parent
-        self.project.remove_run(node.name)
-        #select parent
-        parent_idx = self.createIndex(
-            0, 0, parent)
-        self.item_clicked(parent_idx)
+    def remove_run(self, simrun_node):
+        self.project.remove_run(simrun_node.name)
+        ##select parent
+        #parent_idx = self.createIndex(
+            #0, 0, parent)
+        #self.item_clicked(parent_idx)
 
-    def remove_resource(self):
+    def remove_project(self, project_node):
+        project_node.remove()
+
+    def remove_resource(self, resource_node):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
         '''
-        node = self.selected_item
-        if os.path.exists(node.full_source):
+        if os.path.exists(resource_node.full_source):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"),
                 _fromUtf8("Soll die Datei {} \nin {}\n".format(
-                    node.resource.file_name, node.full_path) +
+                    resource_node.resource.file_name,
+                    resource_node.full_path) +
                           "ebenfalls entfernt werden?"),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             do_delete = reply == QtGui.QMessageBox.Yes
             if do_delete:
-                os.remove(node.full_source)
-        node.set_source(None)
-        node.update()
+                os.remove(resource_node.full_source)
+        resource_node.set_source(None)
+        resource_node.update()
         self.project_changed.emit()
 
     def reset_simrun(self):
@@ -234,7 +246,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         if name is None:
             name = 'Neues Projekt'
         if self.project:
-            self.project.remove()
+            self.remove(self.project)
         self.root.add_child(Project(name))
         #select first row
         index = self.createIndex(
@@ -243,9 +255,10 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         self.project.project_folder = folder
 
     def read_project(self, filename):
+        self.current_index = self.createIndex(0, 0, self.project)
         if self.project:
-            self.project.remove()
-        self.root = XMLParser.read_xml('root', filename)
+            self.remove(self.project)
+        self.root = XMLParser.read_xml(self.root, filename)
         self.project.update()
         self.view_changed.emit()
 
@@ -277,6 +290,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             #self.reset = do_nothing
             self.refreshable.emit(True)
             #self.refresh = do_nothing
+            self.executable.emit(False)
             self.details = ProjectDetails(node)
 
         elif isinstance(node, SimRun):
@@ -284,6 +298,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.removable.emit(True)
             self.resetable.emit(True)
             self.refreshable.emit(True)
+            self.executable.emit(True)
             self.details = SimRunDetails(node)
 
         elif isinstance(node, ResourceNode):
@@ -291,6 +306,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.removable.emit(True)
             self.resetable.emit(True)
             self.refreshable.emit(True)
+            self.executable.emit(False)
             self.details = ResourceDetails(node)
 
         else:
@@ -298,6 +314,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.removable.emit(False)
             self.resetable.emit(False)
             self.refreshable.emit(False)
+            self.executable.emit(False)
 
         if self.details:
             self.details.value_changed.connect(self.project_changed)
@@ -316,7 +333,10 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
     def index(self, row, column, parent_index):
         node = self.nodeFromIndex(parent_index)
-        return self.createIndex(row, column, node.child_at_row(row))
+        if row >= 0 and len(node.children) > row:
+            return self.createIndex(row, column, node.child_at_row(row))
+        else:
+            return QtCore.QModelIndex()
 
 
     def data(self, index, role):
@@ -376,13 +396,11 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             return 0
         return node.child_count
 
-    def parent(self, child):
-        print self.count
-        self.count += 1
-        if not child.isValid():
-            return QModelIndex()
+    def parent(self, child_idx):
+        if not child_idx.isValid():
+            return QtCore.QModelIndex()
 
-        node = self.nodeFromIndex(child)
+        node = self.nodeFromIndex(child_idx)
 
         if node is None or not isinstance(node, ProjectTreeNode):
             return QtCore.QModelIndex()
@@ -394,8 +412,9 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
         grandparent = parent.parent
         if grandparent is None:
-            return QtCore.QModelIndex()
-        row = grandparent.row_of_child(parent)
+            row = 0
+        else:
+            row = grandparent.row_of_child(parent)
 
         assert row != - 1
         return self.createIndex(row, 0, parent)
@@ -455,7 +474,8 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def removeRows(self, row, count, parentIndex):
         self.beginRemoveRows(parentIndex, row, row)
         node = self.nodeFromIndex(parentIndex)
-        node.remove_child_at(row)
+        if len(node.children) > row:
+            node.remove_child_at(row)
         self.endRemoveRows()
 
         return True

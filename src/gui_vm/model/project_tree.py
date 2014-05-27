@@ -3,11 +3,9 @@ import os
 import time
 from lxml import etree
 from shutil import copytree
-from gui_vm.config.config import DEFAULT_FOLDER
+from gui_vm.config.config import (DEFAULT_FOLDER, TRAFFIC_MODELS)
 from resources import ResourceFile
 from gui_vm.config.maxem import Maxem
-
-TRAFFIC_MODELS = ['Maxem']
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -325,7 +323,6 @@ class SimRun(ProjectTreeNode):
     '''
     def __init__(self, model=None, name=None, parent=None):
         super(SimRun, self).__init__(name, parent=parent)
-        self._available = TRAFFIC_MODELS
         if model is not None:
             self.set_model(model)
         #simulation runs can be renamed
@@ -338,6 +335,18 @@ class SimRun(ProjectTreeNode):
     @property
     def default_folder(self):
         return os.path.join(DEFAULT_FOLDER, self.model.name)
+
+    def run(self):
+        self.model.process(
+            self.name,
+            TRAFFIC_MODELS[self.model.name],
+            zonal_file=self.get_resource('Zonen').full_source,
+            put_file=self.get_resource('OV').full_source,
+            prt_file=self.get_resource('MIV').full_source,
+            nmt_file=self.get_resource('Fuss und Rad').full_source,
+            param_file=self.get_resource('Params').full_source,
+            modal_split=False,
+            correction=False)
 
     def get_default_model(self):
         '''
@@ -415,7 +424,7 @@ class SimRun(ProjectTreeNode):
         ----------
         name: String, name of the traffic model
         '''
-        if name in self._available:
+        if name in TRAFFIC_MODELS:
             self.model = globals()[name]()
             self.model.update(self.path)
             #remove the old children of the sim run (including resources)
@@ -466,7 +475,7 @@ class SimRun(ProjectTreeNode):
         super(SimRun, self).from_xml(element)
         #init the traffic model before resources can be set
         vm = element.find('Verkehrsmodell').text
-        if vm in self._available:
+        if vm in TRAFFIC_MODELS:
             self.model = globals()[vm]()
             self.model.update(self.path)
         else:
@@ -740,11 +749,10 @@ class XMLParser(object):
         pass
 
     @classmethod
-    def read_xml(self, rootname, filename):
+    def read_xml(self, root, filename):
         tree = etree.parse(filename)
         root_element = tree.getroot()
         if root_element.tag == 'GUI_VM':
-            root = ProjectTreeNode(root_element.tag)
             self.build_xml(root_element, root)
         return root
 

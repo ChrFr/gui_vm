@@ -3,7 +3,7 @@ from gui_vm.view.qt_designed.resource_ui import Ui_DetailsResource
 from gui_vm.view.qt_designed.simrun_ui import Ui_DetailsSimRun
 from gui_vm.view.qt_designed.project_ui import Ui_DetailsProject
 from PyQt4 import QtGui, QtCore
-from gui_vm.config.config import DEFAULT_FOLDER
+from gui_vm.config.config import (DEFAULT_FOLDER, TRAFFIC_MODELS)
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -32,7 +32,7 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.setupUi(self)
         self.setTitle(simrun_node.name)
         self.simrun_node = simrun_node
-        self.combo_model.addItems(self.simrun_node._available)
+        self.combo_model.addItems(TRAFFIC_MODELS.keys())
         index = self.combo_model.findText(self.simrun_node.model.name)
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(
@@ -56,6 +56,15 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         '''
         self.simrun_node.set_model(str(name))
         self.value_changed.emit()
+
+    def run(self):
+        reply = dialog.question(
+            self, _fromUtf8('Simulation starten'),
+            _fromUtf8('Soll die Simulation gestartet werden?'),
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.Ok:
+            self.simrun_node.run()
+
 
 
 class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
