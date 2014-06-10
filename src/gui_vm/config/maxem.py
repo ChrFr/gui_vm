@@ -135,13 +135,13 @@ class Maxem(TrafficModel):
         #cmd = r'python -m {}'.format(main_file)
         cmd = r'C:\Anaconda\python -m tdmks.main'
 
-        cmd_name = name
+        cmd_name = '-n "{}"'.format(name)
         #if not zonal_file:
-        cmd_zonal = '--zd %s' % zonal_file
-        cmd_put = '--pp_put --put %s' % put_file
-        cmd_prt = '--pp_prt --prt %s' % prt_file
-        cmd_nmt = '--pp_nmt --nmt %s' % nmt_file
-        cmd_par = '--par %s' % param_file
+        cmd_zonal = '--zd "%s"' % zonal_file
+        cmd_put = '--pp_put --put "%s"' % put_file
+        cmd_prt = '--pp_prt --prt "%s"' % prt_file
+        cmd_nmt = '--pp_nmt --nmt "%s"' % nmt_file
+        cmd_par = '--par "%s"' % param_file
 
         if modal_split:
             cmd_cal = '-c'

@@ -243,7 +243,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         validate the resource files
         '''
-        self.resource_node.resource.validate(self.resource_node.simrun_path)
+        self.resource_node.validate()
         self.show_attributes()
 
     def __del__(self):

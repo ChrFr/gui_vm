@@ -348,6 +348,11 @@ class SimRun(ProjectTreeNode):
             modal_split=False,
             correction=False)
 
+    def validate(self):
+        resource_nodes = self.get_resources()
+        for node in resource_nodes:
+            node.validate()
+
     def get_default_model(self):
         '''
         get the defaults from the default xml depending on the model
@@ -720,6 +725,9 @@ class ResourceNode(ProjectTreeNode):
 
     def update(self):
         self.resource.update(self.run_path)
+
+    def validate(self):
+        self.resource.validate(self.simrun_path)
 
     def reset_to_default(self):
         '''

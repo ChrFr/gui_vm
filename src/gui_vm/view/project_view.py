@@ -100,6 +100,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     resetable = QtCore.pyqtSignal(bool)
     refreshable = QtCore.pyqtSignal(bool)
     executable = QtCore.pyqtSignal(bool)
+    reloadable = QtCore.pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__()
@@ -126,16 +127,19 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.add_run()
 
     def remove(self, node=None):
-        if node is None:
+        if not isinstance(node, ProjectTreeNode):
             node = self.selected_item
         if isinstance(node, SimRun):
             self.remove_run(node)
+            self.remove_row(self.current_index.row(),
+                            self.parent(self.current_index))
         elif isinstance(node, Project):
             self.remove_project(node)
+            self.remove_row(self.current_index.row(),
+                            self.parent(self.current_index))
         elif isinstance(node, ResourceNode):
             self.remove_resource(node)
-        self.remove_row(self.current_index.row(),
-                        self.parent(self.current_index))
+        self.project_changed.emit()
 
     def edit(self):
         node = self.selected_item
@@ -158,6 +162,11 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         node = self.selected_item
         if isinstance(node, SimRun):
             node.run()
+
+    def do_reload(self):
+        node = self.selected_item
+        node.validate()
+        self.view_changed.emit()
 
     def add_run(self):
         project = self.project
@@ -291,6 +300,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.refreshable.emit(True)
             #self.refresh = do_nothing
             self.executable.emit(False)
+            self.reloadable.emit(False)
             self.details = ProjectDetails(node)
 
         elif isinstance(node, SimRun):
@@ -299,6 +309,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.resetable.emit(True)
             self.refreshable.emit(True)
             self.executable.emit(True)
+            self.reloadable.emit(True)
             self.details = SimRunDetails(node)
 
         elif isinstance(node, ResourceNode):
@@ -307,6 +318,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.resetable.emit(True)
             self.refreshable.emit(True)
             self.executable.emit(False)
+            self.reloadable.emit(True)
             self.details = ResourceDetails(node)
 
         else:
@@ -315,6 +327,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.resetable.emit(False)
             self.refreshable.emit(False)
             self.executable.emit(False)
+            self.reloadable.emit(False)
 
         if self.details:
             self.details.value_changed.connect(self.project_changed)

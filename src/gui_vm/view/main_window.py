@@ -37,6 +37,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.save_button.clicked.connect(self.save_project)
         self.open_button.clicked.connect(self.load_project)
         self.start_button.clicked.connect(self.project_view.run)
+        self.reload_button.clicked.connect(self.project_view.do_reload)
 
         #activation of buttons depending on the selected item
         self.project_view.editable[bool].connect(
@@ -47,8 +48,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.minus_button.setEnabled)
         self.project_view.resetable[bool].connect(
             self.reset_button.setEnabled)
-        self.project_view.resetable[bool].connect(
-            self.start_button.setEnabled)
+        self.project_view.reloadable[bool].connect(
+            self.reload_button.setEnabled)
 
         for button in self.context_button_group.children():
             button.setEnabled(False)
