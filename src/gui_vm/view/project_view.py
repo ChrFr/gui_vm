@@ -187,6 +187,14 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
                               .format(name)))
             else:
                 project.add_run(model='Maxem', name=name)
+                reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8("Neues Szenario erstellen"),
+                    _fromUtf8("Möchten Sie die Standarddateien " +
+                              "für das neue Szenario verwenden?"),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                do_copy = reply == QtGui.QMessageBox.Yes
+                if do_copy:
+                    self.reset_simrun(simrun_node=project.get_child(name))
                 self.project_changed.emit()
 
     def remove_run(self, simrun_node):
@@ -215,14 +223,15 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         resource_node.update()
         self.project_changed.emit()
 
-    def reset_simrun(self):
+    def reset_simrun(self, simrun_node=None):
         '''
         set the simrun to default, copy all files from the default folder
         to the project/scenario folder and link the project tree to those
         files
         '''
         #self.project_tree_view.reset(self.row_index)
-        simrun_node = self.selected_item
+        if simrun_node is None:
+            simrun_node = self.selected_item
         simrun_node = simrun_node.reset_to_default()
         filenames = []
         destinations = []
@@ -258,12 +267,12 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             name = 'Neues Projekt'
         if self.project:
             self.remove(self.project)
+            self.remove_row(self.current_index.row(),
+                            self.parent(self.current_index))
+            return
         self.root.add_child(Project(name))
-        #select first row
-        index = self.createIndex(
-            0, 0, self.project)
-        self.item_clicked(index)
-        self.project.project_folder = folder
+        self.item_clicked(self.createIndex(0, 0, self.project))
+        self.project.project_folder = os.path.join(folder, name)
 
     def read_project(self, filename):
         self.current_index = self.createIndex(0, 0, self.project)
