@@ -378,12 +378,6 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         node = self.nodeFromIndex(index)
         if node is None:
             return QtCore.QVariant()
-        #print '{} - {}'.format(node.name, sys.getrefcount(node))
-        is_valid = True
-        is_checked = False
-        if hasattr(node, 'resource'):
-            is_valid = node.resource.is_valid
-            is_checked = node.resource.is_checked
 
         if role == QtCore.Qt.DecorationRole:
             return QtCore.QVariant()
@@ -397,13 +391,25 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
         #color the the 2nd column of a node depending on its status
         if role == QtCore.Qt.TextColorRole and index.column() == 1:
+            #if hasattr(node, 'is_checked'):
+            is_checked = node.is_checked
             if is_checked:
+                #if hasattr(node, 'is_valid'):
+                is_valid = node.is_valid
                 if is_valid:
                     return QtCore.QVariant(QtGui.QColor(QtCore.Qt.darkGreen))
                 else:
                     return QtCore.QVariant(QtGui.QColor(QtCore.Qt.red))
             else:
                 return QtCore.QVariant(QtGui.QColor(QtCore.Qt.black))
+
+        if role == QtCore.Qt.FontRole:
+            #if  (index.column() == 0 and
+            if (isinstance(node, SimRun) or isinstance(node, Project)):
+                return QtCore.QVariant(
+                    QtGui.QFont("Arial", 9, QtGui.QFont.Bold))
+            else:
+                return QtCore.QVariant(QtGui.QFont("Arial", 9))
 
         #all other roles (except display role)
         if role != QtCore.Qt.DisplayRole:

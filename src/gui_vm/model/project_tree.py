@@ -24,6 +24,8 @@ class ProjectTreeNode(object):
         self.name = name
         self.children = []
         self.rename = False
+        self.is_checked = False
+        self.is_valid = True
 
     #def __del__(self):
         #print '{} geloescht'.format(self.name)
@@ -350,8 +352,14 @@ class SimRun(ProjectTreeNode):
 
     def validate(self):
         resource_nodes = self.get_resources()
+        self.is_valid = True
         for node in resource_nodes:
             node.validate()
+            if node.is_checked and not node.is_valid:
+                #node.parent.checked = True
+                #node.parent.is_valid = False
+                self.is_valid = False
+        self.is_checked = True
 
     def get_default_model(self):
         '''
@@ -729,6 +737,8 @@ class ResourceNode(ProjectTreeNode):
 
     def validate(self):
         self.resource.validate(self.simrun_path)
+        self.is_checked = self.resource.is_checked
+        self.is_valid = self.resource.is_valid
 
     def reset_to_default(self):
         '''
