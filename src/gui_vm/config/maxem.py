@@ -133,7 +133,7 @@ class Maxem(TrafficModel):
             #pass
         #main_file = os.path.join(main_path, 'main.py')
         #cmd = r'python -m {}'.format(main_file)
-        cmd = r'C:\Anaconda\python -m tdmks.main'
+        cmd = r'C:\Anaconda\envs\tdmks\python -m tdmks.main'
 
         cmd_name = '-n "{}"'.format(name)
         #if not zonal_file:

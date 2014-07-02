@@ -53,7 +53,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         for button in self.context_button_group.children():
             button.setEnabled(False)
-        self.start_button.setEnabled(False)
+        self.start_button.setEnabled(True)
         #self.project_view.refreshable[bool].connect(
             #self.edit_button.setEnabled)
 
@@ -65,7 +65,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionNeues_Projekt.triggered.connect(self.create_project)
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
-        self.project_view.dataChanged.connect(self.project_changed_handler)
+        self.project_view.dataChanged.connect(self.update_gui)
         self.project_view.view_changed.connect(self.update_gui)
         self.project_view.project_changed.connect(self.project_changed_handler)
         self.project_changed.connect(self.project_changed_handler)
@@ -75,10 +75,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         '''
         refresh the view on the project tree
         '''
-        #self.qtreeview.expandAll()
+        self.qtreeview.expandAll()
         for column in range(self.qtreeview.model()
                             .columnCount(QtCore.QModelIndex())):
             self.qtreeview.resizeColumnToContents(column)
+        self.project_view.refresh_details()
         details = self.project_view.details
         if details is not None:
             self.details_layout.addWidget(details)
@@ -155,7 +156,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                       'Wollen Sie die Änderungen speichern?'),
             QtGui.QMessageBox.Save, QtGui.QMessageBox.Discard,
             QtGui.QMessageBox.Cancel)
-        if reply == QtGui.QMessageBox.Ok:
+        if reply == QtGui.QMessageBox.Save:
             saved = self.save_project()
             if saved:
                 do_continue = True
@@ -166,6 +167,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return do_continue
 
     def closeEvent(self, event):
+        do_continue = True
         if self.project_has_changed:
             do_continue = self.project_changed_message()
         if do_continue:

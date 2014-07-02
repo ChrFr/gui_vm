@@ -104,7 +104,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
     def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__()
-        #self.parent = parent
+        self.parent_dialog = parent
         self.root = ProjectTreeNode('root')
         self.header = ('Projektbrowser', 'Details')
         self.count = 0
@@ -130,13 +130,17 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         if not isinstance(node, ProjectTreeNode):
             node = self.selected_item
         if isinstance(node, SimRun):
+            parent_idx = self.parent(self.current_index)
+            self.remove_row(self.current_index.row(),
+                            parent_idx)
             self.remove_run(node)
-            self.remove_row(self.current_index.row(),
-                            self.parent(self.current_index))
+            self.item_clicked(parent_idx)
         elif isinstance(node, Project):
-            self.remove_project(node)
+            project_node = node
             self.remove_row(self.current_index.row(),
                             self.parent(self.current_index))
+            self.item_clicked(self.createIndex(0, 0))
+            return
         elif isinstance(node, ResourceNode):
             self.remove_resource(node)
         self.project_changed.emit()
@@ -187,10 +191,6 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
     def remove_run(self, simrun_node):
         self.project.remove_run(simrun_node.name)
-        ##select parent
-        #parent_idx = self.createIndex(
-            #0, 0, parent)
-        #self.item_clicked(parent_idx)
 
     def remove_project(self, project_node):
         project_node.remove()
@@ -232,9 +232,10 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
         #bad workaround (as it has to know the parents qtreeview)
         #but the view crashes otherwise, maybe make update signal
-        self.parent.qtreeview.setUpdatesEnabled(False)
-        dialog = CopyFilesDialog(filenames, destinations, parent=self.parent)
-        self.parent.qtreeview.setUpdatesEnabled(True)
+        self.parent_dialog.qtreeview.setUpdatesEnabled(False)
+        dialog = CopyFilesDialog(filenames, destinations,
+                                 parent=self.parent_dialog)
+        self.parent_dialog.qtreeview.setUpdatesEnabled(True)
         #dialog.deleteLater()
         simrun_node.update()
         self.project_changed.emit()
@@ -244,7 +245,8 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         res_node.reset_to_default()
         filename = res_node.original_source
         destination = res_node.full_path
-        dialog = CopyFilesDialog(filename, destination, parent=self.parent)
+        dialog = CopyFilesDialog(filename, destination,
+                                 parent=self.parent_dialog)
         res_node.update()
         self.project_changed.emit()
 
@@ -271,7 +273,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         self.project.update()
         self.view_changed.emit()
 
-    def item_clicked(self, index):
+    def item_clicked(self, index=None):
         '''
         show details when row of project tree is clicked
         details shown depend on type of node that is behind the clicked row
@@ -285,7 +287,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             self.details.close()
             self.details = None
 
-        if node.rename:
+        if node and node.rename:
             self.editable.emit(True)
         else:
             self.editable.emit(False)
@@ -332,6 +334,14 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         if self.details:
             self.details.value_changed.connect(self.project_changed)
         self.dataChanged.emit(index, index)
+
+    def refresh_details(self):
+
+        node = self.selected_item
+        if self.details:
+            self.details.close()
+            self.details = self.details.__class__(node)
+            self.details.value_changed.connect(self.project_changed)
 
     def replace(self, index, new_node):
         pass

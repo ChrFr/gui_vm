@@ -361,7 +361,8 @@ class SimRun(ProjectTreeNode):
                                             'default.xml')
         #get the default simrun(scenario) for the traffic model
         #from the default file
-        defaults = XMLParser.read_xml('default_root', default_project_file)
+        tmp_root = ProjectTreeNode('default_root')
+        defaults = XMLParser.read_xml(tmp_root, default_project_file)
         default_model = defaults.find_all(self.model.name)[0]
         return default_model
 
