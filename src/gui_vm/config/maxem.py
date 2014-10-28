@@ -3,7 +3,7 @@ from gui_vm.model.resources import Rule
 from collections import OrderedDict
 import subprocess
 import os
-import imp
+import sys
 
 class Maxem(TrafficModel):
     '''
@@ -129,10 +129,6 @@ class Maxem(TrafficModel):
         callback: function,
                   function to track the progress
         '''
-        #if not os.path.exists('main.py'):
-            #pass
-        #main_file = os.path.join(main_path, 'main.py')
-        #cmd = r'python -m {}'.format(main_file)
         cmd = r'C:\Anaconda\envs\tdmks\python -m tdmks.main'
 
         cmd_name = '-n "{}"'.format(name)
@@ -156,30 +152,35 @@ class Maxem(TrafficModel):
         # create full command
         full_cmd = ' '.join([cmd, cmd_name, cmd_put, cmd_prt,
                              cmd_nmt, cmd_zonal, cmd_par, cmd_cal, cmd_kor])
-        process = subprocess.Popen(full_cmd, stderr=subprocess.PIPE)
-        message = process.stderr.readline()
-        group = None
-        while len(message) > 0:
-            #addIn.ReportMessage(message)
-            l = message.split("INFO->['")
-            if len(l)>1:
-                l2 = l[1].split("'")
-                new_group = l2[0]
-                l3 = l[1].split(',')
-                to_do = int(l3[1].strip())
-                if group != new_group:
-                    group = new_group
-                    progressMax = to_do
-                    msg = 'Ziel und Verkehrmittelwahl'
-                    print(msg + "Gruppe %s" % group + progressMax)
-                already_done = progressMax - to_do
+        return full_cmd
+        #process = subprocess.Popen(full_cmd, stderr=subprocess.PIPE)
 
-                addIn.UpdateProgressDialog(already_done)
-            message = process.stderr.readline()
+        #for line in iter(process.stderr.readline, ''):
+            #i += 1
+            #print('<<<<<' + line)
+            #sys.stdout.write(line)
+            #callback(str(line), 0)
+        #while len(message) > 0:
+            ##addIn.ReportMessage(message)
+            #l = message.split("INFO->['")
+            #if len(l)>1:
+                #l2 = l[1].split("'")
+                #new_group = l2[0]
+                #l3 = l[1].split(',')
+                #to_do = int(l3[1].strip())
+                #if group != new_group:
+                    #group = new_group
+                    #progressMax = to_do
+                    #msg = 'Ziel und Verkehrmittelwahl'
+                    #print(msg + "Gruppe %s" % group + progressMax)
+                #already_done = progressMax - to_do
 
-        returnvalue = process.wait()
-        if returnvalue == 1:
-            print 'Fehler'
+                #addIn.UpdateProgressDialog(already_done)
+            #message = process.stderr.readline()
+
+        #returnvalue = process.wait()
+        #if returnvalue == 1:
+            #print 'Fehler'
 
 
 

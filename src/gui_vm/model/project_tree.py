@@ -338,17 +338,18 @@ class SimRun(ProjectTreeNode):
     def default_folder(self):
         return os.path.join(DEFAULT_FOLDER, self.model.name)
 
-    def run(self):
-        self.model.process(
+    def run(self, callback=None):
+        return self.model.process(
             self.name,
             TRAFFIC_MODELS[self.model.name],
             zonal_file=self.get_resource('Zonen').full_source,
             put_file=self.get_resource('OV').full_source,
             prt_file=self.get_resource('MIV').full_source,
             nmt_file=self.get_resource('Fuss und Rad').full_source,
-            param_file=self.get_resource('Params').full_source,
+            param_file=self.get_resource('Betas').full_source,
             modal_split=False,
-            correction=False)
+            correction=False,
+            callback=callback)
 
     def validate(self):
         resource_nodes = self.get_resources()

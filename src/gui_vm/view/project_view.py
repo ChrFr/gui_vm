@@ -3,9 +3,7 @@ from PyQt4 import (QtCore, QtGui)
 from details import (SimRunDetails, ProjectDetails, ResourceDetails)
 from gui_vm.model.project_tree import (Project, ProjectTreeNode, SimRun,
                                        ResourceNode, XMLParser)
-from gui_vm.view.qt_designed.progress_ui import Ui_ProgressDialog
-from gui_vm.model.backend import hard_copy
-import sys
+from gui_vm.view.progress_dialogs import CopyFilesDialog, ProgressDialog
 import os
 
 try:
@@ -13,73 +11,6 @@ try:
 except AttributeError:
     def _fromUtf8(s):
         return s
-
-
-class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
-    '''
-
-    Parameter
-    ---------
-    filenames: list of Strings,
-           filenames of the files to be copied
-    destinations: list of Strings,
-                  folders where the files shall be copied
-    '''
-
-    def __init__(self, filenames, destinations, parent=None):
-        super(CopyFilesDialog, self).__init__(parent=parent)
-        self.parent = parent
-        self.setupUi(self)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setMaximumHeight(420)
-        self.buttonBox.clicked.connect(self.close)
-        self.show()
-        self.copy(filenames, destinations)
-
-    def copy(self, filenames, destinations):
-
-        #todo: store changed filenames in this dict
-        self.changed_filenames = {}
-
-        if not hasattr(filenames, '__iter__'):
-            filenames = [filenames]
-        if not hasattr(destinations, '__iter__'):
-            destinations = [destinations]
-        for i in xrange(len(filenames)):
-            d, filename = os.path.split(filenames[i])
-            dest_filename = os.path.join(destinations[i], filename)
-            do_copy = True
-            if os.path.exists(dest_filename):
-                reply = QtGui.QMessageBox.question(
-                    self, _fromUtf8("Überschreiben"),
-                    _fromUtf8("Die Datei {} existiert bereits."
-                              .format(filename) +
-                              "\nWollen Sie sie überschreiben?"),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-                do_copy = reply == QtGui.QMessageBox.Yes
-            if do_copy:
-                status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
-                    filename, destinations[i])
-                self.log_edit.insertHtml(status_txt)
-                success = hard_copy(filenames[i], dest_filename,
-                                    callback=self.progress_bar.setValue)
-                if success:
-                    status_txt = '{} erfolgreich kopiert<br>'.format(filename)
-                else:
-                    status_txt = ('<b>Fehler</b> beim Kopieren von {}<br>'
-                                  .format(filename))
-                self.log_edit.insertHtml(status_txt)
-            else:
-                status_txt = '<b>{}</b> nicht kopiert<br>'.format(
-                    filename, destinations[i])
-                self.log_edit.insertHtml(status_txt)
-        self.progress_bar.setValue(100)
-
-    def __del__(self):
-        print 'messagebox geloescht'
-
-
-
 
 class ProjectTreeView(QtCore.QAbstractItemModel):
     '''
@@ -165,7 +96,8 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def run(self):
         node = self.selected_item
         if isinstance(node, SimRun):
-            node.run()
+            cmd = node.run()
+            dialog = ProgressDialog(cmd, parent=self.parent_dialog)
 
     def do_reload(self):
         node = self.selected_item

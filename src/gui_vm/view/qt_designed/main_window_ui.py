@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Tue Jun 10 13:18:36 2014
-#      by: PyQt4 UI code generator 4.10.4
+# Created: Tue Oct 28 17:45:36 2014
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -56,9 +56,9 @@ class Ui_MainWindow(object):
         self.open_button.setMaximumSize(QtCore.QSize(30, 30))
         self.open_button.setText(_fromUtf8(""))
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/open.svg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/open.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.open_button.setIcon(icon)
-        self.open_button.setIconSize(QtCore.QSize(60, 60))
+        self.open_button.setIconSize(QtCore.QSize(24, 28))
         self.open_button.setObjectName(_fromUtf8("open_button"))
         self.horizontalLayout_3.addWidget(self.open_button)
         self.save_button = QtGui.QPushButton(self.centralwidget)

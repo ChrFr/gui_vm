@@ -1,6 +1,6 @@
 <RCC>
   <qresource prefix="buttons">
-    <file>../icons/open.svg</file>
+    <file>../icons/open.png</file>
     <file>../icons/reset.png</file>
     <file>../icons/edit.png</file>
     <file>../icons/minus.png</file>
