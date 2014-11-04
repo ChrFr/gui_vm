@@ -370,7 +370,7 @@
     </property>
     <addaction name="actionNeues_Szenario"/>
     <addaction name="separator"/>
-    <addaction name="actionProjekteinstellungen"/>
+    <addaction name="actionEinstellungen"/>
    </widget>
    <widget class="QMenu" name="menuHilfe">
     <property name="title">
@@ -408,9 +408,9 @@
     <string>Neues Szenario</string>
    </property>
   </action>
-  <action name="actionProjekteinstellungen">
+  <action name="actionEinstellungen">
    <property name="text">
-    <string>Projekteinstellungen</string>
+    <string>Einstellungen</string>
    </property>
   </action>
   <action name="actionInfo">

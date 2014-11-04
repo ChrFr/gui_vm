@@ -5,6 +5,8 @@ from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeView
 from gui_vm.view.qt_designed.new_project_ui import Ui_NewProject
 from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
+from gui_vm.view.qt_designed.settings_ui import Ui_Settings
+from gui_vm.config.config import Config
 import os
 
 try:
@@ -21,6 +23,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
 
+        self.config = Config()
+        self.config.read()
         #define the view on the project and connect to the qtreeview in
         #the main window
         self.project_view = ProjectTreeView(parent=self)
@@ -63,6 +67,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionNeues_Szenario.triggered.connect(
             self.project_view.add_run)
         self.actionNeues_Projekt.triggered.connect(self.create_project)
+        self.actionEinstellungen.triggered.connect(self.edit_settings)
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
         self.project_view.dataChanged.connect(self.update_gui)
@@ -101,6 +106,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 return True
         else:
             return False
+
+    def edit_settings(self):
+        '''
+        create a new project
+        return True if new project was created
+        '''
+        SettingsDialog(self)
 
     def load_project(self):
         '''
@@ -214,6 +226,90 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
                     dialog, "Warnung!", "Verzeichnis {} existiert nicht!"
                     .format(project_folder))
         return (project_name, project_folder, False)
+
+class SettingsDialog(QtGui.QDialog, Ui_Settings):
+    '''
+    open a dialog to set the project name and folder and afterwards create
+    a new project
+    '''
+
+    def __init__(self, parent=None):
+        super(SettingsDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.config = parent.config
+
+        env = self.config.settings['environment']
+        self.project_edit.setText(env['default_project_folder'])
+        self.project_browse_button.clicked.connect(
+            lambda: self.set_folder(self.project_edit))
+
+        self.python_edit.setText(env['python_path'])
+        self.python_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.python_edit, 'python.exe'))
+
+        mod = self.config.settings['trafficmodels']
+        maxem = mod['Maxem']
+        self.maxem_default_edit.setText(maxem['default_folder'])
+        self.maxem_default_browse_button.clicked.connect(
+            lambda: self.set_folder(self.maxem_default_edit))
+        self.maxem_exec_edit.setText(maxem['executable'])
+        self.maxem_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.maxem_exec_edit, '*.py'))
+
+        verkmod = mod['VerkMod']
+        self.verkmod_default_edit.setText(verkmod['default_folder'])
+        self.verkmod_default_browse_button.clicked.connect(
+            lambda: self.set_folder(self.verkmod_default_edit))
+        self.verkmod_exec_edit.setText(verkmod['executable'])
+        self.verkmod_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
+
+        self.OK_button.clicked.connect(self.write_config)
+        self.reset_button.clicked.connect(self.reset)
+        self.cancel_button.clicked.connect(self.close)
+        self.show()
+
+    def set_file(self, line_edit, extension):
+        '''
+        open a file browser to put a path to a file into the given line edit
+        '''
+        filename = str(
+            QtGui.QFileDialog.getOpenFileName(
+                self, 'Datei wählen', extension))
+        #filename is '' if canceled
+        if len(filename) > 0:
+            line_edit.setText(filename)
+
+    def set_folder(self, line_edit):
+        '''
+        open a file browser to put a directory into the given line edit
+        '''
+        folder = str(
+            QtGui.QFileDialog.getExistingDirectory(
+                self, 'Ordner wählen', '.'))
+        #folder is '' if canceled
+        if len(folder) > 0:
+            line_edit.setText(folder)
+
+    def write_config(self):
+        env = self.config.settings['environment']
+        env['default_project_folder'] = str(self.project_edit.text())
+        env['python_path'] = str(self.python_edit.text())
+
+        mod = self.config.settings['trafficmodels']
+        maxem = mod['Maxem']
+        maxem['default_folder'] = str(self.maxem_default_edit.text())
+        maxem['executable'] = str(self.maxem_exec_edit.text())
+
+        verkmod = mod['VerkMod']
+        verkmod['default_folder'] = str(self.verkmod_default_edit.text())
+        verkmod['executable'] = str(self.verkmod_exec_edit.text())
+
+        self.config.write()
+        self.close()
+
+    def reset(self):
+        pass
 
 
 class WelcomeDialog(QtGui.QDialog, Ui_Welcome):

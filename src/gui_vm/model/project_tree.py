@@ -3,9 +3,10 @@ import os
 import time
 from lxml import etree
 from shutil import copytree
-from gui_vm.config.config import (DEFAULT_FOLDER, TRAFFIC_MODELS)
+from gui_vm.config.config import Config
 from resources import ResourceFile
-from gui_vm.config.maxem import Maxem
+#from gui_vm.config.maxem import Maxem
+#from gui_vm.config.verkmod import Verkmod
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config

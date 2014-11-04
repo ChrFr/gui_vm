@@ -1,0 +1,16 @@
+<CONFIG>
+  <environment>
+    <default_project_folder>F:\ggr Projekte\vm_projekte</default_project_folder>
+    <python_path>C:/Python27/python.exe</python_path>
+  </environment>
+  <trafficmodels>
+    <Maxem>
+      <executable></executable>
+      <default_folder>F:\ggr Projekte\gui_vm\default\Maxem</default_folder>
+    </Maxem>
+    <VerkMod>
+      <executable></executable>
+      <default_folder></default_folder>
+    </VerkMod>
+  </trafficmodels>
+</CONFIG>

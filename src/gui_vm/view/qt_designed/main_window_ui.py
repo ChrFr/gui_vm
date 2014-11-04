@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Tue Oct 28 17:45:36 2014
+# Created: Tue Nov 04 15:40:11 2014
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -159,8 +159,8 @@ class Ui_MainWindow(object):
         self.actionNeues_Projekt.setObjectName(_fromUtf8("actionNeues_Projekt"))
         self.actionNeues_Szenario = QtGui.QAction(MainWindow)
         self.actionNeues_Szenario.setObjectName(_fromUtf8("actionNeues_Szenario"))
-        self.actionProjekteinstellungen = QtGui.QAction(MainWindow)
-        self.actionProjekteinstellungen.setObjectName(_fromUtf8("actionProjekteinstellungen"))
+        self.actionEinstellungen = QtGui.QAction(MainWindow)
+        self.actionEinstellungen.setObjectName(_fromUtf8("actionEinstellungen"))
         self.actionInfo = QtGui.QAction(MainWindow)
         self.actionInfo.setObjectName(_fromUtf8("actionInfo"))
         self.menuDatei.addAction(self.actionNeues_Projekt)
@@ -170,7 +170,7 @@ class Ui_MainWindow(object):
         self.menuDatei.addAction(self.actionBeenden)
         self.menuBearbeiten.addAction(self.actionNeues_Szenario)
         self.menuBearbeiten.addSeparator()
-        self.menuBearbeiten.addAction(self.actionProjekteinstellungen)
+        self.menuBearbeiten.addAction(self.actionEinstellungen)
         self.menuHilfe.addAction(self.actionInfo)
         self.menubar.addAction(self.menuDatei.menuAction())
         self.menubar.addAction(self.menuBearbeiten.menuAction())
@@ -199,7 +199,7 @@ class Ui_MainWindow(object):
         self.actionProjekt_speichern.setText(_translate("MainWindow", "Projekt speichern", None))
         self.actionNeues_Projekt.setText(_translate("MainWindow", "Neues Projekt", None))
         self.actionNeues_Szenario.setText(_translate("MainWindow", "Neues Szenario", None))
-        self.actionProjekteinstellungen.setText(_translate("MainWindow", "Projekteinstellungen", None))
+        self.actionEinstellungen.setText(_translate("MainWindow", "Einstellungen", None))
         self.actionInfo.setText(_translate("MainWindow", "Info", None))
 
 import gui_rc

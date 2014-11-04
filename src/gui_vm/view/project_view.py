@@ -106,6 +106,8 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
     def add_run(self):
         project = self.project
+        if (not project):
+            return
         text, ok = QtGui.QInputDialog.getText(
             None, 'Neues Szenario', 'Name des neuen Szenarios:',
             QtGui.QLineEdit.Normal,

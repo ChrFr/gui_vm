@@ -70,7 +70,7 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                 status_txt = '<b>{}</b> nicht kopiert<br>'.format(
                     filename, destinations[i])
                 self.log_edit.insertHtml(status_txt)
-        self.cancelButton.text('OK')
+        self.cancelButton.setText('OK')
         self.progress_bar.setValue(100)
 
 

@@ -4,7 +4,7 @@ from gui_vm.view.qt_designed.simrun_ui import Ui_DetailsSimRun
 from gui_vm.view.qt_designed.project_ui import Ui_DetailsProject
 from gui_vm.view.progress_dialogs import CopyFilesDialog
 from PyQt4 import QtGui, QtCore
-from gui_vm.config.config import (DEFAULT_FOLDER, TRAFFIC_MODELS)
+from gui_vm.config.config import Config
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
