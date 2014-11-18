@@ -3,9 +3,8 @@ import sys
 from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeView
-from gui_vm.view.dialogs import NewProjectDialog
+from gui_vm.view.dialogs import NewProjectDialog, SettingsDialog
 from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
-from gui_vm.view.qt_designed.settings_ui import Ui_Settings
 from gui_vm.config.config import Config
 import os
 
@@ -26,15 +25,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
 
-        #define the view on the project and connect to the qtreeview in
-        #the main window
+        # define the view on the project and connect to the qtreeview in
+        # the main window
         self.project_view = ProjectTreeView(parent=self)
         self.qtreeview.setModel(self.project_view)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
             self.project_view.item_clicked)
         self.project_has_changed = False
 
-        #connect the buttons
+        # connect the buttons
         self.plus_button.clicked.connect(self.project_view.add)
         self.minus_button.clicked.connect(self.project_view.remove)
         self.edit_button.clicked.connect(self.project_view.edit)
@@ -44,7 +43,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.start_button.clicked.connect(self.project_view.run)
         self.reload_button.clicked.connect(self.project_view.do_reload)
 
-        #activation of buttons depending on the selected item
+        # activation of buttons depending on the selected item
         self.project_view.editable[bool].connect(
             self.edit_button.setEnabled)
         self.project_view.addable[bool].connect(
@@ -62,7 +61,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #self.project_view.refreshable[bool].connect(
             #self.edit_button.setEnabled)
 
-        #connect the tool bar
+        # connect the tool bar
         self.actionProjekt_speichern.triggered.connect(self.save_project)
         self.actionProjekt_ffnen.triggered.connect(self.load_project)
         self.actionNeues_Szenario.triggered.connect(
@@ -96,7 +95,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         create a new project
         return True if new project was created
         '''
-        (project_name, project_folder, ok )= NewProjectDialog.getValues()
+        (project_name, project_folder, ok) = NewProjectDialog.getValues()
         if ok:
             do_continue = True
             if self.project_has_changed:
@@ -183,90 +182,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             event.accept()
         else:
             event.ignore()
-
-
-class SettingsDialog(QtGui.QDialog, Ui_Settings):
-    '''
-    open a dialog to set the project name and folder and afterwards create
-    a new project
-    '''
-
-    def __init__(self, parent=None):
-        super(SettingsDialog, self).__init__(parent)
-        self.setupUi(self)
-
-        env = config.settings['environment']
-        self.project_edit.setText(env['default_project_folder'])
-        self.project_browse_button.clicked.connect(
-            lambda: self.set_folder(self.project_edit))
-
-        self.python_edit.setText(env['python_path'])
-        self.python_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.python_edit, 'python.exe'))
-
-        mod = config.settings['trafficmodels']
-        maxem = mod['Maxem']
-        self.maxem_default_edit.setText(maxem['default_folder'])
-        self.maxem_default_browse_button.clicked.connect(
-            lambda: self.set_folder(self.maxem_default_edit))
-        self.maxem_exec_edit.setText(maxem['executable'])
-        self.maxem_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.maxem_exec_edit, '*.py'))
-
-        verkmod = mod['VerkMod']
-        self.verkmod_default_edit.setText(verkmod['default_folder'])
-        self.verkmod_default_browse_button.clicked.connect(
-            lambda: self.set_folder(self.verkmod_default_edit))
-        self.verkmod_exec_edit.setText(verkmod['executable'])
-        self.verkmod_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
-
-        self.OK_button.clicked.connect(self.write_config)
-        self.reset_button.clicked.connect(self.reset)
-        self.cancel_button.clicked.connect(self.close)
-        self.show()
-
-    def set_file(self, line_edit, extension):
-        '''
-        open a file browser to put a path to a file into the given line edit
-        '''
-        filename = str(
-            QtGui.QFileDialog.getOpenFileName(
-                self, 'Datei wählen', extension))
-        #filename is '' if canceled
-        if len(filename) > 0:
-            line_edit.setText(filename)
-
-    def set_folder(self, line_edit):
-        '''
-        open a file browser to put a directory into the given line edit
-        '''
-        folder = str(
-            QtGui.QFileDialog.getExistingDirectory(
-                self, 'Ordner wählen', '.'))
-        #folder is '' if canceled
-        if len(folder) > 0:
-            line_edit.setText(folder)
-
-    def write_config(self):
-        env = config.settings['environment']
-        env['default_project_folder'] = str(self.project_edit.text())
-        env['python_path'] = str(self.python_edit.text())
-
-        mod = config.settings['trafficmodels']
-        maxem = mod['Maxem']
-        maxem['default_folder'] = str(self.maxem_default_edit.text())
-        maxem['executable'] = str(self.maxem_exec_edit.text())
-
-        verkmod = mod['VerkMod']
-        verkmod['default_folder'] = str(self.verkmod_default_edit.text())
-        verkmod['executable'] = str(self.verkmod_exec_edit.text())
-
-        config.write()
-        self.close()
-
-    def reset(self):
-        pass
 
 
 class WelcomeDialog(QtGui.QDialog, Ui_Welcome):

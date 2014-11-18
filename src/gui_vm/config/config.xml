@@ -5,14 +5,14 @@
   </environment>
   <trafficmodels>
     <Maxem>
-      <config_file>config/Maxem/maxem.py</config_file>
-      <executable>F:\ELAN\tdmks\src\tdmks\main.py</executable>
       <default_folder>F:\ggr Projekte\gui_vm\default\Maxem</default_folder>
+      <executable>F:\ELAN\tdmks\src\tdmks\main.py</executable>
+      <config_file>config/Maxem/maxem.py</config_file>
     </Maxem>
     <VerkMod>
-      <config_file></config_file>
-      <executable></executable>
       <default_folder></default_folder>
+      <executable></executable>
+      <config_file></config_file>
     </VerkMod>
   </trafficmodels>
 </CONFIG>

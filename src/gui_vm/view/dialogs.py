@@ -2,6 +2,7 @@
 from gui_vm.view.qt_designed.progress_ui import Ui_ProgressDialog
 from gui_vm.view.qt_designed.new_project_ui import Ui_NewProject
 from gui_vm.view.qt_designed.new_simrun_ui import Ui_NewSimRun
+from gui_vm.view.qt_designed.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy
 from PyQt4 import QtGui, QtCore
 import sys
@@ -16,6 +17,7 @@ try:
 except AttributeError:
     def _fromUtf8(s):
         return s
+
 
 class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
     '''
@@ -189,3 +191,87 @@ class NewSimRunDialog(QtGui.QDialog, Ui_NewSimRun):
         model_name = str(dialog.combo_model.currentText())
         accepted = ok == QtGui.QDialog.Accepted
         return (simrun_name, model_name, accepted)
+
+
+class SettingsDialog(QtGui.QDialog, Ui_Settings):
+    '''
+    open a dialog to set the project name and folder and afterwards create
+    a new project
+    '''
+
+    def __init__(self, parent=None):
+        super(SettingsDialog, self).__init__(parent)
+        self.setupUi(self)
+
+        env = config.settings['environment']
+        self.project_edit.setText(env['default_project_folder'])
+        self.project_browse_button.clicked.connect(
+            lambda: self.set_folder(self.project_edit))
+
+        self.python_edit.setText(env['python_path'])
+        self.python_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.python_edit, 'python.exe'))
+
+        mod = config.settings['trafficmodels']
+        maxem = mod['Maxem']
+        self.maxem_default_edit.setText(maxem['default_folder'])
+        self.maxem_default_browse_button.clicked.connect(
+            lambda: self.set_folder(self.maxem_default_edit))
+        self.maxem_exec_edit.setText(maxem['executable'])
+        self.maxem_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.maxem_exec_edit, '*.py'))
+
+        verkmod = mod['VerkMod']
+        self.verkmod_default_edit.setText(verkmod['default_folder'])
+        self.verkmod_default_browse_button.clicked.connect(
+            lambda: self.set_folder(self.verkmod_default_edit))
+        self.verkmod_exec_edit.setText(verkmod['executable'])
+        self.verkmod_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
+
+        self.OK_button.clicked.connect(self.write_config)
+        self.reset_button.clicked.connect(self.reset)
+        self.cancel_button.clicked.connect(self.close)
+        self.show()
+
+    def set_file(self, line_edit, extension):
+        '''
+        open a file browser to put a path to a file into the given line edit
+        '''
+        filename = str(
+            QtGui.QFileDialog.getOpenFileName(
+                self, 'Datei wählen', extension))
+        #filename is '' if canceled
+        if len(filename) > 0:
+            line_edit.setText(filename)
+
+    def set_folder(self, line_edit):
+        '''
+        open a file browser to put a directory into the given line edit
+        '''
+        folder = str(
+            QtGui.QFileDialog.getExistingDirectory(
+                self, 'Ordner wählen', '.'))
+        #folder is '' if canceled
+        if len(folder) > 0:
+            line_edit.setText(folder)
+
+    def write_config(self):
+        env = config.settings['environment']
+        env['default_project_folder'] = str(self.project_edit.text())
+        env['python_path'] = str(self.python_edit.text())
+
+        mod = config.settings['trafficmodels']
+        maxem = mod['Maxem']
+        maxem['default_folder'] = str(self.maxem_default_edit.text())
+        maxem['executable'] = str(self.maxem_exec_edit.text())
+
+        verkmod = mod['VerkMod']
+        verkmod['default_folder'] = str(self.verkmod_default_edit.text())
+        verkmod['executable'] = str(self.verkmod_exec_edit.text())
+
+        config.write()
+        self.close()
+
+    def reset(self):
+        pass
