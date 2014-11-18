@@ -5,9 +5,8 @@ from gui_vm.view.qt_designed.new_simrun_ui import Ui_NewSimRun
 from gui_vm.view.qt_designed.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy
 from PyQt4 import QtGui, QtCore
-import sys
+import sys, os
 from gui_vm.config.config import Config
-import os
 
 config = Config()
 config.read()

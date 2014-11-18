@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import sys
+import sys, os
 from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeView
 from gui_vm.view.dialogs import NewProjectDialog, SettingsDialog
 from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
 from gui_vm.config.config import Config
-import os
 
 config = Config()
 config.read()
@@ -31,6 +30,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.qtreeview.setModel(self.project_view)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
             self.project_view.item_clicked)
+
+        self.qtreeview.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.qtreeview.customContextMenuRequested.connect(self.project_view.pop_context_menu)
+
         self.project_has_changed = False
 
         # connect the buttons

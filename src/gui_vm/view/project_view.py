@@ -416,3 +416,11 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
 
         return True
 
+    def pop_context_menu(self, pos):
+        menu = QtGui.QMenu()
+        hallo = menu.addAction("Hallo")
+        huhu = menu.addAction("Huhu")
+        quitAction = menu.addAction("Quit")
+        action = menu.exec_(self.parent_dialog.mapToGlobal(pos))
+        if action == quitAction:
+            pass  #qApp.quit()
