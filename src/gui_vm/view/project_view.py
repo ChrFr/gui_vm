@@ -3,8 +3,13 @@ from PyQt4 import (QtCore, QtGui)
 from details import (SimRunDetails, ProjectDetails, ResourceDetails)
 from gui_vm.model.project_tree import (Project, ProjectTreeNode, SimRun,
                                        ResourceNode, XMLParser)
-from gui_vm.view.progress_dialogs import CopyFilesDialog, ProgressDialog
+from gui_vm.view.dialogs import (CopyFilesDialog, ExecDialog,
+                                 NewSimRunDialog)
+from gui_vm.config.config import Config
 import os
+
+config = Config()
+config.read()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -96,8 +101,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def run(self):
         node = self.selected_item
         if isinstance(node, SimRun):
-            cmd = node.run()
-            dialog = ProgressDialog(cmd, parent=self.parent_dialog)
+            dialog = ExecDialog(node, parent=self.parent_dialog)
 
     def do_reload(self):
         node = self.selected_item
@@ -108,19 +112,16 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         project = self.project
         if (not project):
             return
-        text, ok = QtGui.QInputDialog.getText(
-            None, 'Neues Szenario', 'Name des neuen Szenarios:',
-            QtGui.QLineEdit.Normal,
-            'Szenario {}'.format(project.child_count))
+        default_name = 'Szenario {}'.format(project.child_count)
+        simrun_name, model_name, ok = NewSimRunDialog.getValues(default_name)
         if ok:
-            name = str(text)
-            if name in project.children_names:
+            if simrun_name in project.children_names:
                 QtGui.QMessageBox.about(
                     None, "Fehler",
                     _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
-                              .format(name)))
+                              .format(simrun_name)))
             else:
-                project.add_run(model='Maxem', name=name)
+                project.add_run(model=model_name, name=simrun_name)
                 reply = QtGui.QMessageBox.question(
                     None, _fromUtf8("Neues Szenario erstellen"),
                     _fromUtf8("Möchten Sie die Standarddateien " +
@@ -128,7 +129,8 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
                     QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
                 do_copy = reply == QtGui.QMessageBox.Yes
                 if do_copy:
-                    self.reset_simrun(simrun_node=project.get_child(name))
+                    self.reset_simrun(
+                        simrun_node=project.get_child(simrun_name))
                 self.project_changed.emit()
 
     def remove_run(self, simrun_node):
@@ -394,44 +396,6 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def nodeFromIndex(self, index):
         return index.internalPointer() if index.isValid() else self.root
 
-    #def flags(self, index):
-        #defaultFlags = QAbstractItemModel.flags(self, index)
-
-        #if index.isValid():
-            #return Qt.ItemIsEditable | Qt.ItemIsDragEnabled | \
-                    #Qt.ItemIsDropEnabled | defaultFlags
-
-        #else:
-            #return Qt.ItemIsDropEnabled | defaultFlags
-
-
-    #def mimeTypes(self):
-        #types = QStringList()
-        #types.append('application/x-ets-qt4-instance')
-        #return types
-
-    #def mimeData(self, index):
-        #node = self.nodeFromIndex(index[0])
-        #mimeData = PyMimeData(node)
-        #return mimeData
-
-
-    #def dropMimeData(self, mimedata, action, row, column, parentIndex):
-        #if action == Qt.IgnoreAction:
-            #return True
-
-        #dragNode = mimedata.instance()
-        #parentNode = self.nodeFromIndex(parentIndex)
-
-        ## make an copy of the node being moved
-        #newNode = deepcopy(dragNode)
-        #newNode.setParent(parentNode)
-        #self.insertRow(len(parentNode)-1, parentIndex)
-        #self.emit(SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-#parentIndex, parentIndex)
-        #return True
-
-
     def insertRow(self, row, parent):
         return self.insertRows(row, 1, parent)
 
@@ -451,3 +415,4 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
         self.endRemoveRows()
 
         return True
+

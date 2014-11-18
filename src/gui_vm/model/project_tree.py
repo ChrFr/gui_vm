@@ -1,12 +1,12 @@
 from copy import deepcopy
 import os
 import time
+import imp
 from lxml import etree
 from shutil import copytree
 from gui_vm.config.config import Config
-from resources import ResourceFile
-#from gui_vm.config.maxem import Maxem
-#from gui_vm.config.verkmod import Verkmod
+from gui_vm.model.resources import ResourceFile
+from gui_vm.model.traffic_model import TrafficModel
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -14,6 +14,10 @@ XML_CLASS_NAMES = {'SimRun': 'Szenario',
                    'Project': 'Projekt',
                    'ResourceNode': 'Ressource',
                    'ProjectTreeNode': 'Layer'}
+
+
+config = Config()
+config.read()
 
 
 class ProjectTreeNode(object):
@@ -27,9 +31,6 @@ class ProjectTreeNode(object):
         self.rename = False
         self.is_checked = False
         self.is_valid = True
-
-    #def __del__(self):
-        #print '{} geloescht'.format(self.name)
 
     def remove(self):
         self.parent.remove_child(self.name)
@@ -337,20 +338,8 @@ class SimRun(ProjectTreeNode):
 
     @property
     def default_folder(self):
-        return os.path.join(DEFAULT_FOLDER, self.model.name)
-
-    def run(self, callback=None):
-        return self.model.process(
-            self.name,
-            TRAFFIC_MODELS[self.model.name],
-            zonal_file=self.get_resource('Zonen').full_source,
-            put_file=self.get_resource('OV').full_source,
-            prt_file=self.get_resource('MIV').full_source,
-            nmt_file=self.get_resource('Fuss und Rad').full_source,
-            param_file=self.get_resource('Betas').full_source,
-            modal_split=False,
-            correction=False,
-            callback=callback)
+        name = self.model.name
+        return config.settings['trafficmodels'][name]['default_folder']
 
     def validate(self):
         resource_nodes = self.get_resources()
@@ -440,12 +429,12 @@ class SimRun(ProjectTreeNode):
         ----------
         name: String, name of the traffic model
         '''
-        if name in TRAFFIC_MODELS:
-            self.model = globals()[name]()
+        model = TrafficModel.new_specific_model(name)
+        if model:
+            self.model = model
             self.model.update(self.path)
             #remove the old children of the sim run (including resources)
-            for i in reversed(range(self.child_count)):
-                self.remove_child_at(i)
+            self.remove_all_children()
 
             #categorize resources
             res_dict = {}
@@ -490,9 +479,10 @@ class SimRun(ProjectTreeNode):
         '''
         super(SimRun, self).from_xml(element)
         #init the traffic model before resources can be set
-        vm = element.find('Verkehrsmodell').text
-        if vm in TRAFFIC_MODELS:
-            self.model = globals()[vm]()
+        name = element.find('Verkehrsmodell').text
+        model = TrafficModel.new_specific_model(name)
+        if model:
+            self.model = model
             self.model.update(self.path)
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
@@ -588,21 +578,6 @@ class ResourceNode(ProjectTreeNode):
         self.resource_name = name
         super(ResourceNode, self).__init__(name, parent=parent)
         self.original_source = self.full_source
-
-    #@property
-    #def name(self):
-        #'''
-        #name and resource name are the same in this case
-        #'''
-        #return self.resource_name
-
-    #@setter
-    #def name(self, name):
-        #'''
-        #name can't be set to avoid messing up the resource reference
-        #by accident
-        #'''
-        #pass
 
     @property
     def resource(self):

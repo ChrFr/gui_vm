@@ -3,6 +3,8 @@ from resources import (H5Array, H5Table, H5Resource,
 from resource_parser import (TableTable, InputTable, ArrayTable, ColumnTable)
 from collections import OrderedDict
 import numpy as np
+import os, imp
+from gui_vm.config.config import Config
 
 
 class TrafficModel(object):
@@ -268,6 +270,20 @@ class TrafficModel(object):
             characteristics[pretty_name] = value
         return characteristics
 
+    @staticmethod
+    def new_specific_model(name):
+        config = Config()
+        config.read()
+        traffic_models = config.settings['trafficmodels']
+        if name in traffic_models:
+            config_file_name = traffic_models[name]['config_file']
+            #complete relative paths
+            if not os.path.isabs(config_file_name):
+                config_file_name = os.path.join(os.getcwd(), config_file_name)
+            return (imp.load_source('SpecificModel', config_file_name)
+                    .SpecificModel())
+        else:
+            return None
 
 def is_number(s):
     '''
