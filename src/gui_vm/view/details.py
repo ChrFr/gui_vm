@@ -6,6 +6,9 @@ from gui_vm.view.progress_dialogs import CopyFilesDialog
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
 
+config = Config()
+config.read()
+
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -33,7 +36,7 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
         self.setupUi(self)
         self.setTitle(simrun_node.name)
         self.simrun_node = simrun_node
-        self.combo_model.addItems(TRAFFIC_MODELS.keys())
+        self.combo_model.addItems(config.settings['trafficmodels'].keys())
         index = self.combo_model.findText(self.simrun_node.model.name)
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(

@@ -95,7 +95,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         create a new project
         return True if new project was created
         '''
-        project_name, project_folder, ok = NewProjectDialog.getValues()
+        default = self.config.settings['environment']['default_project_folder']
+        project_name, project_folder, ok = NewProjectDialog.getValues(default)
         if ok:
             do_continue = True
             if self.project_has_changed:
@@ -108,10 +109,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             return False
 
     def edit_settings(self):
-        '''
-        create a new project
-        return True if new project was created
-        '''
         SettingsDialog(self)
 
     def load_project(self):
@@ -194,9 +191,10 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     a new project
     '''
 
-    def __init__(self, parent=None):
-        super(NewProjectDialog, self).__init__(parent)
+    def __init__(self, default_folder):
+        super(NewProjectDialog, self).__init__()
         self.setupUi(self)
+        self.folder_edit.setText(default_folder)
         self.folder_browse_button.clicked.connect(self.browse_folder)
         self.show()
 
@@ -212,8 +210,8 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             self.folder_edit.setText(folder)
 
     @staticmethod
-    def getValues():
-        dialog = NewProjectDialog()
+    def getValues(default = ''):
+        dialog = NewProjectDialog(default)
         ok = dialog.exec_()
         project_name = str(dialog.project_edit.text())
         project_folder = str(dialog.folder_edit.text())
