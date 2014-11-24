@@ -101,11 +101,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         (project_name, project_folder, ok) = NewProjectDialog.getValues()
         if ok:
             do_continue = True
+            #save already opened project before changing?
             if self.project_has_changed:
                 do_continue = self.project_changed_message()
             if do_continue:
                 self.project_view.create_project(project_name, project_folder)
                 self.project_has_changed = False
+                self.save_project(os.path.join(project_folder, 'project.xml'))
                 return True
         else:
             return False
@@ -130,20 +132,25 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 return True
         return False
 
-    def save_project(self):
+    def save_project(self, filename=None):
         '''
         save the project
         return True if project was saved
         '''
-        filename = str(QtGui.QFileDialog.getSaveFileName(
-            self, 'Projekt speichern', '.', '*.xml'))
+        if not filename:
+            dialog_opened = True
+            filename = str(QtGui.QFileDialog.getSaveFileName(
+                self, 'Projekt speichern', '.', '*.xml'))
+        else:
+            dialog_opened = False
         #filename is '' if aborted (file dialog returns no status)
         if len(filename) > 0:
             self.project_view.write_project(filename)
-            QtGui.QMessageBox.about(
-                self, "Speichern erfolgreich",
-                'Die Speicherung des Projektes\n{}\n war erfolgreich'.
-                format(filename))
+            if dialog_opened:
+                QtGui.QMessageBox.about(
+                    self, "Speichern erfolgreich",
+                    'Die Speicherung des Projektes\n{}\n war erfolgreich'.
+                    format(filename))
             self.project_has_changed = False
             return True
         return False

@@ -7,7 +7,7 @@
     <Maxem>
       <default_folder></default_folder>
       <executable></executable>
-      <config_file></config_file>
+      <config_file>config/Maxem/maxem.py</config_file>
     </Maxem>
     <VerkMod>
       <default_folder></default_folder>
