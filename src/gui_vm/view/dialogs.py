@@ -149,7 +149,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         '''
         folder = str(
             QtGui.QFileDialog.getExistingDirectory(
-                self, 'Projektverzeichnis wählen', '.'))
+                self, 'Projektverzeichnis wählen', directory=self.folder_edit.text()))
         #filename is '' if canceled
         if len(folder) > 0:
             self.folder_edit.setText(folder)
@@ -231,15 +231,20 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.OK_button.clicked.connect(self.write_config)
         self.reset_button.clicked.connect(self.reset)
         self.cancel_button.clicked.connect(self.close)
+        self.auto_python_button.clicked.connect(lambda: self.python_edit.setText(sys.executable))
         self.show()
 
     def set_file(self, line_edit, extension):
         '''
         open a file browser to put a path to a file into the given line edit
         '''
+        try:
+            current = os.path.split(line_edit.text())[0]
+        except:
+            current = ''
         filename = str(
             QtGui.QFileDialog.getOpenFileName(
-                self, 'Datei wählen', extension))
+                self, 'Datei wählen', extension, directory=current))
         #filename is '' if canceled
         if len(filename) > 0:
             line_edit.setText(filename)
@@ -250,7 +255,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         '''
         folder = str(
             QtGui.QFileDialog.getExistingDirectory(
-                self, 'Ordner wählen', '.'))
+                self, 'Ordner wählen', directory=line_edit.text()))
         #folder is '' if canceled
         if len(folder) > 0:
             line_edit.setText(folder)

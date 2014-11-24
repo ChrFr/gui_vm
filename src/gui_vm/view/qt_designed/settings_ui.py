@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'settings.ui'
 #
-# Created: Tue Nov 18 18:14:31 2014
-#      by: PyQt4 UI code generator 4.11.2
+# Created: Mon Nov 24 17:22:43 2014
+#      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -62,21 +62,13 @@ class Ui_Settings(object):
         self.gridLayout_2 = QtGui.QGridLayout(self.gridLayoutWidget)
         self.gridLayout_2.setMargin(0)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-        self.python_edit = QtGui.QLineEdit(self.gridLayoutWidget)
-        self.python_edit.setObjectName(_fromUtf8("python_edit"))
-        self.gridLayout_2.addWidget(self.python_edit, 2, 1, 1, 1)
         self.python_exec_browse_button = QtGui.QPushButton(self.gridLayoutWidget)
         self.python_exec_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
         self.python_exec_browse_button.setObjectName(_fromUtf8("python_exec_browse_button"))
-        self.gridLayout_2.addWidget(self.python_exec_browse_button, 2, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.python_exec_browse_button, 2, 3, 1, 1)
         self.label_2 = QtGui.QLabel(self.gridLayoutWidget)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.gridLayout_2.addWidget(self.label_2, 2, 0, 1, 1)
-        self.project_edit = QtGui.QLineEdit(self.gridLayoutWidget)
-        self.project_edit.setObjectName(_fromUtf8("project_edit"))
-        self.gridLayout_2.addWidget(self.project_edit, 0, 1, 1, 1)
-        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.gridLayout_2.addItem(spacerItem1, 5, 1, 1, 1)
         self.label = QtGui.QLabel(self.gridLayoutWidget)
         self.label.setToolTip(_fromUtf8(""))
         self.label.setObjectName(_fromUtf8("label"))
@@ -84,7 +76,15 @@ class Ui_Settings(object):
         self.project_browse_button = QtGui.QPushButton(self.gridLayoutWidget)
         self.project_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
         self.project_browse_button.setObjectName(_fromUtf8("project_browse_button"))
-        self.gridLayout_2.addWidget(self.project_browse_button, 0, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.project_browse_button, 0, 3, 1, 1)
+        self.project_edit = QtGui.QLineEdit(self.gridLayoutWidget)
+        self.project_edit.setObjectName(_fromUtf8("project_edit"))
+        self.gridLayout_2.addWidget(self.project_edit, 0, 2, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.gridLayout_2.addItem(spacerItem1, 5, 2, 1, 1)
+        self.python_edit = QtGui.QLineEdit(self.gridLayoutWidget)
+        self.python_edit.setObjectName(_fromUtf8("python_edit"))
+        self.gridLayout_2.addWidget(self.python_edit, 2, 2, 1, 1)
         self.label_11 = QtGui.QLabel(self.gridLayoutWidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -97,7 +97,7 @@ class Ui_Settings(object):
         self.label_11.setPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/fragezeichen.png")))
         self.label_11.setScaledContents(True)
         self.label_11.setObjectName(_fromUtf8("label_11"))
-        self.gridLayout_2.addWidget(self.label_11, 0, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.label_11, 0, 1, 1, 1)
         self.label_12 = QtGui.QLabel(self.gridLayoutWidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -110,7 +110,10 @@ class Ui_Settings(object):
         self.label_12.setPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/fragezeichen.png")))
         self.label_12.setScaledContents(True)
         self.label_12.setObjectName(_fromUtf8("label_12"))
-        self.gridLayout_2.addWidget(self.label_12, 2, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.label_12, 2, 1, 1, 1)
+        self.auto_python_button = QtGui.QPushButton(self.gridLayoutWidget)
+        self.auto_python_button.setObjectName(_fromUtf8("auto_python_button"))
+        self.gridLayout_2.addWidget(self.auto_python_button, 2, 4, 1, 1)
         self.tabWidget.addTab(self.environment_tab, _fromUtf8(""))
         self.models_tab = QtGui.QWidget()
         self.models_tab.setObjectName(_fromUtf8("models_tab"))
@@ -246,6 +249,7 @@ class Ui_Settings(object):
         self.project_browse_button.setText(_translate("Settings", "...", None))
         self.label_11.setToolTip(_translate("Settings", "Der Standardordner für die Projekte.", None))
         self.label_12.setToolTip(_translate("Settings", "Der Pfad zum ausführbaren Python-Interpreter.", None))
+        self.auto_python_button.setText(_translate("Settings", "Auto", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.environment_tab), _translate("Settings", "Umgebung", None))
         self.maxemBox.setTitle(_translate("Settings", "Maxem", None))
         self.label_3.setText(_translate("Settings", "Defaultordner", None))

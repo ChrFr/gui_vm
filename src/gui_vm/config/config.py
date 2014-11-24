@@ -17,8 +17,8 @@ class Config():
     __metaclass__ = Singleton
 
     def __init__(self):
-        self.filename = "config/config.xml"
-        self.default_file = "config/default_config.xml"
+        self.filename = "./config/config.xml"
+        self.default_file = "./config/default_config.xml"
         self.settings = {
             'environment': {
                 'default_project_folder': '',

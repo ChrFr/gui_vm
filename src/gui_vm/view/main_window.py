@@ -119,7 +119,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return True if project was loaded
         '''
         fileinput = str(QtGui.QFileDialog.getOpenFileName(
-            self, _fromUtf8('Projekt öffnen'), '.', '*.xml'))
+            self, _fromUtf8('Projekt öffnen'), config.settings['environment']['default_project_folder'], '*.xml'))
         if len(fileinput) > 0:
             do_continue = True
             if self.project_has_changed:
