@@ -49,7 +49,7 @@
       </item>
       <item row="3" column="0">
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="1" column="9">
+        <item row="0" column="9">
          <spacer name="horizontalSpacer_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -62,23 +62,7 @@
           </property>
          </spacer>
         </item>
-        <item row="1" column="3">
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="5">
+        <item row="0" column="5">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QPushButton" name="open_button">
@@ -109,55 +93,9 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="save_button">
-            <property name="maximumSize">
-             <size>
-              <width>30</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Projekt speichern</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="gui.qrc">
-              <normaloff>:/buttons/icons/save.png</normaloff>:/buttons/icons/save.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>28</height>
-             </size>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
         <item row="0" column="2">
-         <widget class="QLabel" name="button_group_label">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Projekt</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
          <widget class="QGroupBox" name="context_button_group">
           <property name="minimumSize">
            <size>
@@ -309,6 +247,22 @@
           </widget>
          </widget>
         </item>
+        <item row="0" column="3" colspan="2">
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </item>
       <item row="6" column="2">
@@ -358,19 +312,9 @@
     <property name="title">
      <string>Datei</string>
     </property>
-    <addaction name="actionNeues_Projekt"/>
-    <addaction name="actionProjekt_ffnen"/>
-    <addaction name="actionProjekt_speichern"/>
+    <addaction name="actionEinstellungen"/>
     <addaction name="separator"/>
     <addaction name="actionBeenden"/>
-   </widget>
-   <widget class="QMenu" name="menuBearbeiten">
-    <property name="title">
-     <string>Bearbeiten</string>
-    </property>
-    <addaction name="actionNeues_Szenario"/>
-    <addaction name="separator"/>
-    <addaction name="actionEinstellungen"/>
    </widget>
    <widget class="QMenu" name="menuHilfe">
     <property name="title">
@@ -378,8 +322,32 @@
     </property>
     <addaction name="actionInfo"/>
    </widget>
+   <widget class="QMenu" name="menuProjekt">
+    <property name="title">
+     <string>Projekt</string>
+    </property>
+    <widget class="QMenu" name="menuZuletzt_benutzt">
+     <property name="title">
+      <string>zuletzt benutzt</string>
+     </property>
+    </widget>
+    <addaction name="actionNeues_Projekt"/>
+    <addaction name="actionProjekt_ffnen"/>
+    <addaction name="actionProjekt_schlie_en"/>
+    <addaction name="separator"/>
+    <addaction name="menuZuletzt_benutzt"/>
+   </widget>
+   <widget class="QMenu" name="menuSzenario">
+    <property name="title">
+     <string>Szenario</string>
+    </property>
+    <addaction name="actionNeues_Szenario"/>
+    <addaction name="actionSzenario_duplizieren"/>
+    <addaction name="actionSzenario_l_schen"/>
+   </widget>
    <addaction name="menuDatei"/>
-   <addaction name="menuBearbeiten"/>
+   <addaction name="menuProjekt"/>
+   <addaction name="menuSzenario"/>
    <addaction name="menuHilfe"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -416,6 +384,26 @@
   <action name="actionInfo">
    <property name="text">
     <string>Info</string>
+   </property>
+  </action>
+  <action name="actionSzenario_duplizieren">
+   <property name="text">
+    <string>Szenario duplizieren</string>
+   </property>
+  </action>
+  <action name="actionSzenario_l_schen">
+   <property name="text">
+    <string>Szenario löschen</string>
+   </property>
+  </action>
+  <action name="actionProjekt_schlie_en">
+   <property name="text">
+    <string>Projekt schließen</string>
+   </property>
+  </action>
+  <action name="actionBla">
+   <property name="text">
+    <string>bla</string>
    </property>
   </action>
  </widget>

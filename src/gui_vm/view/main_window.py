@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys, os
+from functools import partial
 from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeView
@@ -36,13 +37,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.qtreeview.customContextMenuRequested.connect(self.project_view.pop_context_menu)
 
         self.project_has_changed = False
+        self.recently_used_actions = []
 
         # connect the buttons
         self.plus_button.clicked.connect(self.project_view.add)
         self.minus_button.clicked.connect(self.project_view.remove)
         self.edit_button.clicked.connect(self.project_view.edit)
         self.reset_button.clicked.connect(self.project_view.reset)
-        self.save_button.clicked.connect(self.save_project)
+        #self.save_button.clicked.connect(self.save_project)
         self.open_button.clicked.connect(self.load_project)
         self.start_button.clicked.connect(self.project_view.run)
         self.reload_button.clicked.connect(self.project_view.do_reload)
@@ -78,7 +80,22 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_view.view_changed.connect(self.update_gui)
         self.project_view.project_changed.connect(self.project_changed_handler)
         self.project_changed.connect(self.project_changed_handler)
-        welcome = WelcomeDialog(self)
+        #open recent project
+        h = config.settings['history']
+        if len(h) > 0:
+            for recent in h:
+                action = QtGui.QAction(self)
+                action.setText(_fromUtf8(recent))
+                self.recently_used_actions.append(action)
+                self.menuZuletzt_benutzt.addAction(action)
+                project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
+                action.triggered.connect(partial((lambda filename: self.project_view.read_project(filename)), project_file))
+
+            project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
+            self.project_view.read_project(project_file)
+        #welcome screen if there is none (assumed first start)
+        else:
+            welcome = WelcomeDialog(self)
 
     def update_gui(self):
         '''
@@ -108,7 +125,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             if do_continue:
                 self.project_view.create_project(project_name, project_folder)
                 self.project_has_changed = False
-                self.save_project(os.path.join(self.project_view.project.filename))
+                project_file = self.project_view.project.filename
+                self.save_project(os.path.join(project_file))
+                config.add_to_history(project_folder)
                 return True
         else:
             return False
@@ -122,20 +141,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return True if project was loaded
         '''
         #current = config.settings['environment']['default_project_folder']
-        if self.project_view.project:
-            current = self.project_view.project.project_folder
-        else:
-            current = ''
-        directory = str(QtGui.QFileDialog.getExistingDirectory(
-            self, _fromUtf8('Projektordner auswählen'),  current))
-        if len(directory) > 0:
-            project_file = os.path.join(directory, Project.FILENAME_DEFAULT)
-            if os.path.isfile:
+        h = config.settings['history']
+        if len(h) > 0:
+            recent = h[0]
+        project_folder = str(QtGui.QFileDialog.getExistingDirectory(
+            self, _fromUtf8('Projektordner auswählen'),  recent))
+        if len(project_folder) > 0:
+            project_file = os.path.join(project_folder, Project.FILENAME_DEFAULT)
+            if os.path.isfile(project_file):
                 do_continue = True
                 if self.project_has_changed:
                     do_continue = self.project_changed_message()
                 if do_continue:
                     self.project_view.read_project(project_file)
+                    config.add_to_history(project_folder)
                     self.project_has_changed = False
                     return True
             else:

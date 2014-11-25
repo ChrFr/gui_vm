@@ -100,7 +100,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
             self.meta_layout.addRow(label, edit)
         self.folder_edit.setText(str(self.project_node.project_folder))
 
-        self.folder_browse_button.clicked.connect(self.browse_folder)
+        #self.folder_browse_button.clicked.connect(self.browse_folder)
         self.folder_edit.textChanged.connect(self.update)
 
     def update(self):
