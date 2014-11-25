@@ -1,18 +1,17 @@
 <CONFIG>
   <environment>
-    <default_project_folder></default_project_folder>
     <python_path></python_path>
   </environment>
   <trafficmodels>
     <Maxem>
-      <default_folder></default_folder>
-      <executable></executable>
       <config_file>config/Maxem/maxem.py</config_file>
+      <executable></executable>
+      <default_folder></default_folder>
     </Maxem>
     <VerkMod>
-      <default_folder></default_folder>
-      <executable></executable>
       <config_file></config_file>
+      <executable></executable>
+      <default_folder></default_folder>
     </VerkMod>
   </trafficmodels>
 </CONFIG>

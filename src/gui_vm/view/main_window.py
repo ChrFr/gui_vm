@@ -107,7 +107,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             if do_continue:
                 self.project_view.create_project(project_name, project_folder)
                 self.project_has_changed = False
-                self.save_project(os.path.join(project_folder, 'project.xml'))
+                self.save_project(os.path.join(self.project_view.project.filename))
                 return True
         else:
             return False
@@ -120,8 +120,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         load a project
         return True if project was loaded
         '''
+        #current = config.settings['environment']['default_project_folder']
+        if self.project_view.project:
+            current = self.project_view.project
+        else:
+            current = ''
         fileinput = str(QtGui.QFileDialog.getOpenFileName(
-            self, _fromUtf8('Projekt öffnen'), config.settings['environment']['default_project_folder'], '*.xml'))
+            self, _fromUtf8('Projekt öffnen'),  current, '*.xml'))
         if len(fileinput) > 0:
             do_continue = True
             if self.project_has_changed:

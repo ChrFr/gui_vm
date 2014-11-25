@@ -14,7 +14,7 @@ def main(folder, model):
     folder: String, name of the folder containing the
             input data (h5 files etc.)
     """
-    file_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+    filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(folder)) for f in fn]
     input_table = InputTable()
     tables = TableTable()
@@ -22,15 +22,15 @@ def main(folder, model):
     columns = ColumnTable()
 
     #iterate over all files in directory (incl. subdirectories)
-    for file_name in file_names:
-        if file_name.endswith('.h5'):
-            parser = H5ConfigParser(file_name)
+    for filename in filenames:
+        if filename.endswith('.h5'):
+            parser = H5ConfigParser(filename)
             i, t, a, c = parser.parse()
             tables += t
             arrays += a
             columns += c
         else:
-            i = ConfigParser(file_name).parse()
+            i = ConfigParser(filename).parse()
         input_table += i
 
     #write tables to csv

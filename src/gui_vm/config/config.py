@@ -21,7 +21,6 @@ class Config():
         self.default_file = "./config/default_config.xml"
         self.settings = {
             'environment': {
-                'default_project_folder': '',
                 'python_path': '',
                 },
 

@@ -118,7 +118,7 @@ class TrafficModel(object):
                 if res_table['type'][0].startswith('H5'):
                     resource = H5Resource(str(res_name),
                                           subfolder=category,
-                                          file_name='')
+                                          filename='')
                     node_names = res_table['subdivision']
                     node_types = res_table['type']
                     for i, node_name in enumerate(node_names):
@@ -276,11 +276,11 @@ class TrafficModel(object):
         config.read()
         traffic_models = config.settings['trafficmodels']
         if name in traffic_models:
-            config_file_name = traffic_models[name]['config_file']
+            config_filename = traffic_models[name]['config_file']
             #complete relative paths
-            if not os.path.isabs(config_file_name):
-                config_file_name = os.path.join(os.getcwd(), config_file_name)
-            return (imp.load_source('SpecificModel', config_file_name)
+            if not os.path.isabs(config_filename):
+                config_filename = os.path.join(os.getcwd(), config_filename)
+            return (imp.load_source('SpecificModel', config_filename)
                     .SpecificModel())
         else:
             return None

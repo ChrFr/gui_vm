@@ -138,7 +138,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     def __init__(self):
         super(NewProjectDialog, self).__init__()
         self.setupUi(self)
-        default = config.settings['environment']['default_project_folder']
+        default = ''#config.settings['environment']['default_project_folder']
         self.folder_edit.setText(default)
         self.folder_browse_button.clicked.connect(self.browse_folder)
         self.show()
@@ -157,17 +157,23 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     @staticmethod
     def getValues():
         dialog = NewProjectDialog()
-        ok = dialog.exec_()
-        project_name = str(dialog.project_edit.text())
-        project_folder = str(dialog.folder_edit.text())
-        if ok == QtGui.QDialog.Accepted:
-            if os.path.exists(project_folder):
-                return (project_name, project_folder, True)
+        ret = None
+        # dialog shall be opened again, if no valid
+        # true loop will only be exited, if (ok and valid) or canceled
+        while True:
+            ret = dialog.exec_()
+            project_name = str(dialog.project_edit.text())
+            project_folder = str(dialog.folder_edit.text())
+            if ret == QtGui.QDialog.Accepted:
+                if os.path.exists(project_folder):
+                    return (project_name, project_folder, True)
+                #ok clicked and not valid -> loop again
+                else:
+                    QtGui.QMessageBox.about(
+                        dialog, "Warnung!", "Verzeichnis {} existiert nicht!"
+                        .format(project_folder))
             else:
-                QtGui.QMessageBox.about(
-                    dialog, "Warnung!", "Verzeichnis {} existiert nicht!"
-                    .format(project_folder))
-        return (project_name, project_folder, False)
+                return (project_name, project_folder, False)
 
 
 class NewSimRunDialog(QtGui.QDialog, Ui_NewSimRun):
@@ -203,9 +209,9 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.setupUi(self)
 
         env = config.settings['environment']
-        self.project_edit.setText(env['default_project_folder'])
-        self.project_browse_button.clicked.connect(
-            lambda: self.set_folder(self.project_edit))
+        #self.project_edit.setText(env['default_project_folder'])
+        #self.project_browse_button.clicked.connect(
+            #lambda: self.set_folder(self.project_edit))
 
         self.python_edit.setText(env['python_path'])
         self.python_exec_browse_button.clicked.connect(
@@ -239,12 +245,13 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         open a file browser to put a path to a file into the given line edit
         '''
         try:
-            current = os.path.split(line_edit.text())[0]
+            current = os.path.split(str(line_edit.text()))[0]
         except:
             current = ''
+
         filename = str(
             QtGui.QFileDialog.getOpenFileName(
-                self, 'Datei wählen', extension, directory=current))
+                self, _fromUtf8('Datei wählen'), current+'/'+extension))
         #filename is '' if canceled
         if len(filename) > 0:
             line_edit.setText(filename)
@@ -262,7 +269,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
 
     def write_config(self):
         env = config.settings['environment']
-        env['default_project_folder'] = str(self.project_edit.text())
+        #env['default_project_folder'] = str(self.project_edit.text())
         env['python_path'] = str(self.python_edit.text())
 
         mod = config.settings['trafficmodels']

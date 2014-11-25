@@ -199,27 +199,27 @@ class ResourceFile(Resource):
               the category of the resource (e.g. matrices)
     subfolder: String, optional
                the subfolder the file is in
-    file_name: String, optional
+    filename: String, optional
                the name of the resource file
     file_path: String, optional
                the path of the resource file
 
     '''
-    monitored = OrderedDict([('file_name', 'Datei'),
+    monitored = OrderedDict([('filename', 'Datei'),
                              ('file_modified', 'Datum')])
 
-    def __init__(self, name, subfolder='', file_name=None):
+    def __init__(self, name, subfolder='', filename=None):
         self.monitored.update(super(ResourceFile, self).monitored)
         super(ResourceFile, self).__init__(name)
         self.subfolder = subfolder
-        self.file_name = file_name
+        self.filename = filename
         self.file_modified = ''
 
-    def set_source(self, file_name, subfolder=None):
+    def set_source(self, filename, subfolder=None):
         '''
         set the filename and the subpath of the resource
         '''
-        self.file_name = file_name
+        self.filename = filename
         if subfolder is not None:
             self.subfolder = subfolder
 
@@ -229,20 +229,20 @@ class ResourceFile(Resource):
         in the subclasses
         '''
         self.clear_status()
-        if self.file_name != '' and self.file_name is not None:
-            file_name = os.path.join(path, self.subfolder, self.file_name)
-            if os.path.exists(file_name):
-                stats = os.stat(file_name)
+        if self.filename != '' and self.filename is not None:
+            filename = os.path.join(path, self.subfolder, self.filename)
+            if os.path.exists(filename):
+                stats = os.stat(filename)
                 t = time.strftime('%d-%m-%Y %H:%M:%S',
                                   time.localtime(stats.st_mtime))
                 self.file_modified = t
-                self.status_flags['file_name'] = FOUND
+                self.status_flags['filename'] = FOUND
                 return
-        self.status_flags['file_name'] = NOT_FOUND
+        self.status_flags['filename'] = NOT_FOUND
 
     @property
     def is_set(self):
-        if self.file_name is None:
+        if self.filename is None:
             return False
 
 
@@ -258,14 +258,14 @@ class H5Resource(ResourceFile):
                the subfolder the file is in
     category: String, optional
               the category of the resource (e.g. matrices)
-    file_name: String, optional
+    filename: String, optional
                the name of the h5 resource file
     '''
     def __init__(self, name, subfolder='',
-                 file_name=None):
+                 filename=None):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
-            file_name=file_name)
+            filename=filename)
 
     def update(self, path):
         '''
@@ -278,12 +278,12 @@ class H5Resource(ResourceFile):
         '''
         super(H5Resource, self).update(path)
         h5 = None
-        if self.status_flags['file_name'] == FOUND:
-            h5 = HDF5(os.path.join(path, self.subfolder, self.file_name))
+        if self.status_flags['filename'] == FOUND:
+            h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
             successful = h5.read()
             if not successful:
                 #set a flag for file not found
-                self.status_flags['file_name'] = (NOT_FOUND,
+                self.status_flags['filename'] = (NOT_FOUND,
                                                   'keine gueltige HDF5 Datei')
         for child in self.children:
             child.update(h5)

@@ -403,10 +403,7 @@ class SimRun(ProjectTreeNode):
 
     @property
     def path(self):
-        if self.get_parent_by_class(Project).project_folder is None:
-            return None
-        return os.path.join(
-            self.get_parent_by_class(Project).project_folder, self.name)
+        return self.get_parent_by_class(Project).project_folder
 
     @property
     def note(self):
@@ -495,13 +492,19 @@ class Project(ProjectTreeNode):
     '''
     def __init__(self, name, parent=None):
         super(Project, self).__init__(name, parent=parent)
-        self.project_folder = os.getcwd()
+        self.project_folder = ''  #os.getcwd()
+        #all projects are stored in xmls with the same name
+        self.default_filename = 'project.xml'
         self.meta = {}
         #projects can be renamed
         self.rename = True
         self.meta['Datum'] = time.strftime("%d.%m.%Y")
         self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
         self.meta['Autor'] = ''
+
+    @property
+    def filename(self):
+        return os.path.join(self.project_folder, self.default_filename)
 
     def add_to_xml(self, parent):
         '''
@@ -536,8 +539,6 @@ class Project(ProjectTreeNode):
             if subelement.tag == 'Meta':
                 for submeta in subelement:
                     self.meta[submeta.tag] = submeta.text
-            if subelement.tag == 'Projektordner':
-                self.project_folder = subelement.text
 
     @property
     def note(self):
@@ -642,10 +643,10 @@ class ResourceNode(ProjectTreeNode):
         ------
         String
         '''
-        file_name = self.resource.file_name
-        if file_name is None or file_name == '':
-            file_name = 'nicht gesetzt'
-        note = '<{}>'.format(file_name)
+        filename = self.resource.filename
+        if filename is None or filename == '':
+            filename = 'nicht gesetzt'
+        note = '<{}>'.format(filename)
         return note
 
     @property
@@ -656,11 +657,11 @@ class ResourceNode(ProjectTreeNode):
         path of the resource file within the project folder
         '''
         if (self.resource is None or
-            self.resource.file_name is None or
-            self.resource.file_name == ''):
+            self.resource.filename is None or
+            self.resource.filename == ''):
             return None
         source = os.path.join(self.resource.subfolder,
-                              self.resource.file_name)
+                              self.resource.filename)
         return source
 
     @property
@@ -729,7 +730,7 @@ class ResourceNode(ProjectTreeNode):
         #find corresponding default resource node
         res_default = default_model.get_resource(self.name)
         #rename source
-        self.resource.file_name = res_default.resource.file_name
+        self.resource.filename = res_default.resource.filename
         self.resource.subfolder = res_default.resource.subfolder
         self.original_source = os.path.join(sim_run.default_folder,
                                             self.source)
@@ -748,7 +749,7 @@ class XMLParser(object):
     def read_xml(self, root, filename):
         tree = etree.parse(filename)
         root_element = tree.getroot()
-        if root_element.tag == 'GUI_VM':
+        if root_element.tag == 'GUI_VM_PROJECT':
             self.build_xml(root_element, root)
         return root
 
@@ -788,6 +789,6 @@ class XMLParser(object):
         ----------
         filename: String, xml file to write to, will be overwritten
         '''
-        xml_tree = etree.Element('GUI_VM')
+        xml_tree = etree.Element('GUI_VM_PROJECT')
         project_tree.add_to_xml(xml_tree)
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)

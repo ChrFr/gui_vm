@@ -222,9 +222,14 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         open a file browser to change the source of the resource file
         '''
+        current = self.resource_node.full_source
+        if not current:
+            current = config.settings['trafficmodels'][
+                self.resource_node.model.name]['default_folder'] + '/*.h5'
         fileinput = str(
             QtGui.QFileDialog.getOpenFileName(
-                self, _fromUtf8('Ressourcendatei öffnen'), DEFAULT_FOLDER))
+                self, _fromUtf8('Ressourcendatei öffnen'),
+                current))
         #filename is '' if aborted
         if len(fileinput) > 0:
             self.file_edit.setText(fileinput)

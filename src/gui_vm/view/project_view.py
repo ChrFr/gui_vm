@@ -148,7 +148,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"),
                 _fromUtf8("Soll die Datei {} \nin {}\n".format(
-                    resource_node.resource.file_name,
+                    resource_node.resource.filename,
                     resource_node.full_path) +
                           "ebenfalls entfernt werden?"),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
@@ -198,7 +198,7 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def write_project(self, filename):
         XMLParser.write_xml(self.project, filename)
 
-    def create_project(self, name, folder):
+    def create_project(self, name, filename):
         if name is None:
             name = 'Neues Projekt'
         if self.project:
@@ -208,13 +208,14 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
             return
         self.root.add_child(Project(name))
         self.item_clicked(self.createIndex(0, 0, self.project))
-        self.project.project_folder = os.path.join(folder, name)
+        self.project.filename = filename
 
     def read_project(self, filename):
         self.current_index = self.createIndex(0, 0, self.project)
         if self.project:
             self.remove(self.project)
         self.root = XMLParser.read_xml(self.root, filename)
+        self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
         self.view_changed.emit()
 

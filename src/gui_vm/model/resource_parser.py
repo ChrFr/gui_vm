@@ -170,19 +170,19 @@ class ConfigTable(object):
         '''
         return self.columns.__iter__()
 
-    def to_csv(self, file_name):
+    def to_csv(self, filename):
         '''
         write the table to a csv file
 
         Parameter
         ---------
-        file_name: String,
+        filename: String,
                    the name of the csv file, the table will be written to
         '''
         table = []
         for col_name in self.columns:
             table.append(self.columns[col_name])
-        with open(file_name, 'wb') as csvfile:
+        with open(filename, 'wb') as csvfile:
             writer = csv.writer(csvfile, delimiter=';')
             writer.writerow(self.header)
             for r in xrange(self.row_count):
@@ -191,17 +191,17 @@ class ConfigTable(object):
                     row.append(table[c][r])
                 writer.writerow(row)
 
-    def from_csv(self, file_name):
+    def from_csv(self, filename):
         '''
         create a table out of a csv file
 
         Parameter
         ---------
-        file_name: String,
+        filename: String,
                    the name of the csv file
         '''
         rows = []
-        with open(file_name, 'rb') as csvfile:
+        with open(filename, 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=';')
             for row in reader:
                 rows.append(row)
@@ -275,15 +275,15 @@ class ConfigParser(object):
     '''
     base class for parsing a resource file
     '''
-    def __init__(self, file_name):
-        self.file_name = file_name
+    def __init__(self, filename):
+        self.filename = filename
         self.input_table = InputTable()
 
     def parse(self):
         '''
         get file information of the resource file
         '''
-        directory, name = os.path.split(self.file_name)
+        directory, name = os.path.split(self.filename)
         self.input_table['resource_name'] = name
         self.input_table['type'] = 'unknown'
         return self.input_table
@@ -293,8 +293,8 @@ class H5ConfigParser(ConfigParser):
     '''
     parser specifically for HDF5 files and their nodes
     '''
-    def __init__(self, file_name):
-        super(H5ConfigParser, self).__init__(file_name)
+    def __init__(self, filename):
+        super(H5ConfigParser, self).__init__(filename)
         self.tables = TableTable()
         self.arrays = ArrayTable()
         self.columns = ColumnTable()
@@ -317,9 +317,9 @@ class H5ConfigParser(ConfigParser):
         columns: ColumnTable,
                  contains all columns and additional info
         '''
-        directory, fname = os.path.split(self.file_name)
+        directory, fname = os.path.split(self.filename)
         name = os.path.splitext(fname)[0]
-        h5_input = HDF5(self.file_name)
+        h5_input = HDF5(self.filename)
         h5_input.read()
         for table in h5_input.h5_file:
             in_table = InputTable()
