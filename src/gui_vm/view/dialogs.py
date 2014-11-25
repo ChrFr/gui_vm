@@ -138,8 +138,11 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     def __init__(self):
         super(NewProjectDialog, self).__init__()
         self.setupUi(self)
-        default = ''#config.settings['environment']['default_project_folder']
-        self.folder_edit.setText(default)
+        h = config.settings['history']
+        if len(h) > 0:
+            recent = h[0]
+        #default = config.settings['environment']['default_project_folder']
+        self.folder_edit.setText(recent)
         self.folder_browse_button.clicked.connect(self.browse_folder)
         self.show()
 

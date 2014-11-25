@@ -325,10 +325,14 @@ class SimRun(ProjectTreeNode):
     used traffic model)
     the resources are its children
     '''
+    INPUT_NODES = 'Ressourcen'
+    OUTPUT_NODES = 'Ergebnisse'
+
     def __init__(self, model=None, name=None, parent=None):
         super(SimRun, self).__init__(name, parent=parent)
         if model is not None:
             self.set_model(model)
+        self.add_child(ProjectTreeNode(self.INPUT_NODES))
         #simulation runs can be renamed
         self.rename = True
 
@@ -340,6 +344,27 @@ class SimRun(ProjectTreeNode):
     def default_folder(self):
         name = self.model.name
         return config.settings['trafficmodels'][name]['default_folder']
+
+    @property
+    def path(self):
+        if self.get_parent_by_class(Project).project_folder is None:
+            return None
+        return os.path.join(
+            self.get_parent_by_class(Project).project_folder,
+            self.INPUT_NODES,
+            self.name)
+
+    @property
+    def note(self):
+        '''
+        short textual info to display in ui tree
+
+        Return
+        ------
+        String
+        '''
+        note = self.model.name
+        return note
 
     def validate(self):
         resource_nodes = self.get_resources()
@@ -370,15 +395,15 @@ class SimRun(ProjectTreeNode):
         reset the simrun to the defaults
         '''
         default_model = self.get_default_model()
+        resources = ProjectTreeNode(self.INPUT_NODES)
+        resources.remove_all_children()
+        resources.children = default_model.children
         #set the original sources to the files in the default folder
         for res_node in default_model.get_resources():
             res_node.original_source = os.path.join(self.default_folder,
                                                     res_node.source)
-        #swap this node with the default one
-        parent = self.parent
-        parent.replace_child(self, default_model)
-        default_model.name = self.name
-        return default_model
+            res_node.parent = resources
+        return self
 
     def get_resource(self, name):
         '''
@@ -400,25 +425,6 @@ class SimRun(ProjectTreeNode):
 
     def get_resources(self):
         return self.find_all_by_class(ResourceNode)
-
-    @property
-    def path(self):
-        if self.get_parent_by_class(Project).project_folder is None:
-            return None
-        return os.path.join(
-            self.get_parent_by_class(Project).project_folder, self.name)
-
-    @property
-    def note(self):
-        '''
-        short textual info to display in ui tree
-
-        Return
-        ------
-        String
-        '''
-        note = self.model.name
-        return note
 
     def set_model(self, name):
         '''
@@ -793,3 +799,9 @@ class XMLParser(object):
         xml_tree = etree.Element('GUI_VM_PROJECT')
         project_tree.add_to_xml(xml_tree)
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
+
+class ResultsNode(ProjectTreeNode):
+    def __init__(self, name=None, parent=None):
+        super(ResultsNode, self).__init__(name, parent=parent)
+        #simulation runs can be renamed
+        self.rename = False
