@@ -3,6 +3,7 @@ import sys, os
 from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 from project_view import ProjectTreeView
+from gui_vm.model.project_tree import Project
 from gui_vm.view.dialogs import NewProjectDialog, SettingsDialog
 from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
 from gui_vm.config.config import Config
@@ -122,19 +123,27 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         '''
         #current = config.settings['environment']['default_project_folder']
         if self.project_view.project:
-            current = self.project_view.project
+            current = self.project_view.project.project_folder
         else:
             current = ''
-        fileinput = str(QtGui.QFileDialog.getOpenFileName(
-            self, _fromUtf8('Projekt öffnen'),  current, '*.xml'))
-        if len(fileinput) > 0:
-            do_continue = True
-            if self.project_has_changed:
-                do_continue = self.project_changed_message()
-            if do_continue:
-                self.project_view.read_project(fileinput)
-                self.project_has_changed = False
-                return True
+        directory = str(QtGui.QFileDialog.getExistingDirectory(
+            self, _fromUtf8('Projektordner auswählen'),  current))
+        if len(directory) > 0:
+            project_file = os.path.join(directory, Project.FILENAME_DEFAULT)
+            if os.path.isfile:
+                do_continue = True
+                if self.project_has_changed:
+                    do_continue = self.project_changed_message()
+                if do_continue:
+                    self.project_view.read_project(project_file)
+                    self.project_has_changed = False
+                    return True
+            else:
+                QtGui.QMessageBox.about(
+                    self,
+                    _fromUtf8('Ungültiger Projektordner'),
+                    "Im angegebenen Ordner konnte keine " +
+                    FILENAME_DEFAULT + " gefunden werden!")
         return False
 
     def save_project(self, filename=None):
@@ -151,11 +160,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #filename is '' if aborted (file dialog returns no status)
         if len(filename) > 0:
             self.project_view.write_project(filename)
-            if dialog_opened:
-                QtGui.QMessageBox.about(
-                    self, "Speichern erfolgreich",
-                    'Die Speicherung des Projektes\n{}\n war erfolgreich'.
-                    format(filename))
+            self.project_has_changed = False
+        if dialog_opened:
+            QtGui.QMessageBox.about(
+                self, "Speichern erfolgreich",
+                'Die Speicherung des Projektes\n{}\n war erfolgreich'.
+                format(filename))
             self.project_has_changed = False
             return True
         return False
@@ -165,6 +175,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         handle what happens, if project has changed
         '''
         self.project_has_changed = True
+        self.save_project(os.path.join(self.project_view.project.filename))
         self.update_gui()
 
     def project_changed_message(self):
@@ -191,12 +202,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         do_continue = True
-        if self.project_has_changed:
-            do_continue = self.project_changed_message()
+        #if self.project_has_changed:
+        #    do_continue = self.project_changed_message()
         if do_continue:
             event.accept()
         else:
             event.ignore()
+
 
 
 class WelcomeDialog(QtGui.QDialog, Ui_Welcome):

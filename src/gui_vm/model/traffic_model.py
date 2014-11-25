@@ -27,6 +27,8 @@ class TrafficModel(object):
                          tablecolumns and their target values
 
     '''
+    FILENAME_DEFAULT = 'default.xml'
+
     #names of the fields that can be displayed outside the model
     monitored = OrderedDict()
 

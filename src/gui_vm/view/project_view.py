@@ -198,17 +198,15 @@ class ProjectTreeView(QtCore.QAbstractItemModel):
     def write_project(self, filename):
         XMLParser.write_xml(self.project, filename)
 
-    def create_project(self, name, filename):
+    def create_project(self, name, project_folder):
         if name is None:
             name = 'Neues Projekt'
         if self.project:
             self.remove(self.project)
             self.remove_row(self.current_index.row(),
                             self.parent(self.current_index))
-            return
-        self.root.add_child(Project(name))
+        self.root.add_child(Project(name, project_folder=project_folder))
         self.item_clicked(self.createIndex(0, 0, self.project))
-        self.project.filename = filename
 
     def read_project(self, filename):
         self.current_index = self.createIndex(0, 0, self.project)

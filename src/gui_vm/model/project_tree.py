@@ -357,7 +357,7 @@ class SimRun(ProjectTreeNode):
         get the defaults from the default xml depending on the model
         '''
         default_project_file = os.path.join(self.default_folder,
-                                            'default.xml')
+                                            TrafficModel.FILENAME_DEFAULT)
         #get the default simrun(scenario) for the traffic model
         #from the default file
         tmp_root = ProjectTreeNode('default_root')
@@ -403,7 +403,10 @@ class SimRun(ProjectTreeNode):
 
     @property
     def path(self):
-        return self.get_parent_by_class(Project).project_folder
+        if self.get_parent_by_class(Project).project_folder is None:
+            return None
+        return os.path.join(
+            self.get_parent_by_class(Project).project_folder, self.name)
 
     @property
     def note(self):
@@ -490,11 +493,12 @@ class Project(ProjectTreeNode):
     Node that holds the informations about the project
     the simulation runs and their resources are its children
     '''
-    def __init__(self, name, parent=None):
+    FILENAME_DEFAULT = 'project.xml'
+
+    def __init__(self, name, project_folder=None, parent=None):
         super(Project, self).__init__(name, parent=parent)
-        self.project_folder = ''  #os.getcwd()
+        self.project_folder = project_folder  #os.getcwd()
         #all projects are stored in xmls with the same name
-        self.default_filename = 'project.xml'
         self.meta = {}
         #projects can be renamed
         self.rename = True
@@ -504,7 +508,7 @@ class Project(ProjectTreeNode):
 
     @property
     def filename(self):
-        return os.path.join(self.project_folder, self.default_filename)
+        return os.path.join(self.project_folder, self.FILENAME_DEFAULT)
 
     def add_to_xml(self, parent):
         '''
@@ -521,9 +525,6 @@ class Project(ProjectTreeNode):
         for meta_data in self.meta:
             etree.SubElement(meta, meta_data).text = self.meta[meta_data]
         xml_element.insert(0, meta)
-        folder = etree.Element('Projektordner')
-        folder.text = self.project_folder
-        xml_element.insert(0, folder)
 
     def from_xml(self, element):
         '''
