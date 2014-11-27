@@ -7,6 +7,7 @@ from shutil import copytree
 from gui_vm.config.config import Config
 from gui_vm.model.resources import ResourceFile
 from gui_vm.model.traffic_model import TrafficModel
+from compiler.ast import Node
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -330,9 +331,11 @@ class SimRun(ProjectTreeNode):
 
     def __init__(self, model=None, name=None, parent=None):
         super(SimRun, self).__init__(name, parent=parent)
+        #create a subnode to put all resources in
+        resources = ProjectTreeNode(self.INPUT_NODES)
+        self.add_child(resources)
         if model is not None:
-            self.set_model(model)
-        self.add_child(ProjectTreeNode(self.INPUT_NODES))
+            self.set_model(model, node=resources)
         #simulation runs can be renamed
         self.rename = True
 
@@ -426,7 +429,7 @@ class SimRun(ProjectTreeNode):
     def get_resources(self):
         return self.find_all_by_class(ResourceNode)
 
-    def set_model(self, name):
+    def set_model(self, name, node=None):
         '''
         set the traffic model of the sim run, create new traffic model and
         integrate it into the project tree
@@ -435,12 +438,16 @@ class SimRun(ProjectTreeNode):
         ----------
         name: String, name of the traffic model
         '''
+        model_parent = node
+        #if no subnode is given, append the model directly to simrun
+        if not node:
+            model_parent = self
         model = TrafficModel.new_specific_model(name)
         if model:
             self.model = model
             self.model.update(self.path)
             #remove the old children of the sim run (including resources)
-            self.remove_all_children()
+            model_parent.remove_all_children()
 
             #categorize resources
             res_dict = {}
@@ -452,10 +459,10 @@ class SimRun(ProjectTreeNode):
             #add the resources needed by the traffic model, categorized
             for subfolder in res_dict:
                 layer_node = ProjectTreeNode(subfolder)
-                self.add_child(layer_node)
+                model_parent.add_child(layer_node)
                 for resource in res_dict[subfolder]:
                     layer_node.add_child(ResourceNode(resource.name,
-                                                      parent=self))
+                                                      parent=model_parent))
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
 
