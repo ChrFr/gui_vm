@@ -91,8 +91,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
                 action.triggered.connect(partial((lambda filename: self.project_view.read_project(filename)), project_file))
 
-            project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
-            self.project_view.read_project(project_file)
+            project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)            
+            if os.path.isfile(project_file):
+                self.project_view.read_project(project_file)
         #welcome screen if there is none (assumed first start)
         else:
             welcome = WelcomeDialog(self)
@@ -162,7 +163,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                     self,
                     _fromUtf8('Ungültiger Projektordner'),
                     "Im angegebenen Ordner konnte keine " +
-                    FILENAME_DEFAULT + " gefunden werden!")
+                    Project.FILENAME_DEFAULT + " gefunden werden!")
         return False
 
     def save_project(self, filename=None):

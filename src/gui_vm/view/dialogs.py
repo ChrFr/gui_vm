@@ -210,30 +210,15 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
-
-        env = config.settings['environment']
-        #self.project_edit.setText(env['default_project_folder'])
-        #self.project_browse_button.clicked.connect(
-            #lambda: self.set_folder(self.project_edit))
-
-        self.python_edit.setText(env['python_path'])
+        
         self.python_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.python_edit, 'python.exe'))
-
-        mod = config.settings['trafficmodels']
-        maxem = mod['Maxem']
-        self.maxem_default_edit.setText(maxem['default_folder'])
         self.maxem_default_browse_button.clicked.connect(
             lambda: self.set_folder(self.maxem_default_edit))
-        self.maxem_exec_edit.setText(maxem['executable'])
         self.maxem_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.maxem_exec_edit, '*.py'))
-
-        verkmod = mod['VerkMod']
-        self.verkmod_default_edit.setText(verkmod['default_folder'])
         self.verkmod_default_browse_button.clicked.connect(
             lambda: self.set_folder(self.verkmod_default_edit))
-        self.verkmod_exec_edit.setText(verkmod['executable'])
         self.verkmod_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
 
@@ -242,6 +227,21 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.cancel_button.clicked.connect(self.close)
         self.auto_python_button.clicked.connect(lambda: self.python_edit.setText(sys.executable))
         self.show()
+        
+    def fill(self):                
+        env = config.settings['environment']
+        
+        self.python_edit.setText(env['python_path'])
+
+        mod = config.settings['trafficmodels']
+        maxem = mod['Maxem']
+        self.maxem_default_edit.setText(maxem['default_folder'])
+        self.maxem_exec_edit.setText(maxem['executable'])
+
+        verkmod = mod['VerkMod']
+        self.verkmod_default_edit.setText(verkmod['default_folder'])
+        self.verkmod_exec_edit.setText(verkmod['executable'])
+
 
     def set_file(self, line_edit, extension):
         '''
@@ -288,4 +288,4 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.close()
 
     def reset(self):
-        pass
+        config.reset()

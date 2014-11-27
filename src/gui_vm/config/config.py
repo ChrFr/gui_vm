@@ -1,4 +1,5 @@
 from lxml import etree
+import os
 
 class Singleton(type):
     '''
@@ -17,8 +18,9 @@ class Config():
     __metaclass__ = Singleton
 
     def __init__(self):
-        self.filename = "./config/config.xml"
-        self.default_file = "./config/default_config.xml"
+        curdir = os.path.dirname(__file__)
+        self.filename = os.path.join(curdir, "config.xml")
+        self.default_file = os.path.join(curdir, "default_config.xml")
         self.settings = {
             'environment': {
                 'python_path': '',
@@ -48,16 +50,18 @@ class Config():
         self.write()
 
     '''
-    read the config from given xml file (default config/config.xml)
+    read the config from given xml file (default config.xml)
     '''
     def read(self, filename=None):
         if not filename:
             filename = self.filename
+        if not os.path.isfile(filename):
+            self.reset(reset_filename=filename)
         tree = etree.parse(filename)
         self.settings.update(xml_to_dict(tree.getroot(), ['history']))
 
     '''
-    write the config as xml to given file (default config/config.xml)
+    write the config as xml to given file (default config.xml)
     '''
     def write(self, filename=None):
         xml_tree = etree.Element('CONFIG')
@@ -65,6 +69,17 @@ class Config():
         if not filename:
             filename = self.filename
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
+        
+    def reset(self, reset_filename=None, reset_from_filename=None):    
+        if not reset_filename:
+            reset_filename = self.filename    
+        if not reset_from_filename:
+            reset_from_filename = self.default_file
+        #keep the history
+        hist_tmp = self.settings['history']
+        self.read(filename=self.default_file)
+        self.settings['history'] = hist_tmp
+        self.write(filename=reset_filename)
 
 '''
 append the entries of a dictionary as childs to the given xml tree element
