@@ -36,7 +36,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.project_control.item_clicked)
 
         self.qtreeview.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.qtreeview.customContextMenuRequested.connect(self.project_control.pop_context_menu)
+        self.qtreeview.customContextMenuRequested.connect(
+            self.project_control.pop_context_menu)
 
         self.project_has_changed = False
         self.recently_used_actions = []
@@ -190,6 +191,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         '''
         self.project_has_changed = True
         self.save_project(os.path.join(self.project_control.project.filename))
+        self.project_control.validate_project()
         self.update_gui()
 
     def project_changed_message(self):

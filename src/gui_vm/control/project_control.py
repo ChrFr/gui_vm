@@ -201,13 +201,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         return True
 
     def pop_context_menu(self, pos):
-        menu = QtGui.QMenu()
-        hallo = menu.addAction("Hallo")
-        huhu = menu.addAction("Huhu")
-        quitAction = menu.addAction("Quit")
-        action = menu.exec_(self.view.mapToGlobal(pos))
-        if action == quitAction:
-            pass  #qApp.quit()
+        pass
 
 
 class VMProjectControl(ProjectTreeControl):
@@ -226,7 +220,7 @@ class VMProjectControl(ProjectTreeControl):
             },
             'reset': {
                 Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
-                Scenario: [self._reset_resource, 'Ressource zurücksetzen']
+                ResourceNode: [self._reset_resource, 'Ressource zurücksetzen']
             },
             'edit': {
                 Scenario: [self._rename, 'Szenario umbenennen'],
@@ -269,8 +263,9 @@ class VMProjectControl(ProjectTreeControl):
         if self.details:
             self.details.value_changed.connect(self.project_changed)
 
-        #emit signal flags for context
         cls = node.__class__
+
+        #emit signal flags for context
         self.addable.emit(cls in self.context_map['add'])
         self.removable.emit(cls in self.context_map['remove'])
         self.resetable.emit(cls in self.context_map['reset'])
@@ -278,6 +273,19 @@ class VMProjectControl(ProjectTreeControl):
         self.executable.emit(cls in self.context_map['execute'])
 
         self.dataChanged.emit(index, index)
+
+    def pop_context_menu(self, pos):
+        cls = self.selected_item.__class__
+        context_menu = QtGui.QMenu()
+        action_map = {}
+        for key, value in self.context_map.iteritems():
+            if cls in value:
+                action_map[context_menu.addAction(_fromUtf8(value[cls][1]))] = \
+                    value[cls][0]
+        action = context_menu.exec_(self.view.mapToGlobal(pos))
+        context_menu.close()
+        if action:
+            action_map[action]()
 
     def show_details(self, window):
         node = self.selected_item
@@ -311,12 +319,15 @@ class VMProjectControl(ProjectTreeControl):
         node.remove_all_children()
         self.item_clicked(parent_idx)
 
-    def _remove_resource(self, resource_node):
+    def _remove_resource(self, resource_node=None):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
         '''
-        if os.path.exists(resource_node.full_source):
+        if not resource_node:
+            resource_node = self.selected_item
+        full_source = resource_node.full_source
+        if full_source and os.path.exists(full_source):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"),
                 _fromUtf8("Soll die Datei {} \nin {}\n".format(
@@ -389,7 +400,7 @@ class VMProjectControl(ProjectTreeControl):
             destinations = []
             for res_node in scenario_node.get_resources():
                 filenames.append(res_node.original_source)
-                destinations.append(os.path.join(res_node.full_path))
+                destinations.append(res_node.full_path)
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal
@@ -401,6 +412,12 @@ class VMProjectControl(ProjectTreeControl):
             scenario_node.update()
 
         self.project_changed.emit()
+
+    def validate_project(self):
+        scenarios = self.project.find_all_by_class(Scenario)
+        for scen in scenarios:
+            scen.validate()
+        self.view_changed.emit()
 
     def _reset_resource(self):
         res_node = self.selected_item

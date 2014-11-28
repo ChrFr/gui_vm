@@ -332,10 +332,8 @@ class Scenario(TreeNode):
     def __init__(self, model=None, name=None, parent=None):
         super(Scenario, self).__init__(name, parent=parent)
         #create a subnode to put all resources in
-        resources = TreeNode(self.INPUT_NODES)
-        self.add_child(resources)
         if model is not None:
-            self.set_model(model, node=resources)
+            self.set_model(model)
 
     @property
     def meta(self):
@@ -378,7 +376,7 @@ class Scenario(TreeNode):
                 self.is_valid = False
         self.is_checked = True
 
-    def get_default_model(self):
+    def get_default_scenario(self):
         '''
         get the defaults from the default xml depending on the model
         '''
@@ -398,18 +396,18 @@ class Scenario(TreeNode):
         '''
         reset the simrun to the defaults
         '''
-        default_model = self.get_default_model()
+        default_model = self.get_default_scenario()
         if not default_model:
             return None
-        resources = TreeNode(self.INPUT_NODES)
-        resources.remove_all_children()
-        resources.children = default_model.children
         #set the original sources to the files in the default folder
         for res_node in default_model.get_resources():
             res_node.original_source = os.path.join(self.default_folder,
                                                     res_node.source)
-            res_node.parent = resources
-        return self
+        #swap this node with the default one
+        parent = self.parent
+        parent.replace_child(self, default_model)
+        default_model.name = self.name
+        return default_model
 
     def get_resource(self, name):
         '''
@@ -432,7 +430,7 @@ class Scenario(TreeNode):
     def get_resources(self):
         return self.find_all_by_class(ResourceNode)
 
-    def set_model(self, name, node=None):
+    def set_model(self, name):
         '''
         set the traffic model of the sim run, create new traffic model and
         integrate it into the project tree
@@ -441,16 +439,17 @@ class Scenario(TreeNode):
         ----------
         name: String, name of the traffic model
         '''
-        model_parent = node
-        #if no subnode is given, append the model directly to simrun
-        if not node:
-            model_parent = self
+        #append resources of model to resource subnode
+        resource_node = self.get_child(self.INPUT_NODES)
+        if not resource_node:
+            resource_node = TreeNode(self.INPUT_NODES)
+            self.add_child(resource_node)
         model = TrafficModel.new_specific_model(name)
         if model:
             self.model = model
             self.model.update(self.path)
             #remove the old children of the sim run (including resources)
-            model_parent.remove_all_children()
+            resource_node.remove_all_children()
 
             #categorize resources
             res_dict = {}
@@ -462,10 +461,10 @@ class Scenario(TreeNode):
             #add the resources needed by the traffic model, categorized
             for subfolder in res_dict:
                 layer_node = TreeNode(subfolder)
-                model_parent.add_child(layer_node)
+                resource_node.add_child(layer_node)
                 for resource in res_dict[subfolder]:
                     layer_node.add_child(ResourceNode(resource.name,
-                                                      parent=model_parent))
+                                                      parent=resource_node))
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
 
@@ -689,7 +688,6 @@ class ResourceNode(TreeNode):
         #only set filename, because subfolder will be determined
         #by the category
         self.resource.set_source(filename)
-        #self.resource.update(self.simrun_path)
 
     @property
     def full_source(self):
