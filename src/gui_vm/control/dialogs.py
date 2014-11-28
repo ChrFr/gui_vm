@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from gui_vm.view.qt_designed.progress_ui import Ui_ProgressDialog
-from gui_vm.view.qt_designed.new_project_ui import Ui_NewProject
-from gui_vm.view.qt_designed.new_simrun_ui import Ui_NewSimRun
-from gui_vm.view.qt_designed.settings_ui import Ui_Settings
+from gui_vm.view.progress_ui import Ui_ProgressDialog
+from gui_vm.view.new_project_ui import Ui_NewProject
+from gui_vm.view.new_simrun_ui import Ui_NewSimRun
+from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy
 from PyQt4 import QtGui, QtCore
 import sys, os
@@ -179,13 +179,13 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
                 return (project_name, project_folder, False)
 
 
-class NewSimRunDialog(QtGui.QDialog, Ui_NewSimRun):
+class NewScenarioDialog(QtGui.QDialog, Ui_NewSimRun):
     '''
     open a dialog to set the scenario name and traffic model to work with
     '''
 
     def __init__(self, default_name):
-        super(NewSimRunDialog, self).__init__()
+        super(NewScenarioDialog, self).__init__()
         self.setupUi(self)
         self.name_edit.setText(default_name)
         self.combo_model.addItems(config.settings['trafficmodels'].keys())
@@ -193,7 +193,7 @@ class NewSimRunDialog(QtGui.QDialog, Ui_NewSimRun):
 
     @staticmethod
     def getValues(default_name=''):
-        dialog = NewSimRunDialog(default_name)
+        dialog = NewScenarioDialog(default_name)
         ok = dialog.exec_()
         simrun_name = str(dialog.name_edit.text())
         model_name = str(dialog.combo_model.currentText())
@@ -210,7 +210,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
-        
+
         self.python_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.python_edit, 'python.exe'))
         self.maxem_default_browse_button.clicked.connect(
@@ -227,10 +227,10 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.cancel_button.clicked.connect(self.close)
         self.auto_python_button.clicked.connect(lambda: self.python_edit.setText(sys.executable))
         self.show()
-        
-    def fill(self):                
+
+    def fill(self):
         env = config.settings['environment']
-        
+
         self.python_edit.setText(env['python_path'])
 
         mod = config.settings['trafficmodels']

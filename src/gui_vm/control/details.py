@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from gui_vm.view.qt_designed.resource_ui import Ui_DetailsResource
-from gui_vm.view.qt_designed.simrun_ui import Ui_DetailsSimRun
-from gui_vm.view.qt_designed.project_ui import Ui_DetailsProject
-from gui_vm.view.dialogs import CopyFilesDialog
+from gui_vm.view.resource_ui import Ui_DetailsResource
+from gui_vm.view.simrun_ui import Ui_DetailsSimRun
+from gui_vm.view.project_ui import Ui_DetailsProject
+from gui_vm.controls.dialogs import CopyFilesDialog
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
 
@@ -15,7 +15,7 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
-class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
+class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
     '''
     display the details of a simrun node in the given layout
     input to change the traffic model
@@ -32,7 +32,7 @@ class SimRunDetails(QtGui.QGroupBox, Ui_DetailsSimRun):
     value_changed = QtCore.pyqtSignal()
 
     def __init__(self, simrun_node):
-        super(SimRunDetails, self).__init__()
+        super(ScenarioDetails, self).__init__()
         self.setupUi(self)
         self.setTitle(simrun_node.name)
         self.simrun_node = simrun_node

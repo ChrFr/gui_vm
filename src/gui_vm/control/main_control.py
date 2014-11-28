@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import sys, os
 from functools import partial
-from gui_vm.view.qt_designed.main_window_ui import Ui_MainWindow
+from gui_vm.view.main_window_ui import Ui_MainWindow
+from gui_vm.view.welcome_ui import Ui_Welcome
 from PyQt4 import QtGui, QtCore
-from project_view import ProjectTreeView
+from gui_vm.control.project_control import VMProjectControl
 from gui_vm.model.project_tree import Project
-from gui_vm.view.dialogs import NewProjectDialog, SettingsDialog
-from gui_vm.view.qt_designed.welcome_ui import Ui_Welcome
+from gui_vm.control.dialogs import NewProjectDialog, SettingsDialog
 from gui_vm.config.config import Config
+from gui_vm.model.project_tree import TreeNode
 
 config = Config()
 config.read()
@@ -28,57 +29,52 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         # define the view on the project and connect to the qtreeview in
         # the main window
-        self.project_view = ProjectTreeView(parent=self)
-        self.qtreeview.setModel(self.project_view)
+        self.project_tree = TreeNode('root')
+        self.project_control = VMProjectControl(view=self)
+        self.qtreeview.setModel(self.project_control)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
-            self.project_view.item_clicked)
+            self.project_control.item_clicked)
 
         self.qtreeview.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.qtreeview.customContextMenuRequested.connect(self.project_view.pop_context_menu)
+        self.qtreeview.customContextMenuRequested.connect(self.project_control.pop_context_menu)
 
         self.project_has_changed = False
         self.recently_used_actions = []
 
-        # connect the buttons
-        self.plus_button.clicked.connect(self.project_view.add)
-        self.minus_button.clicked.connect(self.project_view.remove)
-        self.edit_button.clicked.connect(self.project_view.edit)
-        self.reset_button.clicked.connect(self.project_view.reset)
-        #self.save_button.clicked.connect(self.save_project)
+        self.actionProjekt_ffnen.triggered.connect(self.load_project)
         self.open_button.clicked.connect(self.load_project)
-        self.start_button.clicked.connect(self.project_view.run)
-        self.reload_button.clicked.connect(self.project_view.do_reload)
+
+        # connect the context buttons with the project control
+        self.plus_button.clicked.connect(self.project_control.add)
+        self.minus_button.clicked.connect(self.project_control.remove)
+        self.edit_button.clicked.connect(self.project_control.edit)
+        self.reset_button.clicked.connect(self.project_control.reset)
+        self.start_button.clicked.connect(self.project_control.run)
 
         # activation of buttons depending on the selected item
-        self.project_view.editable[bool].connect(
+        self.project_control.editable[bool].connect(
             self.edit_button.setEnabled)
-        self.project_view.addable[bool].connect(
+        self.project_control.addable[bool].connect(
             self.plus_button.setEnabled)
-        self.project_view.removable[bool].connect(
+        self.project_control.removable[bool].connect(
             self.minus_button.setEnabled)
-        self.project_view.resetable[bool].connect(
+        self.project_control.resetable[bool].connect(
             self.reset_button.setEnabled)
-        self.project_view.reloadable[bool].connect(
-            self.reload_button.setEnabled)
 
         for button in self.context_button_group.children():
             button.setEnabled(False)
         self.start_button.setEnabled(True)
-        #self.project_view.refreshable[bool].connect(
-            #self.edit_button.setEnabled)
 
         # connect the tool bar
-        self.actionProjekt_speichern.triggered.connect(self.save_project)
-        self.actionProjekt_ffnen.triggered.connect(self.load_project)
         self.actionNeues_Szenario.triggered.connect(
-            self.project_view.add_run)
+            self.project_control.add_scenario)
         self.actionNeues_Projekt.triggered.connect(self.create_project)
         self.actionEinstellungen.triggered.connect(self.edit_settings)
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
-        self.project_view.dataChanged.connect(self.update_gui)
-        self.project_view.view_changed.connect(self.update_gui)
-        self.project_view.project_changed.connect(self.project_changed_handler)
+        self.project_control.dataChanged.connect(self.update_gui)
+        self.project_control.view_changed.connect(self.update_gui)
+        self.project_control.project_changed.connect(self.project_changed_handler)
         self.project_changed.connect(self.project_changed_handler)
         #open recent project
         h = config.settings['history']
@@ -89,11 +85,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.recently_used_actions.append(action)
                 self.menuZuletzt_benutzt.addAction(action)
                 project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
-                action.triggered.connect(partial((lambda filename: self.project_view.read_project(filename)), project_file))
+                action.triggered.connect(partial((lambda filename: self.project_control.read_project(filename)), project_file))
 
-            project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)            
+            project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
             if os.path.isfile(project_file):
-                self.project_view.read_project(project_file)
+                self.project_control.read_project(project_file)
         #welcome screen if there is none (assumed first start)
         else:
             welcome = WelcomeDialog(self)
@@ -106,11 +102,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for column in range(self.qtreeview.model()
                             .columnCount(QtCore.QModelIndex())):
             self.qtreeview.resizeColumnToContents(column)
-        self.project_view.refresh_details()
-        details = self.project_view.details
-        if details is not None:
-            self.details_layout.addWidget(details)
-            details.show()
+        self.project_control.show_details(self.details_layout)
 
     def create_project(self):
         '''
@@ -124,9 +116,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             if self.project_has_changed:
                 do_continue = self.project_changed_message()
             if do_continue:
-                self.project_view.create_project(project_name, project_folder)
+                self.project_control.new_project(project_name, project_folder)
                 self.project_has_changed = False
-                project_file = self.project_view.project.filename
+                project_file = self.project_control.project.filename
                 self.save_project(os.path.join(project_file))
                 config.add_to_history(project_folder)
                 return True
@@ -145,6 +137,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         h = config.settings['history']
         if len(h) > 0:
             recent = h[0]
+        else:
+            recent = '.'
         project_folder = str(QtGui.QFileDialog.getExistingDirectory(
             self, _fromUtf8('Projektordner auswählen'),  recent))
         if len(project_folder) > 0:
@@ -154,7 +148,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 if self.project_has_changed:
                     do_continue = self.project_changed_message()
                 if do_continue:
-                    self.project_view.read_project(project_file)
+                    self.project_control.read_project(project_file)
                     config.add_to_history(project_folder)
                     self.project_has_changed = False
                     return True
@@ -179,7 +173,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             dialog_opened = False
         #filename is '' if aborted (file dialog returns no status)
         if len(filename) > 0:
-            self.project_view.write_project(filename)
+            self.project_control.write_project(filename)
             self.project_has_changed = False
         if dialog_opened:
             QtGui.QMessageBox.about(
@@ -195,7 +189,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         handle what happens, if project has changed
         '''
         self.project_has_changed = True
-        self.save_project(os.path.join(self.project_view.project.filename))
+        self.save_project(os.path.join(self.project_control.project.filename))
         self.update_gui()
 
     def project_changed_message(self):
@@ -253,7 +247,7 @@ class WelcomeDialog(QtGui.QDialog, Ui_Welcome):
             self.close()
 
     def create_project(self):
-        created = self.parent.create_project()
+        created = self.parent.new_project()
         if created:
             self.close()
 

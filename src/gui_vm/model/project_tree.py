@@ -11,17 +11,18 @@ from compiler.ast import Node
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
-XML_CLASS_NAMES = {'SimRun': 'Szenario',
-                   'Project': 'Projekt',
-                   'ResourceNode': 'Ressource',
-                   'ProjectTreeNode': 'Layer'}
-
+XML_CLASS_NAMES = {
+    'Scenario': 'Szenario',
+    'Project': 'Projekt',
+    'ResourceNode': 'Ressource',
+    'TreeNode': 'Layer'
+}
 
 config = Config()
 config.read()
 
 
-class ProjectTreeNode(object):
+class TreeNode(object):
     '''
     Base class of nodes in the project tree
     '''
@@ -29,7 +30,6 @@ class ProjectTreeNode(object):
         self.parent = parent
         self.name = name
         self.children = []
-        self.rename = False
         self.is_checked = False
         self.is_valid = True
 
@@ -125,25 +125,25 @@ class ProjectTreeNode(object):
         return children
 
     def find_all_by_class(self, node_class):
-            '''
-            find all children by name (deep traversal)
+        '''
+        find all children by name (deep traversal)
 
-            Parameters
-            ----------
-            classname: String,
-                       name of the class of the nodes to look for
+        Parameters
+        ----------
+        classname: String,
+                   name of the class of the nodes to look for
 
-            Return
-            ------
-            children: list of ProjectTreeNodes
-            '''
-            children = []
-            #print '{}: {}'.format(self.name, self.__class__.__name__)
-            if isinstance(self, node_class):
-                children.extend([self])
-            for child in self.children:
-                children.extend(child.find_all_by_class(node_class))
-            return children
+        Return
+        ------
+        children: list of ProjectTreeNodes
+        '''
+        children = []
+        #print '{}: {}'.format(self.name, self.__class__.__name__)
+        if isinstance(self, node_class):
+            children.extend([self])
+        for child in self.children:
+            children.extend(child.find_all_by_class(node_class))
+        return children
 
     def has_child(self, name):
         '''
@@ -320,7 +320,7 @@ class ProjectTreeNode(object):
         return names
 
 
-class SimRun(ProjectTreeNode):
+class Scenario(TreeNode):
     '''
     Node that holds informations about the a simulation run (e.g. the
     used traffic model)
@@ -330,14 +330,12 @@ class SimRun(ProjectTreeNode):
     OUTPUT_NODES = 'Ergebnisse'
 
     def __init__(self, model=None, name=None, parent=None):
-        super(SimRun, self).__init__(name, parent=parent)
+        super(Scenario, self).__init__(name, parent=parent)
         #create a subnode to put all resources in
-        resources = ProjectTreeNode(self.INPUT_NODES)
+        resources = TreeNode(self.INPUT_NODES)
         self.add_child(resources)
         if model is not None:
             self.set_model(model, node=resources)
-        #simulation runs can be renamed
-        self.rename = True
 
     @property
     def meta(self):
@@ -388,7 +386,7 @@ class SimRun(ProjectTreeNode):
                                             TrafficModel.FILENAME_DEFAULT)
         #get the default simrun(scenario) for the traffic model
         #from the default file
-        tmp_root = ProjectTreeNode('default_root')
+        tmp_root = TreeNode('default_root')
         defaults = XMLParser.read_xml(tmp_root, default_project_file)
         default_model = defaults.find_all(self.model.name)[0]
         return default_model
@@ -398,7 +396,7 @@ class SimRun(ProjectTreeNode):
         reset the simrun to the defaults
         '''
         default_model = self.get_default_model()
-        resources = ProjectTreeNode(self.INPUT_NODES)
+        resources = TreeNode(self.INPUT_NODES)
         resources.remove_all_children()
         resources.children = default_model.children
         #set the original sources to the files in the default folder
@@ -458,7 +456,7 @@ class SimRun(ProjectTreeNode):
                 res_dict[resource.subfolder].append(resource)
             #add the resources needed by the traffic model, categorized
             for subfolder in res_dict:
-                layer_node = ProjectTreeNode(subfolder)
+                layer_node = TreeNode(subfolder)
                 model_parent.add_child(layer_node)
                 for resource in res_dict[subfolder]:
                     layer_node.add_child(ResourceNode(resource.name,
@@ -476,7 +474,7 @@ class SimRun(ProjectTreeNode):
         parent: SubElement,
                 this node will be added to it
         '''
-        xml_element = super(SimRun, self).add_to_xml(parent)
+        xml_element = super(Scenario, self).add_to_xml(parent)
         tm = etree.Element('Verkehrsmodell')
         tm.text = self.model.name
         xml_element.insert(0, tm)
@@ -490,7 +488,7 @@ class SimRun(ProjectTreeNode):
         element: SubElement,
                  xml node containing informations about this project node
         '''
-        super(SimRun, self).from_xml(element)
+        super(Scenario, self).from_xml(element)
         #init the traffic model before resources can be set
         name = element.find('Verkehrsmodell').text
         model = TrafficModel.new_specific_model(name)
@@ -501,7 +499,7 @@ class SimRun(ProjectTreeNode):
             raise Exception('Traffic Model {0} not available'.format(name))
 
 
-class Project(ProjectTreeNode):
+class Project(TreeNode):
     '''
     Node that holds the informations about the project
     the simulation runs and their resources are its children
@@ -513,8 +511,6 @@ class Project(ProjectTreeNode):
         self.project_folder = project_folder  #os.getcwd()
         #all projects are stored in xmls with the same name
         self.meta = {}
-        #projects can be renamed
-        self.rename = True
         self.meta['Datum'] = time.strftime("%d.%m.%Y")
         self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
         self.meta['Autor'] = ''
@@ -571,14 +567,14 @@ class Project(ProjectTreeNode):
             name = 'Szenario {}'.format(self.child_count)
         #copytree(os.path.join(DEFAULT_FOLDER, 'Maxem'),
                  #os.path.join(self.project_folder, name))
-        new_run = SimRun(model, name, parent=self)
+        new_run = Scenario(model, name, parent=self)
         self.add_child(new_run)
 
     def remove_run(self, name):
         self.remove_child(name)
 
 
-class ResourceNode(ProjectTreeNode):
+class ResourceNode(TreeNode):
     '''
     wrap a resource in a node, link to the resource held by the
     traffic model
@@ -642,11 +638,11 @@ class ResourceNode(ProjectTreeNode):
 
     @property
     def model(self):
-        return self.get_parent_by_class(SimRun).model
+        return self.get_parent_by_class(Scenario).model
 
     @property
     def simrun_path(self):
-        return self.get_parent_by_class(SimRun).path
+        return self.get_parent_by_class(Scenario).path
 
     @property
     def note(self):
@@ -711,7 +707,7 @@ class ResourceNode(ProjectTreeNode):
 
     @property
     def run_path(self):
-        return self.get_parent_by_class(SimRun).path
+        return self.get_parent_by_class(Scenario).path
 
     def set_source(self, filename):
         '''
@@ -739,7 +735,7 @@ class ResourceNode(ProjectTreeNode):
         set to the old model (incl. references of rules and resource list
         of model) at the moment
         '''
-        sim_run = self.get_parent_by_class(SimRun)
+        sim_run = self.get_parent_by_class(Scenario)
         default_model = sim_run.get_default_model()
         #find corresponding default resource node
         res_default = default_model.get_resource(self.name)
@@ -780,7 +776,7 @@ class XMLParser(object):
                 glob_class = globals()[classname]
                 #check if class is subclass of ProjectTreeNode
                 #to avoid injection from xml
-                if issubclass(glob_class, ProjectTreeNode):
+                if issubclass(glob_class, TreeNode):
                     node = glob_class(name='', parent=parent)
                 else:
                     raise Exception('wrong class definition in xml file! '+
@@ -807,8 +803,6 @@ class XMLParser(object):
         project_tree.add_to_xml(xml_tree)
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
 
-class ResultsNode(ProjectTreeNode):
+class ResultsNode(TreeNode):
     def __init__(self, name=None, parent=None):
         super(ResultsNode, self).__init__(name, parent=parent)
-        #simulation runs can be renamed
-        self.rename = False

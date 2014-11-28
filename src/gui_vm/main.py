@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-from gui_vm.view.main_window import MainWindow
+from gui_vm.control.main_control import MainWindow
 from PyQt4 import QtGui
 
 def startmain():
