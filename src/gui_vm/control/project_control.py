@@ -3,7 +3,7 @@ from PyQt4 import (QtCore, QtGui)
 from details import (ScenarioDetails, ProjectDetails, ResourceDetails)
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        ResourceNode, XMLParser)
-from gui_vm.view.dialogs import (CopyFilesDialog, ExecDialog,
+from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
                                  NewScenarioDialog)
 from gui_vm.config.config import Config
 import os
@@ -215,22 +215,34 @@ class VMProjectControl(ProjectTreeControl):
         super(VMProjectControl, self).__init__(view)
         self.model = TreeNode('root')
 
-        self.functions_map = {
+        self.context_map = {
             'add': {
-                Project: self.add_scenario,
-                Scenario: self.add_scenario,
+                Project: [self.add_scenario, 'Szenario hinzufügen'],
+                Scenario: [self.add_scenario, 'Szenario hinzufügen'],
             },
             'remove': {
-                Scenario: self.remove_scenario,
-                ResourceNode: self.remove_resource,
+                Scenario: [self._remove_node, 'Szenario entfernen'],
+                ResourceNode: [self._remove_resource, 'Ressource entfernen'],
             },
             'reset': {
+                Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
+                Scenario: [self._reset_resource, 'Ressource zurücksetzen']
             },
-            'rename': {
+            'edit': {
+                Scenario: [self._rename, 'Szenario umbenennen'],
+                Project: [self._rename, 'Projekt umbenennen']
             },
             'execute': {
+                Scenario: [self._run_scenario, 'Szenario starten']
             },
         }
+
+    def compute_selected_node(self, function_name):
+        node = self.selected_item
+        cls = node.__class__
+        if cls in self.context_map[function_name]:
+            self.context_map[function_name][cls][0]()
+        self.project_changed.emit()
 
     def item_clicked(self, index=None):
         '''
@@ -245,52 +257,26 @@ class VMProjectControl(ProjectTreeControl):
             self.details.close()
             self.details = None
 
-        #if node and node.rename:
-            #self.editable.emit(True)
-        #else:
-            #self.editable.emit(False)
+        #get new details depending on type of node
 
         if isinstance(node, Project):
-            self.addable.emit(True)
-            #self.add = self.add_run
-            self.removable.emit(False)
-            #self.remove = do_nothing
-            self.resetable.emit(False)
-            #self.reset = do_nothing
-            self.refreshable.emit(True)
-            #self.refresh = do_nothing
-            self.executable.emit(False)
-            self.reloadable.emit(False)
             self.details = ProjectDetails(node)
-
         elif isinstance(node, Scenario):
-            self.addable.emit(True)
-            self.removable.emit(True)
-            self.resetable.emit(True)
-            self.refreshable.emit(True)
-            self.executable.emit(True)
-            self.reloadable.emit(True)
             self.details = ScenarioDetails(node)
-
         elif isinstance(node, ResourceNode):
-            self.addable.emit(False)
-            self.removable.emit(True)
-            self.resetable.emit(True)
-            self.refreshable.emit(True)
-            self.executable.emit(False)
-            self.reloadable.emit(True)
             self.details = ResourceDetails(node)
-
-        else:
-            self.addable.emit(False)
-            self.removable.emit(False)
-            self.resetable.emit(False)
-            self.refreshable.emit(False)
-            self.executable.emit(False)
-            self.reloadable.emit(False)
-
+        #track changes made in details
         if self.details:
             self.details.value_changed.connect(self.project_changed)
+
+        #emit signal flags for context
+        cls = node.__class__
+        self.addable.emit(cls in self.context_map['add'])
+        self.removable.emit(cls in self.context_map['remove'])
+        self.resetable.emit(cls in self.context_map['reset'])
+        self.editable.emit(cls in self.context_map['edit'])
+        self.executable.emit(cls in self.context_map['execute'])
+
         self.dataChanged.emit(index, index)
 
     def show_details(self, window):
@@ -303,89 +289,29 @@ class VMProjectControl(ProjectTreeControl):
             self.details.show()
 
     def add(self):
-        node = self.selected_item
-        cls = node.__class__
-        if cls in self.functions_map['add']:
-            self.functions_map['add'][cls]()
-        self.project_changed.emit()
+        self.compute_selected_node('add')
 
     def remove(self, node=None):
-        node = self.selected_item
-        cls = node.__class__
-        if cls in self.functions_map['remove']:
-            self.functions_map['remove'][cls]()
-        self.project_changed.emit()
+        self.compute_selected_node('remove')
 
-    def remove_scenario(self):
-        node = self.selected_item
-        parent_idx = self.parent(self.current_index)
-        self.remove_row(self.current_index.row(),
-                        parent_idx)
-        self.remove_run(node)
-        self.item_clicked(parent_idx)
-
-    def remove_project(self):
-        node = self.selected_item
-        parent_idx = self.parent(self.current_index)
-        self.remove_row(self.current_index.row(),
-                        parent_idx)
-        self.remove_run(node)
-        self.item_clicked(parent_idx)
+    def execute(self):
+        self.compute_selected_node('execute')
 
     def edit(self):
-        node = self.selected_item
-        if node.rename:
-            text, ok = QtGui.QInputDialog.getText(
-                None, 'Umbenennen', 'Neuen Namen eingeben:',
-                QtGui.QLineEdit.Normal, node.name)
-            if ok:
-                node.name = str(text)
-                self.project_changed.emit()
+        self.compute_selected_node('edit')
 
     def reset(self):
+        self.compute_selected_node('reset')
+
+    def _remove_node(self):
         node = self.selected_item
-        if isinstance(node, Scenario):
-            self.reset_simrun()
-        elif isinstance(node, ResourceNode):
-            self.reset_resource()
+        parent_idx = self.parent(self.current_index)
+        self.remove_row(self.current_index.row(),
+                        parent_idx)
+        node.remove_all_children()
+        self.item_clicked(parent_idx)
 
-    def run(self):
-        node = self.selected_item
-        if isinstance(node, Scenario):
-            dialog = ExecDialog(node, parent=self.view)
-
-    def add_scenario(self):
-        project = self.project
-        if (not project):
-            return
-        default_name = 'Szenario {}'.format(project.child_count)
-        simrun_name, model_name, ok = NewScenarioDialog.getValues(default_name)
-        if ok:
-            if simrun_name in project.children_names:
-                QtGui.QMessageBox.about(
-                    None, "Fehler",
-                    _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
-                              .format(simrun_name)))
-            else:
-                project.add_run(model=model_name, name=simrun_name)
-                reply = QtGui.QMessageBox.question(
-                    None, _fromUtf8("Neues Szenario erstellen"),
-                    _fromUtf8("Möchten Sie die Standarddateien " +
-                              "für das neue Szenario verwenden?"),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-                do_copy = reply == QtGui.QMessageBox.Yes
-                if do_copy:
-                    self.reset_simrun(
-                        simrun_node=project.get_child(simrun_name))
-                self.project_changed.emit()
-
-    #def remove_run(self, simrun_node):
-        #self.project.remove_run(simrun_node.name)
-
-    #def remove_project(self, project_node):
-        #project_node.remove()
-
-    def remove_resource(self, resource_node):
+    def _remove_resource(self, resource_node):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
@@ -404,33 +330,79 @@ class VMProjectControl(ProjectTreeControl):
         resource_node.set_source(None)
         resource_node.update()
 
-    def reset_simrun(self, simrun_node=None):
+    def _run_scenario(self):
+        node = self.selected_item
+        dialog = ExecDialog(node, parent=self.view)
+
+    def _rename(self):
+        node = self.selected_item
+        text, ok = QtGui.QInputDialog.getText(
+            None, 'Umbenennen', 'Neuen Namen eingeben:',
+            QtGui.QLineEdit.Normal, node.name)
+        if ok:
+            node.name = str(text)
+            self.project_changed.emit()
+
+    def add_scenario(self):
+        project = self.project
+        if (not project):
+            return
+        default_name = 'Szenario {}'.format(project.child_count)
+        scenario_name, model_name, ok = NewScenarioDialog.getValues(default_name)
+        if ok:
+            if scenario_name in project.children_names:
+                QtGui.QMessageBox.about(
+                    None, "Fehler",
+                    _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
+                              .format(scenario_name)))
+            else:
+                project.add_run(model=model_name, name=scenario_name)
+                reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8("Neues Szenario erstellen"),
+                    _fromUtf8("Möchten Sie die Standarddateien " +
+                              "für das neue Szenario verwenden?"),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                do_copy = reply == QtGui.QMessageBox.Yes
+                if do_copy:
+                    self._reset_scenario(
+                        scenario_node=project.get_child(scenario_name))
+                self.project_changed.emit()
+
+    def _reset_scenario(self, scenario_node=None):
         '''
         set the simrun to default, copy all files from the default folder
         to the project/scenario folder and link the project tree to those
         files
         '''
         #self.project_tree_view.reset(self.row_index)
-        if simrun_node is None:
-            simrun_node = self.selected_item
-        simrun_node = simrun_node.reset_to_default()
-        filenames = []
-        destinations = []
-        for res_node in simrun_node.get_resources():
-            filenames.append(res_node.original_source)
-            destinations.append(os.path.join(res_node.full_path))
+        if not scenario_node:
+            scenario_node = self.selected_item
+        scenario_node = scenario_node.reset_to_default()
 
-        #bad workaround (as it has to know the parents qtreeview)
-        #but the view crashes otherwise, maybe make update signal
-        self.view.qtreeview.setUpdatesEnabled(False)
-        dialog = CopyFilesDialog(filenames, destinations,
-                                 parent=self.view)
-        self.view.qtreeview.setUpdatesEnabled(True)
-        #dialog.deleteLater()
-        simrun_node.update()
+        if not scenario_node:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Die Defaults des Modells " +
+                          "konnten nicht geladen werden."))
+        else:
+            filenames = []
+            destinations = []
+            for res_node in scenario_node.get_resources():
+                filenames.append(res_node.original_source)
+                destinations.append(os.path.join(res_node.full_path))
+
+            #bad workaround (as it has to know the parents qtreeview)
+            #but the view crashes otherwise, maybe make update signal
+            self.view.qtreeview.setUpdatesEnabled(False)
+            dialog = CopyFilesDialog(filenames, destinations,
+                                     parent=self.view)
+            self.view.qtreeview.setUpdatesEnabled(True)
+            #dialog.deleteLater()
+            scenario_node.update()
+
         self.project_changed.emit()
 
-    def reset_resource(self):
+    def _reset_resource(self):
         res_node = self.selected_item
         res_node.reset_to_default()
         filename = res_node.original_source

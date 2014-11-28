@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from gui_vm.view.progress_ui import Ui_ProgressDialog
 from gui_vm.view.new_project_ui import Ui_NewProject
-from gui_vm.view.new_simrun_ui import Ui_NewSimRun
+from gui_vm.view.new_scenario_ui import Ui_NewScenario
 from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy
 from PyQt4 import QtGui, QtCore
@@ -179,7 +179,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
                 return (project_name, project_folder, False)
 
 
-class NewScenarioDialog(QtGui.QDialog, Ui_NewSimRun):
+class NewScenarioDialog(QtGui.QDialog, Ui_NewScenario):
     '''
     open a dialog to set the scenario name and traffic model to work with
     '''

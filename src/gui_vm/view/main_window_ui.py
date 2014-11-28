@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Fri Nov 28 14:39:56 2014
+# Created: Fri Nov 28 16:47:15 2014
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -95,6 +95,8 @@ class Ui_MainWindow(object):
         self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
         self.start_button.setObjectName(_fromUtf8("start_button"))
         self.gridLayout_4.addWidget(self.start_button, 0, 9, 1, 1)
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_4.addItem(spacerItem3, 0, 10, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_4, 3, 0, 1, 1)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))

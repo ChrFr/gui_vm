@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'simrun.ui'
+# Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Fri Nov 28 14:39:56 2014
+# Created: Fri Nov 28 16:47:15 2014
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -23,11 +23,11 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class Ui_DetailsSimRun(object):
-    def setupUi(self, DetailsSimRun):
-        DetailsSimRun.setObjectName(_fromUtf8("DetailsSimRun"))
-        DetailsSimRun.resize(411, 309)
-        self.formLayoutWidget = QtGui.QWidget(DetailsSimRun)
+class Ui_DetailsScenario(object):
+    def setupUi(self, DetailsScenario):
+        DetailsScenario.setObjectName(_fromUtf8("DetailsScenario"))
+        DetailsScenario.resize(411, 309)
+        self.formLayoutWidget = QtGui.QWidget(DetailsScenario)
         self.formLayoutWidget.setGeometry(QtCore.QRect(10, 20, 391, 281))
         self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
         self.formLayout = QtGui.QFormLayout(self.formLayoutWidget)
@@ -40,11 +40,11 @@ class Ui_DetailsSimRun(object):
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
 
-        self.retranslateUi(DetailsSimRun)
-        QtCore.QMetaObject.connectSlotsByName(DetailsSimRun)
+        self.retranslateUi(DetailsScenario)
+        QtCore.QMetaObject.connectSlotsByName(DetailsScenario)
 
-    def retranslateUi(self, DetailsSimRun):
-        DetailsSimRun.setWindowTitle(_translate("DetailsSimRun", "GroupBox", None))
-        DetailsSimRun.setTitle(_translate("DetailsSimRun", "GroupBox", None))
-        self.label.setText(_translate("DetailsSimRun", "Verkehrsmodell", None))
+    def retranslateUi(self, DetailsScenario):
+        DetailsScenario.setWindowTitle(_translate("DetailsScenario", "GroupBox", None))
+        DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
+        self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
 

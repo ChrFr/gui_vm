@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>NewSimRun</class>
- <widget class="QDialog" name="NewSimRun">
+ <class>NewScenario</class>
+ <widget class="QDialog" name="NewScenario">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -118,7 +118,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>NewSimRun</receiver>
+   <receiver>NewScenario</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -134,7 +134,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>NewSimRun</receiver>
+   <receiver>NewScenario</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

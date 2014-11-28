@@ -65,7 +65,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             button.setEnabled(False)
         self.start_button.setEnabled(True)
 
-        # connect the tool bar
+        # connect the menubar
         self.actionNeues_Szenario.triggered.connect(
             self.project_control.add_scenario)
         self.actionNeues_Projekt.triggered.connect(self.create_project)

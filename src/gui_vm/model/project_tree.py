@@ -387,7 +387,10 @@ class Scenario(TreeNode):
         #get the default simrun(scenario) for the traffic model
         #from the default file
         tmp_root = TreeNode('default_root')
-        defaults = XMLParser.read_xml(tmp_root, default_project_file)
+        try:
+            defaults = XMLParser.read_xml(tmp_root, default_project_file)
+        except:
+            return None
         default_model = defaults.find_all(self.model.name)[0]
         return default_model
 
@@ -396,6 +399,8 @@ class Scenario(TreeNode):
         reset the simrun to the defaults
         '''
         default_model = self.get_default_model()
+        if not default_model:
+            return None
         resources = TreeNode(self.INPUT_NODES)
         resources.remove_all_children()
         resources.children = default_model.children
@@ -569,9 +574,6 @@ class Project(TreeNode):
                  #os.path.join(self.project_folder, name))
         new_run = Scenario(model, name, parent=self)
         self.add_child(new_run)
-
-    def remove_run(self, name):
-        self.remove_child(name)
 
 
 class ResourceNode(TreeNode):
