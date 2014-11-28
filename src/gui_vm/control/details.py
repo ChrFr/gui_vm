@@ -5,6 +5,7 @@ from gui_vm.view.project_ui import Ui_DetailsProject
 from gui_vm.control.dialogs import CopyFilesDialog
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
+from functools import partial
 
 config = Config()
 config.read()
@@ -96,7 +97,11 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         for meta in project_node.meta:
             label = QtGui.QLabel(meta)
             edit = QtGui.QLineEdit(project_node.meta[meta])
-            edit.setReadOnly(True)
+            edit.setReadOnly(False)
+            edit.textChanged.connect(
+                partial((lambda key, value:
+                         self.project_node.set_meta(key, str(value))),
+                        meta))
             self.meta_layout.addRow(label, edit)
         self.folder_edit.setText(str(self.project_node.project_folder))
 

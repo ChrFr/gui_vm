@@ -50,7 +50,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.minus_button.clicked.connect(self.project_control.remove)
         self.edit_button.clicked.connect(self.project_control.edit)
         self.reset_button.clicked.connect(self.project_control.reset)
-        self.start_button.clicked.connect(self.project_control.run)
+        self.start_button.clicked.connect(self.project_control.execute)
 
         # activation of buttons depending on the selected item
         self.project_control.editable[bool].connect(
@@ -61,10 +61,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.minus_button.setEnabled)
         self.project_control.resetable[bool].connect(
             self.reset_button.setEnabled)
+        self.project_control.executable[bool].connect(
+            self.start_button.setEnabled)
 
         for button in self.context_button_group.children():
             button.setEnabled(False)
-        self.start_button.setEnabled(True)
+        self.start_button.setEnabled(False)
 
         # connect the menubar
         self.actionNeues_Szenario.triggered.connect(
@@ -217,13 +219,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return do_continue
 
     def closeEvent(self, event):
-        do_continue = True
-        #if self.project_has_changed:
-        #    do_continue = self.project_changed_message()
-        if do_continue:
-            event.accept()
-        else:
-            event.ignore()
+        self.save_project(os.path.join(self.project_control.project.filename))
 
 
 

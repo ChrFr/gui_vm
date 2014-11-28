@@ -82,10 +82,10 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
 
 class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
-    def __init__(self, simrun, parent=None):
+    def __init__(self, scenario, parent=None):
         super(ExecDialog, self).__init__(parent=parent)
         self.parent = parent
-        self.simrun = simrun
+        self.scenario = scenario
         self.setupUi(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.cancelButton.clicked.connect(self.close)
@@ -102,9 +102,9 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
     def call_cmd(self):
         # run the process
-        self.simrun.model.run(self.simrun.name,
+        self.scenario.model.run(self.scenario.name,
                               self.process,
-                              self.simrun.get_resources(),
+                              self.scenario.get_resources(),
                               callback=self.show_status)
 
     def running(self):

@@ -519,6 +519,9 @@ class Project(TreeNode):
         self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
         self.meta['Autor'] = ''
 
+    def set_meta(self, key, value):
+        self.meta[key] = value
+
     @property
     def filename(self):
         return os.path.join(self.project_folder, self.FILENAME_DEFAULT)

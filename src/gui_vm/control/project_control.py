@@ -311,6 +311,9 @@ class VMProjectControl(ProjectTreeControl):
     def reset(self):
         self.compute_selected_node('reset')
 
+    def execute(self):
+        self.compute_selected_node('execute')
+
     def _remove_node(self):
         node = self.selected_item
         parent_idx = self.parent(self.current_index)
@@ -449,4 +452,5 @@ class VMProjectControl(ProjectTreeControl):
         self.model = XMLParser.read_xml(self.model, filename)
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
+        self.project_changed.emit()
         self.view_changed.emit()
