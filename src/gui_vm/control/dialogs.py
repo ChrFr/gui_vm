@@ -213,6 +213,8 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
 
         self.python_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.python_edit, 'python.exe'))
+        self.hdf5_exec_browse_button.clicked.connect(
+            lambda: self.set_file(self.hdf5_edit, '*.exe'))
         self.maxem_default_browse_button.clicked.connect(
             lambda: self.set_folder(self.maxem_default_edit))
         self.maxem_exec_browse_button.clicked.connect(
@@ -226,12 +228,14 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.reset_button.clicked.connect(self.reset)
         self.cancel_button.clicked.connect(self.close)
         self.auto_python_button.clicked.connect(lambda: self.python_edit.setText(sys.executable))
+        self.fill()
         self.show()
 
     def fill(self):
         env = config.settings['environment']
 
         self.python_edit.setText(env['python_path'])
+        self.hdf5_edit.setText(env['hdf5_viewer'])
 
         mod = config.settings['trafficmodels']
         maxem = mod['Maxem']
@@ -274,6 +278,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         env = config.settings['environment']
         #env['default_project_folder'] = str(self.project_edit.text())
         env['python_path'] = str(self.python_edit.text())
+        env['hdf5_viewer'] = str(self.hdf5_edit.text())
 
         mod = config.settings['trafficmodels']
         maxem = mod['Maxem']

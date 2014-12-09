@@ -6,7 +6,7 @@ from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
                                  NewScenarioDialog)
 from gui_vm.config.config import Config
-import os
+import os, subprocess
 
 config = Config()
 config.read()
@@ -224,7 +224,8 @@ class VMProjectControl(ProjectTreeControl):
             },
             'edit': {
                 Scenario: [self._rename, 'Szenario umbenennen'],
-                Project: [self._rename, 'Projekt umbenennen']
+                Project: [self._rename, 'Projekt umbenennen'],
+                ResourceNode: [self._edit_resource, 'Ressource editieren']
             },
             'execute': {
                 Scenario: [self._run_scenario, 'Szenario starten']
@@ -357,6 +358,12 @@ class VMProjectControl(ProjectTreeControl):
             node.name = str(text)
             self.project_changed.emit()
 
+    def _edit_resource(self):
+        node = self.selected_item
+        hdf5_viewer = config.settings['environment']['hdf5_viewer']
+        if hdf5_viewer:
+            subprocess.Popen('{0} {1}'.format(hdf5_viewer, node.full_source))
+
     def add_scenario(self):
         project = self.project
         if (not project):
@@ -407,10 +414,10 @@ class VMProjectControl(ProjectTreeControl):
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal
-            self.view.qtreeview.setUpdatesEnabled(False)
+            self.view.setUpdatesEnabled(False)
             dialog = CopyFilesDialog(filenames, destinations,
                                      parent=self.view)
-            self.view.qtreeview.setUpdatesEnabled(True)
+            self.view.setUpdatesEnabled(True)
             #dialog.deleteLater()
             scenario_node.update()
 

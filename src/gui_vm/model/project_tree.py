@@ -739,7 +739,7 @@ class ResourceNode(TreeNode):
         of model) at the moment
         '''
         sim_run = self.get_parent_by_class(Scenario)
-        default_model = sim_run.get_default_model()
+        default_model = sim_run.get_default_scenario()
         #find corresponding default resource node
         res_default = default_model.get_resource(self.name)
         #rename source

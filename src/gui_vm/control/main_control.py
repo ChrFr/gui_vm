@@ -30,7 +30,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # define the view on the project and connect to the qtreeview in
         # the main window
         self.project_tree = TreeNode('root')
-        self.project_control = VMProjectControl(view=self)
+        self.project_control = VMProjectControl(view=self.qtreeview)
         self.qtreeview.setModel(self.project_control)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
             self.project_control.item_clicked)

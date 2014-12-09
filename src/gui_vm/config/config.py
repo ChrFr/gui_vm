@@ -24,6 +24,7 @@ class Config():
         self.settings = {
             'environment': {
                 'python_path': '',
+                'hdf5_viewer': '',
                 },
             'trafficmodels': {
                 'Maxem': {
@@ -69,10 +70,10 @@ class Config():
         if not filename:
             filename = self.filename
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
-        
-    def reset(self, reset_filename=None, reset_from_filename=None):    
+
+    def reset(self, reset_filename=None, reset_from_filename=None):
         if not reset_filename:
-            reset_filename = self.filename    
+            reset_filename = self.filename
         if not reset_from_filename:
             reset_from_filename = self.default_file
         #keep the history
@@ -101,6 +102,7 @@ def dict_to_xml(element, dictionary):
 
 '''
 convert a xml tree to a dictionary
+represented_as_arrays: list of Strings, all XML Tags, which should be handled as arrays
 '''
 def xml_to_dict(tree, represented_as_arrays):
     if tree.tag in represented_as_arrays:

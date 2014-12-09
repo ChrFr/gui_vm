@@ -25,6 +25,9 @@ def hard_copy(src_filename, dest_filename,
     '''
 
     src = open(src_filename, "rb")
+    #you can't copy a file into itself
+    if os.path.normpath(src_filename) == os.path.normpath(dest_filename):
+        return False
     dest_dir, dest_fn = os.path.split(dest_filename)
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
