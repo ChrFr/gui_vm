@@ -6,6 +6,7 @@ from gui_vm.control.dialogs import CopyFilesDialog
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
 from functools import partial
+import os
 
 config = Config()
 config.read()
@@ -244,12 +245,16 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         change the resource, copy the file
         '''
-        self.resource_node.set_source(str(self.file_edit.text()))
-        self.project_copy.setText(str(self.resource_node.full_source))
+        src_filename = str(self.file_edit.text())
+        self.resource_node.set_source(src_filename)
+        dest_filename = self.resource_node.full_source
+        self.project_copy.setText(dest_filename)
         self.value_changed.emit()
-        dialog = CopyFilesDialog(str(self.file_edit.text()),
-                                 self.resource_node.full_path,
-                                 parent=self)
+        #only try to copy file, if not the same file as before is selected
+        if os.path.normpath(src_filename) != os.path.normpath(dest_filename):
+            dialog = CopyFilesDialog(src_filename,
+                                     self.resource_node.full_path,
+                                     parent=self)
         self.resource_node.update()
         self.show_attributes()
 
