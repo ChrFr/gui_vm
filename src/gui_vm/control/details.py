@@ -144,16 +144,24 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, resource_node):
+    def __init__(self, resource_node, project_control):
         super(ResourceDetails, self).__init__()
         self.setupUi(self)
-        self.project_copy.setText(str(resource_node.full_source))
-        self.file_edit.setText(str(resource_node.original_source))
+        self.project_control = project_control
         self.setTitle(resource_node.name)
         self.resource_node = resource_node
         self.browse_button.clicked.connect(self.browse_files)
+        self.edit_button.clicked.connect(
+            lambda: self.project_control.edit_resource(self.resource_node))
+        self.remove_button.clicked.connect(
+            lambda: self.project_control.remove_resource(self.resource_node))
         #self.file_edit.textChanged.connect(self.update)
         self.status_button.clicked.connect(self.get_status)
+        self.update()
+
+    def update(self):
+        self.project_copy.setText(str(self.resource_node.full_source))
+        self.file_edit.setText(str(self.resource_node.original_source))
         self.show_attributes()
 
     def show_attributes(self):
@@ -221,8 +229,6 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         attr = self.resource_node.resource.status
         build_tree(attr)
         self.resource_tree.resizeColumnToContents(0)
-        #update the project view
-        self.value_changed.emit()
 
     def browse_files(self):
         '''

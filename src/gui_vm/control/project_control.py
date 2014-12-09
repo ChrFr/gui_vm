@@ -216,7 +216,7 @@ class VMProjectControl(ProjectTreeControl):
             },
             'remove': {
                 Scenario: [self._remove_node, 'Szenario entfernen'],
-                ResourceNode: [self._remove_resource, 'Ressource entfernen'],
+                ResourceNode: [self.remove_resource, 'Ressource entfernen'],
             },
             'reset': {
                 Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
@@ -225,7 +225,7 @@ class VMProjectControl(ProjectTreeControl):
             'edit': {
                 Scenario: [self._rename, 'Szenario umbenennen'],
                 Project: [self._rename, 'Projekt umbenennen'],
-                ResourceNode: [self._edit_resource, 'Ressource editieren']
+                ResourceNode: [self.edit_resource, 'Ressource editieren']
             },
             'execute': {
                 Scenario: [self._run_scenario, 'Szenario starten']
@@ -259,7 +259,7 @@ class VMProjectControl(ProjectTreeControl):
         elif isinstance(node, Scenario):
             self.details = ScenarioDetails(node)
         elif isinstance(node, ResourceNode):
-            self.details = ResourceDetails(node)
+            self.details = ResourceDetails(node, self)
         #track changes made in details
         if self.details:
             self.details.value_changed.connect(self.project_changed)
@@ -288,14 +288,14 @@ class VMProjectControl(ProjectTreeControl):
         if action:
             action_map[action]()
 
-    def show_details(self, window):
+    def update_details(self, window):
         node = self.selected_item
         if self.details:
-            self.details.close()
-            self.details = self.details.__class__(node)
+            #self.details.close()
+            #self.details = self.details.__class__(node, self)
             self.details.value_changed.connect(self.project_changed)
             window.addWidget(self.details)
-            self.details.show()
+            self.details.update()
 
     def add(self):
         self.compute_selected_node('add')
@@ -323,7 +323,7 @@ class VMProjectControl(ProjectTreeControl):
         node.remove_all_children()
         self.item_clicked(parent_idx)
 
-    def _remove_resource(self, resource_node=None):
+    def remove_resource(self, resource_node=None):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
@@ -344,6 +344,7 @@ class VMProjectControl(ProjectTreeControl):
                 os.remove(resource_node.full_source)
         resource_node.set_source(None)
         resource_node.update()
+        self.project_changed.emit()
 
     def _run_scenario(self):
         node = self.selected_item
@@ -358,11 +359,14 @@ class VMProjectControl(ProjectTreeControl):
             node.name = str(text)
             self.project_changed.emit()
 
-    def _edit_resource(self):
+    def edit_resource(self, resource_node=None):
+        if not resource_node:
+            resource_node = self.selected_item
         node = self.selected_item
         hdf5_viewer = config.settings['environment']['hdf5_viewer']
         if hdf5_viewer:
-            subprocess.Popen('{0} {1}'.format(hdf5_viewer, node.full_source))
+            subprocess.Popen('"{0}" "{1}"'.format(hdf5_viewer,
+                                                  node.full_source))
 
     def add_scenario(self):
         project = self.project

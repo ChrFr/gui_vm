@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'resource.ui'
 #
-# Created: Fri Nov 28 14:39:56 2014
+# Created: Tue Dec 09 13:08:08 2014
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,6 +35,9 @@ class Ui_DetailsResource(object):
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
+        self.edit_button = QtGui.QPushButton(DetailsResource)
+        self.edit_button.setObjectName(_fromUtf8("edit_button"))
+        self.horizontalLayout_2.addWidget(self.edit_button)
         self.status_button = QtGui.QPushButton(DetailsResource)
         self.status_button.setObjectName(_fromUtf8("status_button"))
         self.horizontalLayout_2.addWidget(self.status_button)
@@ -99,6 +102,7 @@ class Ui_DetailsResource(object):
     def retranslateUi(self, DetailsResource):
         DetailsResource.setWindowTitle(_translate("DetailsResource", "GroupBox", None))
         DetailsResource.setTitle(_translate("DetailsResource", "GroupBox", None))
+        self.edit_button.setText(_translate("DetailsResource", "Datei editieren", None))
         self.status_button.setText(_translate("DetailsResource", "Status prüfen", None))
         self.browse_button.setText(_translate("DetailsResource", "...", None))
         self.label.setText(_translate("DetailsResource", "Quelle", None))

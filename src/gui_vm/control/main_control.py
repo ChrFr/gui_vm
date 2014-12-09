@@ -105,7 +105,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         for column in range(self.qtreeview.model()
                             .columnCount(QtCore.QModelIndex())):
             self.qtreeview.resizeColumnToContents(column)
-        self.project_control.show_details(self.details_layout)
+        self.project_control.update_details(self.details_layout)
 
     def create_project(self):
         '''

@@ -35,6 +35,13 @@
         </spacer>
        </item>
        <item>
+        <widget class="QPushButton" name="edit_button">
+         <property name="text">
+          <string>Datei editieren</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="status_button">
          <property name="text">
           <string>Status prüfen</string>
