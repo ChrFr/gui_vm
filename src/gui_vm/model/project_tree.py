@@ -334,6 +334,7 @@ class Scenario(TreeNode):
         #create a subnode to put all resources in
         if model is not None:
             self.set_model(model)
+        self.locked = False
 
     @property
     def meta(self):
@@ -479,6 +480,7 @@ class Scenario(TreeNode):
                 this node will be added to it
         '''
         xml_element = super(Scenario, self).add_to_xml(parent)
+        xml_element.attrib['locked'] = 'true' if self.locked else 'false'
         tm = etree.Element('Verkehrsmodell')
         tm.text = self.model.name
         xml_element.insert(0, tm)
@@ -494,13 +496,18 @@ class Scenario(TreeNode):
         '''
         super(Scenario, self).from_xml(element)
         #init the traffic model before resources can be set
-        name = element.find('Verkehrsmodell').text
-        model = TrafficModel.new_specific_model(name)
+        tm_name = element.find('Verkehrsmodell').text
+        model = TrafficModel.new_specific_model(tm_name)
         if model:
             self.model = model
             self.model.update(self.path)
         else:
-            raise Exception('Traffic Model {0} not available'.format(name))
+            raise Exception('Traffic Model {0} not available'.format(tm_name))
+        #lock scenario, if defined in xml
+        if 'locked' in element.attrib and element.attrib['locked'] == 'true':
+            self.locked = True
+        else:
+            self.locked = False
 
 
 class Project(TreeNode):

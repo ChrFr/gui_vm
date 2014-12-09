@@ -51,6 +51,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.edit_button.clicked.connect(self.project_control.edit)
         self.reset_button.clicked.connect(self.project_control.reset)
         self.start_button.clicked.connect(self.project_control.execute)
+        self.lock_button.clicked.connect(self.project_control.switch_lock)
 
         # activation of buttons depending on the selected item
         self.project_control.editable[bool].connect(
@@ -63,6 +64,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.reset_button.setEnabled)
         self.project_control.executable[bool].connect(
             self.start_button.setEnabled)
+        self.project_control.lockable[bool].connect(
+            self.switch_lock)
+
+        #self.lock_button.sets
 
         for button in self.context_button_group.children():
             button.setEnabled(False)
@@ -106,6 +111,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                             .columnCount(QtCore.QModelIndex())):
             self.qtreeview.resizeColumnToContents(column)
         self.project_control.update_details(self.details_layout)
+
+    def switch_lock(self, enabled):
+        self.lock_button.setEnabled(enabled)
+        if enabled and self.project_control.selected_item.locked:
+            self.lock_button.setChecked(True)
+        else:
+            self.lock_button.setChecked(False)
 
     def create_project(self):
         '''

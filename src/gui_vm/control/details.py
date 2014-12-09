@@ -114,7 +114,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         update the project view if sth was changed
         '''
         self.project_node.project_folder = (str(self.folder_edit.text()))
-        self.value_changed.emit()
+        #self.value_changed.emit()
 
     def browse_folder(self):
         '''

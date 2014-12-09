@@ -36,6 +36,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     removable = QtCore.pyqtSignal(bool)
     resetable = QtCore.pyqtSignal(bool)
     executable = QtCore.pyqtSignal(bool)
+    lockable = QtCore.pyqtSignal(bool)
 
     def __init__(self, view=None):
         super(ProjectTreeControl, self).__init__()
@@ -230,6 +231,9 @@ class VMProjectControl(ProjectTreeControl):
             'execute': {
                 Scenario: [self._run_scenario, 'Szenario starten']
             },
+            'switch_lock': {
+                Scenario: [self._switch_lock, 'Szenario sperren'],
+            },
         }
 
     def compute_selected_node(self, function_name):
@@ -267,11 +271,13 @@ class VMProjectControl(ProjectTreeControl):
         cls = node.__class__
 
         #emit signal flags for context
+        locked = node.__dict__.has_key('locked') and node.locked
         self.addable.emit(cls in self.context_map['add'])
-        self.removable.emit(cls in self.context_map['remove'])
-        self.resetable.emit(cls in self.context_map['reset'])
-        self.editable.emit(cls in self.context_map['edit'])
+        self.removable.emit(cls in self.context_map['remove'] and not locked)
+        self.resetable.emit(cls in self.context_map['reset'] and not locked)
+        self.editable.emit(cls in self.context_map['edit'] and not locked)
         self.executable.emit(cls in self.context_map['execute'])
+        self.lockable.emit(cls in self.context_map['switch_lock'])
 
         self.dataChanged.emit(index, index)
 
@@ -312,8 +318,8 @@ class VMProjectControl(ProjectTreeControl):
     def reset(self):
         self.compute_selected_node('reset')
 
-    def execute(self):
-        self.compute_selected_node('execute')
+    def switch_lock(self):
+        self.compute_selected_node('switch_lock')
 
     def _remove_node(self):
         node = self.selected_item
@@ -349,6 +355,12 @@ class VMProjectControl(ProjectTreeControl):
     def _run_scenario(self):
         node = self.selected_item
         dialog = ExecDialog(node, parent=self.view)
+
+    def _switch_lock(self, resource_node=None):
+        if not resource_node:
+            resource_node = self.selected_item
+        resource_node.locked = not resource_node.locked
+        self.project_changed.emit()
 
     def _rename(self):
         node = self.selected_item
@@ -460,6 +472,8 @@ class VMProjectControl(ProjectTreeControl):
         self.current_index = self.createIndex(0, 0, self.project)
         if self.project:
             self.remove(self.project)
+            self.remove_row(self.current_index.row(),
+                            self.parent(self.current_index))
         self.model = XMLParser.read_xml(self.model, filename)
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
