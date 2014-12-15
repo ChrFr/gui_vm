@@ -32,6 +32,7 @@ class TreeNode(object):
         self.children = []
         self.is_checked = False
         self.is_valid = True
+        self._locked = False
 
     def remove(self):
         self.parent.remove_child(self.name)
@@ -73,6 +74,28 @@ class TreeNode(object):
         String
         '''
         return ''
+
+    @property
+    def locked(self):
+        '''
+        Return
+        ------
+        locked True, if node or any parent of node is locked
+               False, if not locked (and parents not locked)
+        '''
+        if self._locked:
+            return True
+        if self.parent:
+            return self.parent.locked
+        else:
+            return False
+
+    @locked.setter
+    def locked(self, boolean):
+        '''
+        Setter for locked status of node
+        '''
+        self._locked = boolean
 
     def add_child(self, child):
         '''
@@ -504,10 +527,11 @@ class Scenario(TreeNode):
         else:
             raise Exception('Traffic Model {0} not available'.format(tm_name))
         #lock scenario, if defined in xml
+        #_locked has to be set (instead of locked)
         if 'locked' in element.attrib and element.attrib['locked'] == 'true':
-            self.locked = True
+            self._locked = True
         else:
-            self.locked = False
+            self._locked = False
 
 
 class Project(TreeNode):

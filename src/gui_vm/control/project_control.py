@@ -55,27 +55,6 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def project(self):
         return self.model.child_at_row(0)
 
-    def add(self):
-        pass
-
-    def remove(self, node=None):
-        pass
-
-    def edit(self):
-        pass
-
-    def reset(self):
-        pass
-
-    def run(self):
-        pass
-
-    def item_clicked(self, index=None):
-        pass
-
-    def replace(self, index, new_node):
-        pass
-
     ##### overrides for viewing in qtreeview #####
 
     def headerData(self, section, orientation, role):
@@ -271,7 +250,7 @@ class VMProjectControl(ProjectTreeControl):
         cls = node.__class__
 
         #emit signal flags for context
-        locked = node.__dict__.has_key('locked') and node.locked
+        locked = node.locked
         self.addable.emit(cls in self.context_map['add'])
         self.removable.emit(cls in self.context_map['remove'] and not locked)
         self.resetable.emit(cls in self.context_map['reset'] and not locked)
@@ -282,7 +261,10 @@ class VMProjectControl(ProjectTreeControl):
         self.dataChanged.emit(index, index)
 
     def pop_context_menu(self, pos):
-        cls = self.selected_item.__class__
+        node = self.selected_item
+        if node.locked:
+            return
+        cls = node.__class__
         context_menu = QtGui.QMenu()
         action_map = {}
         for key, value in self.context_map.iteritems():

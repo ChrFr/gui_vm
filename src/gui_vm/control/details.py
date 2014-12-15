@@ -212,7 +212,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
                 line = ('{name}: {value}'
                         .format(name=key, value=val))
                 status_color = get_status_color(status)
-                item = QtGui.QTreeWidgetItem(parent, [line, message])
+                item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(message)])
                 item.setFont(0, font)
                 if status in [2, 3, 4]:
                     item.setTextColor(0, status_color)

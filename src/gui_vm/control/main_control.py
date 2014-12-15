@@ -114,7 +114,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def switch_lock(self, enabled):
         self.lock_button.setEnabled(enabled)
-        if enabled and self.project_control.selected_item.locked:
+        if self.project_control.selected_item.locked:
             self.lock_button.setChecked(True)
         else:
             self.lock_button.setChecked(False)

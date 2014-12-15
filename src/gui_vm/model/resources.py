@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from backend import HDF5
 import os
 import numpy as np
@@ -13,7 +14,7 @@ CHECKED_AND_VALID = 2
 NOT_FOUND = 3
 MISMATCH = 4
 
-DEFAULT_MESSAGES = ['', 'gefunden', 'ueberprueft',
+DEFAULT_MESSAGES = ['', 'gefunden', 'überprüft',
                     'nicht gefunden', 'Fehler']
 
 
