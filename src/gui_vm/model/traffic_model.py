@@ -205,10 +205,10 @@ class TrafficModel(object):
 
         Return
         ------
-        node: H5Array, the new node with all target values, rules and columns
-              (as defined in the array config)
+        node: H5Table, the new node with all target values, rules and columns
+              (as defined in the table config)
         '''
-        node = H5Table(node_name)
+        h5table = H5Table(node_name)
         if self.tables_table.row_count > 0:
             rows = self.tables_table.get_rows_by_entries(
                 resource_name=res_name, subdivision=node_name)
@@ -221,10 +221,11 @@ class TrafficModel(object):
                 if n_rows != '':
                     dim_rule = CompareRule('shape', '==',
                                            n_rows, reference=self,
-                                           error_msg='Dimension != ' + n_rows,
+                                           error_msg='falsche Dimension',
                                            success_msg='Dimension überprüft')
-                    node.add_rule(dim_rule)
-                #add check of dtypes
+                    h5table.add_rule(dim_rule)
+
+                #add columns required by the model to table (defined in csv)
                 table_cols = self.column_table.get_rows_by_entries(
                     resource_name=res_name, subdivision=node_name)
                 col_names = table_cols['column_name']
@@ -232,47 +233,21 @@ class TrafficModel(object):
                 minima = table_cols['minimum']
                 maxima = table_cols['maximum']
                 primaries = table_cols['is_primary_key']
-                #add the columns with their rules
                 for row in xrange(table_cols.row_count):
-                    col_name = col_names[row]
-                    dtype = dtypes[row]
-                    minimum = minima[row]
-                    maximum = maxima[row]
                     primary = primaries[row]
                     if primary == '1' or primary == 'True':
-                        is_primary = True
+                        is_primary_key = True
                     else:
-                        is_primary = False
-                    col = H5TableColumn(col_name, is_primary)
-                    if minimum != '':
-                        if is_number(minimum):
-                            reference = None
-                        else:
-                            reference = self
-                        min_rule = CompareRule('min_value', '>=', minimum,
-                                               reference=reference,
-                                               error_msg='Minimum von '
-                                               + minimum + ' unterschritten',
-                                               success_msg='Minimum überprüft')
-                        col.add_rule(min_rule)
-                    if maximum != '':
-                        if is_number(maximum):
-                            reference = None
-                        else:
-                            reference = self
-                        max_rule = CompareRule('max_value', '<=', maximum,
-                                               reference=reference,
-                                               error_msg='Maximum von '
-                                               + maximum + ' überschritten',
-                                               success_msg='Maximum überprüft')
-                        col.add_rule(max_rule)
-                    if dtype != '':
-                        type_rule = CompareRule('dtype', '==', dtype,
-                                                error_msg='falscher dtype',
-                                                success_msg='dtype überprüft')
-                        col.add_rule(type_rule)
-                    node.add_child(col)
-        return node
+                        is_primary_key = False
+                    h5table.add_column(col_names[row],
+                                       dtype=dtypes[row],
+                                       minimum=minima[row],
+                                       maximum=maxima[row],
+                                       is_primary_key=is_primary_key,
+                                       reference=self,
+                                       required=True)
+        return h5table
+
 
     @property
     def characteristics(self):

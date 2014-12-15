@@ -23,6 +23,7 @@ class SpecificModel(TrafficModel):
     COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
 
     #names of the fields that can be displayed outside the model
+    #can be adressed in the csv as fields of the table
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
                              ('n_time_series', 'Anzahl Zeitscheiben'),
                              ('n_activity_pairs', 'Aktivitaetenpaare'),
@@ -65,10 +66,6 @@ class SpecificModel(TrafficModel):
 
         if path is not None:
             self.update()
-
-    def __del__(self):
-        print 'traffic model deleted'
-
 
     @property
     def n_zones(self):

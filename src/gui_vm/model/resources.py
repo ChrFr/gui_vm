@@ -37,6 +37,7 @@ class Resource(object):
         self.name = name
         self.children = []
         self.rules = []
+        self.required = False
         self.overall_status = NOT_CHECKED, []
         #add status flags for the monitored attributes
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
@@ -196,6 +197,11 @@ class Resource(object):
         for child in self.children:
             child.clear_status()
 
+    def remove_children(self):
+        if len(self.children) > 0:
+            for i in xrange(len(self.children)):
+                self.children.pop(0).remove_children()
+
 
 class ResourceFile(Resource):
     '''
@@ -294,7 +300,7 @@ class H5Resource(ResourceFile):
             if not successful:
                 #set a flag for file not found
                 self.status_flags['filename'] = (NOT_FOUND,
-                                                  'keine gueltige HDF5 Datei')
+                                                 'keine gueltige HDF5 Datei')
         for child in self.children:
             child.update(h5)
         #close file
@@ -372,13 +378,14 @@ class H5Table(H5Node):
     ---------
     table_path: path of the table inside the h5 file
     '''
-    monitored = OrderedDict([('column_names', 'Spalten')])
+    #monitored = OrderedDict([('column_names', 'benötigte Spalten')])
 
     def __init__(self, table_path):
         #set dict for monitored attributes, then call super constructor
         #(there the flags are built out of monitored dict)
         self.monitored.update(super(H5Table, self).monitored)
         self.monitored['shape'] = 'Reihen'
+        self._required_columns = []
         super(H5Table, self).__init__(table_path)
 
     def __repr__(self):
@@ -386,14 +393,29 @@ class H5Table(H5Node):
 
     def update(self, h5_in):
         '''
-        read and set the attributes of the child columns
+        set the table to the given h5
 
         Parameter
         ---------
-        path: String, name of the working directory,
-                      where the file is in (without subfolder)
+        h5_in: HDF5, opened hdf5 file containing this table
         '''
         table = super(H5Table, self).update(h5_in)
+        #clear extra columns, only keep those that are required by definition
+        tmp = []
+        for i in xrange(len(self.children)):
+            child = self.children.pop(0)
+            if not child.required:
+                child.remove_children()
+            else:
+                tmp.append(child)
+        self.children = tmp
+        if table is None:
+            return
+        #add extra columns inside the given h5 (not required ones)
+        col_names = self.column_names
+        for existing_col in table.dtype.names:
+            if existing_col not in self.column_names:
+                self.add_column(existing_col)
         for child in self.children:
             child.update(table)
 
@@ -406,6 +428,63 @@ class H5Table(H5Node):
         for col in self.children:
             column_names.append(col.name)
         return column_names
+
+    def add_column(self, col_name, dtype=None,
+                   minimum=None, maximum=None,
+                   is_primary_key=False, reference=None,
+                   required=False):
+        '''
+        add a column to the table, apply rules (min, max, dtype,
+        primary unique check)
+
+        Parameter
+        ---------
+        col_name:  String,
+                   the name of the column to add
+        dtype:     String, optional
+                   expected dtype
+        minimum:   String, optional
+                   expected minimum
+        maximum:   String, optional
+                   expected maximum
+        is_primary_key: bool, optional
+                        is the column expected to contain primary keys
+        reference: object, optional
+                   a referenced object, by name referenced minima or maxima are
+                   are taken from this object
+        required:  bool, optional
+                   determines, if the column is required by the traffic model
+        '''
+        col = H5TableColumn(col_name, is_primary_key)
+        if minimum:
+            if is_number(minimum):
+                ref = None
+            else:
+                ref = reference
+            min_rule = CompareRule('min_value', '>=', minimum,
+                                   reference=ref,
+                                   error_msg='Minimum von '
+                                   + minimum + ' unterschritten',
+                                   success_msg='Minimum überprüft')
+            col.add_rule(min_rule)
+        if maximum:
+            if is_number(maximum):
+                ref = None
+            else:
+                ref = reference
+            max_rule = CompareRule('max_value', '<=', maximum,
+                                   reference=ref,
+                                   error_msg='Maximum von '
+                                   + maximum + ' überschritten',
+                                   success_msg='Maximum überprüft')
+            col.add_rule(max_rule)
+        if dtype:
+            type_rule = CompareRule('dtype', '==', dtype,
+                                    error_msg='falscher dtype',
+                                    success_msg='dtype überprüft')
+            col.add_rule(type_rule)
+        col.required = required
+        self.add_child(col)
 
 
 class H5TableColumn(Resource):
@@ -450,7 +529,8 @@ class H5TableColumn(Resource):
             self.content = None
         else:
             self.dtype = table.dtype[self.name]
-            self.status_flags['dtype'] = FOUND
+            if self.required:
+                self.status_flags['dtype'] = FOUND
             col = table[self.name]
             if self.dtype.char != 'S':
                 self.max_value = col.max()
@@ -696,8 +776,8 @@ class CompareRule(Rule):
 
         #elementwise compare -> same number of elements needed
         if len(right) != len(left):
-            if self.errormsg:
-                return False, self.errormsg
+            if self.error_msg:
+                return False, self.error_msg
             return False
         #compare left and right elementwise
         for i in xrange(len(left)):
@@ -714,8 +794,8 @@ class CompareRule(Rule):
                 if isinstance(r, str) and is_number(r):
                     r = float(r)
                 if not operator(l, r):
-                    if self.errormsg:
-                        return False, self.errormsg
+                    if self.error_msg:
+                        return False, self.error_msg
                     return False
         if self.success_msg:
             return True, self.success_msg
