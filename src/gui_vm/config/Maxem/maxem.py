@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.resources import Rule
 from collections import OrderedDict
@@ -183,35 +184,6 @@ class SpecificModel(TrafficModel):
         process.readyReadStandardError.connect(show_progress)
 
         process.start(full_cmd)
-        #process = subprocess.Popen(full_cmd, stderr=subprocess.PIPE)
-
-        #for line in iter(process.stderr.readline, ''):
-            #i += 1
-            #print('<<<<<' + line)
-            #sys.stdout.write(line)
-            #callback(str(line), 0)
-        #while len(message) > 0:
-            ##addIn.ReportMessage(message)
-            #l = message.split("INFO->['")
-            #if len(l)>1:
-                #l2 = l[1].split("'")
-                #new_group = l2[0]
-                #l3 = l[1].split(',')
-                #to_do = int(l3[1].strip())
-                #if group != new_group:
-                    #group = new_group
-                    #progressMax = to_do
-                    #msg = 'Ziel und Verkehrmittelwahl'
-                    #print(msg + "Gruppe %s" % group + progressMax)
-                #already_done = progressMax - to_do
-
-                #addIn.UpdateProgressDialog(already_done)
-            #message = process.stderr.readline()
-
-        #returnvalue = process.wait()
-        #if returnvalue == 1:
-            #print 'Fehler'
-
 
 
 class ActivityTracking(Rule):
@@ -239,7 +211,7 @@ class ActivityTracking(Rule):
         check if activity is represented in the columns
         '''
         if activity_list is None:
-            return False, 'Aktivitaet nicht definiert'
+            return False, 'Aktivität nicht definiert'
         #make activity list iterable (e.g. if only one activity)
         if not hasattr(activity_list, '__iter__'):
             activity_list = [activity_list]
@@ -249,4 +221,4 @@ class ActivityTracking(Rule):
             col_name = col_name.replace('?', activity)
             if col_name not in column_names:
                 return False, 'Spalte {} fehlt'.format(col_name)
-        return True
+        return True, 'Aktivitäten vorhanden'

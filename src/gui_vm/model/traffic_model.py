@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from resources import (H5Array, H5Table, H5Resource,
                        CompareRule, H5TableColumn, Rule)
 from resource_parser import (TableTable, InputTable, ArrayTable, ColumnTable)
@@ -167,7 +168,10 @@ class TrafficModel(object):
                     else:
                         reference = self
                     min_rule = CompareRule('min_value', '>=', minimum,
-                                           reference=reference)
+                                           reference=reference,
+                                           error_msg='Minimum von '
+                                           + minimum + ' unterschritten',
+                                           success_msg='Minimum überprüft')
                     node.add_rule(min_rule)
                 if maximum != '':
                     if is_number(maximum):
@@ -175,13 +179,18 @@ class TrafficModel(object):
                     else:
                         reference = self
                     max_rule = CompareRule('max_value', '<=', maximum,
-                                           reference=reference)
+                                           reference=reference,
+                                           error_msg='Maximum von '
+                                           + maximum + ' überschritten',
+                                           success_msg='Maximum überprüft')
                     node.add_rule(max_rule)
                 if (np.array(dimension) != '').any():
                     if len(dimension) == 1:
                         dimension = dimension[0]
                     dim_rule = CompareRule('shape', '==', dimension,
-                                           reference=self)
+                                           reference=self,
+                                           error_msg='falsche Dimension',
+                                           success_msg='Dimension überprüft')
                     node.add_rule(dim_rule)
         return node
 
@@ -211,7 +220,9 @@ class TrafficModel(object):
                 n_rows = rows['n_rows'][0]
                 if n_rows != '':
                     dim_rule = CompareRule('shape', '==',
-                                           n_rows, reference=self)
+                                           n_rows, reference=self,
+                                           error_msg='Dimension != ' + n_rows,
+                                           success_msg='Dimension überprüft')
                     node.add_rule(dim_rule)
                 #add check of dtypes
                 table_cols = self.column_table.get_rows_by_entries(
@@ -239,7 +250,10 @@ class TrafficModel(object):
                         else:
                             reference = self
                         min_rule = CompareRule('min_value', '>=', minimum,
-                                               reference=reference)
+                                               reference=reference,
+                                               error_msg='Minimum von '
+                                               + minimum + ' unterschritten',
+                                               success_msg='Minimum überprüft')
                         col.add_rule(min_rule)
                     if maximum != '':
                         if is_number(maximum):
@@ -247,10 +261,15 @@ class TrafficModel(object):
                         else:
                             reference = self
                         max_rule = CompareRule('max_value', '<=', maximum,
-                                               reference=reference)
+                                               reference=reference,
+                                               error_msg='Maximum von '
+                                               + maximum + ' überschritten',
+                                               success_msg='Maximum überprüft')
                         col.add_rule(max_rule)
                     if dtype != '':
-                        type_rule = CompareRule('dtype', '==', dtype)
+                        type_rule = CompareRule('dtype', '==', dtype,
+                                                error_msg='falscher dtype',
+                                                success_msg='dtype überprüft')
                         col.add_rule(type_rule)
                     node.add_child(col)
         return node

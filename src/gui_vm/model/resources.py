@@ -14,8 +14,8 @@ CHECKED_AND_VALID = 2
 NOT_FOUND = 3
 MISMATCH = 4
 
-DEFAULT_MESSAGES = ['', 'gefunden', 'überprüft',
-                    'nicht gefunden', 'Fehler']
+DEFAULT_MESSAGES = ['', 'vorhanden', 'überprüft',
+                    'nicht vorhanden', 'Fehler']
 
 
 class Resource(object):
@@ -37,7 +37,7 @@ class Resource(object):
         self.name = name
         self.children = []
         self.rules = []
-        self.overall_status = NOT_CHECKED
+        self.overall_status = NOT_CHECKED, []
         #add status flags for the monitored attributes
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
                              for k, v in self.monitored.items()}
@@ -89,18 +89,27 @@ class Resource(object):
         status of its children, the highest status will be taken
         (ascending hierarchical order of status)
         '''
-        status = (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
+        status_flag = NOT_CHECKED
+        messages = []
         for flag in self.status_flags.values():
             if not isinstance(flag, tuple):
                 flag = (flag, DEFAULT_MESSAGES[flag])
-            if flag[0] > status[0]:
-                status = flag
+            msg = flag[1]
+            if len(msg) > 0 and msg not in messages:
+                messages.append(msg)
+            if flag[0] > status_flag:
+                status_flag = flag[0]
         for child in self.children:
             child.set_overall_status()
-            child_status = child.overall_status
-            if child_status[0] > status[0]:
-                status = child_status
-        self.overall_status = status
+            child_status = child.overall_status[0]
+            child_msgs = child.overall_status[1]
+            for child_msg in child_msgs:
+                if len(child_msg) > 0 and child_msg not in messages:
+                    messages.append(child_msg)
+            if child_status > status_flag:
+                status_flag = child_status
+        self.overall_status = status_flag, messages
+        #self.overall_status[1] = msg
 
     @property
     def status(self, overwrite=None):
@@ -134,7 +143,7 @@ class Resource(object):
         #add the status of the children
         for child in self.children:
             attributes.update(child.status)
-        status[self.name] = (attributes, self.overall_status[1],
+        status[self.name] = (attributes, ', '.join(self.overall_status[1]),
                              self.overall_status[0])
         return status
 
@@ -666,9 +675,12 @@ class CompareRule(Rule):
                '!=': op.ne
                }
 
-    def __init__(self, field_name, operator, target, reference=None):
+    def __init__(self, field_name, operator, target, reference=None,
+                 error_msg=None, success_msg=None):
         super(CompareRule, self).__init__(field_name, target,
                                           self.compare, reference)
+        self.success_msg = success_msg
+        self.error_msg = error_msg
         self.operator = operator
 
     def compare(self, left, right):
@@ -681,8 +693,11 @@ class CompareRule(Rule):
             left = [left]
         if not hasattr(right, '__iter__'):
             right = [right]
+
         #elementwise compare -> same number of elements needed
         if len(right) != len(left):
+            if self.errormsg:
+                return False, self.errormsg
             return False
         #compare left and right elementwise
         for i in xrange(len(left)):
@@ -699,5 +714,9 @@ class CompareRule(Rule):
                 if isinstance(r, str) and is_number(r):
                     r = float(r)
                 if not operator(l, r):
+                    if self.errormsg:
+                        return False, self.errormsg
                     return False
+        if self.success_msg:
+            return True, self.success_msg
         return True
