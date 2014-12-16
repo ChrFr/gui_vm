@@ -58,11 +58,11 @@ class SpecificModel(TrafficModel):
         code_column = activities.get_child('code')
         code_column.bind('content',
                          lambda value: self.set('activity_codes', value))
-        #observe activity codes
+        #observe activity names
         name_column = activities.get_child('name')
         name_column.bind('content',
                          lambda value: self.set('activity_names', value))
-        ####special rules for the maxem model#####
+
         if path is not None:
             self.update()
 

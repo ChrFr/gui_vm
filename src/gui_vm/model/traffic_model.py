@@ -153,21 +153,13 @@ class TrafficModel(Observable):
             col_name = d_col['column_name'][0]
             joker = d_col['joker'][0]
             if '?' in col_name or '*' in col_name:
-                replace = getattr(self, joker)
-            #resource = self.resources[d_col['resource_name'][0]]
-            #h5table = resource.get_child(d_col['subdivision'][0])
-            #if primary == '1' or primary == 'True':
-                #is_primary_key = True
-            #else:
-                #is_primary_key = False
-            ##field = getattr(self, joker)
-            #h5table.add_column(col_name,
-                               #dtype=dtype,
-                               #minimum=minimum,
-                               #maximum=maximum,
-                               #is_primary_key=is_primary_key,
-                               #reference=self,
-                               #required=True)
+                resource = self.resources[d_col['resource_name'][0]]
+                h5table = resource.get_child(d_col['subdivision'][0])
+                self.bind(joker, lambda value:
+                          h5table.add_child(column_dict_to_h5column(
+                              d_col, reference=self,
+                              ignore_jokers=False)[0][0]))
+
 
     def create_H5ArrayNode(self, res_name, node_name):
         '''
@@ -326,7 +318,8 @@ def table_dict_to_h5table(table_dict, column_dict, reference=None):
             tables.append(h5table)
     return tables, ignored
 
-def column_dict_to_h5column(column_dict, reference=None):
+
+def column_dict_to_h5column(column_dict, reference=None, ignore_jokers=True):
     '''
     create a resource table node
 
@@ -338,6 +331,10 @@ def column_dict_to_h5column(column_dict, reference=None):
     reference:  object, optional
                 a referenced object, created rules are (e.g. min with fieldname)
                 referenced to this object
+
+    ignore_jokers:  bool, optional
+                    ignore columns with joker chars (their names
+                    depend on other columns)?
 
     Return
     ------
@@ -355,12 +352,13 @@ def column_dict_to_h5column(column_dict, reference=None):
         minimum = column['minimum'][0]
         maximum = column['maximum'][0]
         primary = column['is_primary_key'][0]
-        #compute columns depending on other columns later
-        #(most likely those columns they are depending on are
-        # not parsed yet)
+        #ignore columns depending on other columns (identified by joker chars)
         if '?' in col_name or '*' in col_name:
-            ignored.append(column)
-            continue
+            if ignore_jokers:
+                ignored.append(column)
+                continue
+            else:
+                print 'hallo'
         if primary == '1' or primary == 'True':
             is_primary_key = True
         else:
