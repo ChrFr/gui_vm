@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from resources import (H5Array, H5Table, H5Resource,
                        CompareRule, H5TableColumn, Rule)
-from resource_parser import (TableTable, InputTable, ArrayTable, ColumnTable)
+from resource_dict import (TableDict, FileDict, ArrayDict, ColumnDict)
 from collections import OrderedDict
 import numpy as np
 import os, imp
@@ -44,23 +44,23 @@ class TrafficModel(object):
         self.arrays_config_file = arrays_config_file
         self.columns_config_file = columns_config_file
         #create empty tables for the target data and fill them
-        self.input_table = InputTable()
-        self.tables_table = TableTable()
-        self.array_table = ArrayTable()
-        self.column_table = ColumnTable()
+        self.file_dict = FileDict()
+        self.table_dict = TableDict()
+        self.array_dict = ArrayDict()
+        self.column_dict = ColumnDict()
         if self.input_config_file:
-            self.input_table.from_csv(self.input_config_file)
+            self.file_dict.from_csv(self.input_config_file)
         if self.tables_config_file:
-            self.tables_table.from_csv(self.tables_config_file)
+            self.table_dict.from_csv(self.tables_config_file)
         if self.arrays_config_file:
-            self.array_table.from_csv(self.arrays_config_file)
+            self.array_dict.from_csv(self.arrays_config_file)
         if self.columns_config_file:
-            self.column_table.from_csv(self.columns_config_file)
+            self.column_dict.from_csv(self.columns_config_file)
 
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
-        self.read_config()
+        self.read_resource_config()
 
     def process(self):
         pass
@@ -108,14 +108,17 @@ class TrafficModel(object):
         for resource in self.resources:
             resource.validate()
 
-    def read_config(self):
+    def read_resource_config(self):
         '''
         build the resource tree with according rules out of the csv definitions
         '''
-        if self.input_table.row_count > 0:
-            unique_resources = np.unique(self.input_table['resource_name'])
+        #variable to store columns that could not be created at the
+        #desired point
+        delayed_columns = []
+        if self.file_dict.row_count > 0:
+            unique_resources = np.unique(self.file_dict['resource_name'])
             for res_name in unique_resources:
-                res_table = self.input_table.get_rows_by_entries(
+                res_table = self.file_dict.get_rows_by_entries(
                     resource_name=res_name)
                 category = str(res_table['category'][0])
                 if res_table['type'][0].startswith('H5'):
@@ -132,10 +135,38 @@ class TrafficModel(object):
                                                            node_name)
                         #read and add rules for arrays
                         elif node_type == 'H5Table':
-                            node = self.create_H5TableNode(res_name,
-                                                           node_name)
+                            #get the specific node out of the table dict
+                            table_dict = self.table_dict.get_rows_by_entries(
+                                resource_name=res_name, subdivision=node_name)
+                            node, delayed = table_dict_to_h5table(
+                                table_dict, self.column_dict,
+                                reference=self)
+                            #only one node is expected in return (unique names)
+                            node = node[0]
+                            delayed_columns.extend(delayed)
                         resource.add_child(node)
                     self.add_resources(resource)
+
+        #compute the delayed columns (joker names)
+        for d_col in delayed_columns:
+            col_name = d_col['column_name'][0]
+            joker = d_col['joker'][0]
+            if '?' in col_name or '*' in col_name:
+                replace = getattr(self, joker)
+            #resource = self.resources[d_col['resource_name'][0]]
+            #h5table = resource.get_child(d_col['subdivision'][0])
+            #if primary == '1' or primary == 'True':
+                #is_primary_key = True
+            #else:
+                #is_primary_key = False
+            ##field = getattr(self, joker)
+            #h5table.add_column(col_name,
+                               #dtype=dtype,
+                               #minimum=minimum,
+                               #maximum=maximum,
+                               #is_primary_key=is_primary_key,
+                               #reference=self,
+                               #required=True)
 
     def create_H5ArrayNode(self, res_name, node_name):
         '''
@@ -152,8 +183,8 @@ class TrafficModel(object):
               (as defined in the array config)
         '''
         node = H5Array(node_name)
-        if self.array_table.row_count > 0:
-            rows = self.array_table.get_rows_by_entries(
+        if self.array_dict.row_count > 0:
+            rows = self.array_dict.get_rows_by_entries(
                 resource_name=res_name, subdivision=node_name)
             if rows.row_count > 1:
                 raise Exception('{}{} defined more than once in {}'.format(
@@ -193,60 +224,6 @@ class TrafficModel(object):
                                            success_msg='Dimension überprüft')
                     node.add_rule(dim_rule)
         return node
-
-    def create_H5TableNode(self, res_name, node_name):
-        '''
-        create a resource table node
-
-        Parameter
-        ---------
-        res_name: String, name of the resource the node belongs to
-        node_name: String, the name the node will get
-
-        Return
-        ------
-        node: H5Table, the new node with all target values, rules and columns
-              (as defined in the table config)
-        '''
-        h5table = H5Table(node_name)
-        if self.tables_table.row_count > 0:
-            rows = self.tables_table.get_rows_by_entries(
-                resource_name=res_name, subdivision=node_name)
-            if rows.row_count > 0:
-                if rows.row_count > 1:
-                    raise Exception('{}{} defined more than once in {}'
-                                    .format(res_name, node_name,
-                                            self.tables_config_file))
-                n_rows = rows['n_rows'][0]
-                if n_rows != '':
-                    dim_rule = CompareRule('shape', '==',
-                                           n_rows, reference=self,
-                                           error_msg='falsche Dimension',
-                                           success_msg='Dimension überprüft')
-                    h5table.add_rule(dim_rule)
-
-                #add columns required by the model to table (defined in csv)
-                table_cols = self.column_table.get_rows_by_entries(
-                    resource_name=res_name, subdivision=node_name)
-                col_names = table_cols['column_name']
-                dtypes = table_cols['type']
-                minima = table_cols['minimum']
-                maxima = table_cols['maximum']
-                primaries = table_cols['is_primary_key']
-                for row in xrange(table_cols.row_count):
-                    primary = primaries[row]
-                    if primary == '1' or primary == 'True':
-                        is_primary_key = True
-                    else:
-                        is_primary_key = False
-                    h5table.add_column(col_names[row],
-                                       dtype=dtypes[row],
-                                       minimum=minima[row],
-                                       maximum=maxima[row],
-                                       is_primary_key=is_primary_key,
-                                       reference=self,
-                                       required=True)
-        return h5table
 
 
     @property
@@ -290,3 +267,109 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+def table_dict_to_h5table(table_dict, column_dict, reference=None):
+    '''
+    create a resource h5table node
+
+    Parameter
+    ---------
+    table_dict: TableDict, contains the name of the tables and the resources
+                they belong to
+
+    column_dict: ColumnDict, contains the columns that will be added, the
+                 tables and resources they belong to and the target
+                 values (minimum, maximum, type, is_primary_key)
+
+    reference:  object, optional
+                a referenced object, created rules are (e.g. min with fieldname)
+                referenced to this object
+
+    Return
+    ------
+    tables: list of H5Tables, the created tables with all target values, rules
+            and columns(as defined in the table config)
+
+    ignored: list of ColumnDicts, columns that could not be created yet
+    '''
+    tables = []
+    ignored = []
+    node_names = table_dict['subdivision']
+    resource_names = table_dict['resource_name']
+    for row in xrange(table_dict.row_count):
+        node_name = node_names[row]
+        res_name = resource_names[row]
+        h5table = H5Table(node_name)
+        table = table_dict.get_rows_by_entries(
+            resource_name=res_name, subdivision=node_name)
+        if table.row_count > 0:
+            if table.row_count > 1:
+                raise Exception('{}{} defined more than once'
+                                .format(res_name, node_name))
+            n_rows = table['n_rows'][0]
+            if n_rows != '':
+                dim_rule = CompareRule('shape', '==',
+                                       n_rows, reference=reference,
+                                       error_msg='falsche Dimension',
+                                       success_msg='Dimension überprüft')
+                h5table.add_rule(dim_rule)
+
+            #add columns required by the model to table (defined in csv)
+            table_cols = column_dict.get_rows_by_entries(
+                resource_name=res_name, subdivision=node_name)
+            columns, ign = column_dict_to_h5column(table_cols,
+                                                   reference=reference)
+            ignored.extend(ign)
+            for column in columns:
+                h5table.add_child(column)
+            tables.append(h5table)
+    return tables, ignored
+
+def column_dict_to_h5column(column_dict, reference=None):
+    '''
+    create a resource table node
+
+    Parameter
+    ---------
+    column_dict: ColumnDict, containing the name of the columns and the target
+                 values (minimum, maximum, type, is_primary_key)
+
+    reference:  object, optional
+                a referenced object, created rules are (e.g. min with fieldname)
+                referenced to this object
+
+    Return
+    ------
+    columns: list of H5TableColumns, the created columns with target values as rules
+            (as defined in the table_dict)
+    ignored: list of ColumnDicts, columns that could not be created yet
+    '''
+    ignored = []
+    columns = []
+    for row in xrange(column_dict.row_count):
+        col_name = column_dict['column_name'][row]
+        column = column_dict.get_rows_by_entries(
+            column_name = col_name)
+        dtype = column['type'][0]
+        minimum = column['minimum'][0]
+        maximum = column['maximum'][0]
+        primary = column['is_primary_key'][0]
+        #compute columns depending on other columns later
+        #(most likely those columns they are depending on are
+        # not parsed yet)
+        if '?' in col_name or '*' in col_name:
+            ignored.append(column)
+            continue
+        if primary == '1' or primary == 'True':
+            is_primary_key = True
+        else:
+            is_primary_key = False
+        column = H5TableColumn(col_name,
+                               exp_dtype=dtype,
+                               exp_minimum=minimum,
+                               exp_maximum=maximum,
+                               is_primary_key=is_primary_key,
+                               reference=reference,
+                               required=True)
+        columns.append(column)
+    return columns, ignored

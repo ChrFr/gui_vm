@@ -6,11 +6,11 @@ INPUT_HEADER = ['resource_name', 'subdivision', 'category', 'type']
 TABLE_HEADER = ['resource_name', 'subdivision', 'n_rows']
 ARRAY_HEADER = ['resource_name', 'subdivision', 'dimension',
                 'minimum', 'maximum']
-COLUMN_HEADER = ['resource_name', 'subdivision', 'column_name', 'type',
+COLUMN_HEADER = ['resource_name', 'subdivision', 'column_name', 'joker', 'type',
                  'minimum', 'maximum', 'is_primary_key']
 
 
-class ConfigTable(object):
+class ResourceDict(object):
     '''
     base class for a table holding informations about resources needed
     by the traffic model, acts like a dictionary
@@ -207,7 +207,7 @@ class ConfigTable(object):
                 rows.append(row)
         header = rows.pop(0)
         for row in rows:
-            table = ConfigTable(header)
+            table = ResourceDict(header)
             for col_nr in range(len(header)):
                 col_name = header[col_nr]
                 table[col_name] = row[col_nr]
@@ -223,7 +223,7 @@ class ConfigTable(object):
         table: ConfigTable,
                table containing the rows that will be appended
         '''
-        if not isinstance(table, ConfigTable):
+        if not isinstance(table, ResourceDict):
             raise Exception('given table has wrong type')
         for column in self:
             if table.columns.has_key(column):
@@ -233,51 +233,51 @@ class ConfigTable(object):
                                 .format(column))
 
 
-class InputTable(ConfigTable):
+class FileDict(ResourceDict):
     '''
     a configtable for all input files
     '''
     def __init__(self):
-        super(InputTable, self).__init__(INPUT_HEADER)
+        super(FileDict, self).__init__(INPUT_HEADER)
         self.name = 'Input'
 
 
-class TableTable(ConfigTable):
+class TableDict(ResourceDict):
     '''
     a configtable for all input tables
     '''
     def __init__(self):
-        super(TableTable, self).__init__(TABLE_HEADER)
+        super(TableDict, self).__init__(TABLE_HEADER)
         self.name = 'Tables'
 
 
-class ArrayTable(ConfigTable):
+class ArrayDict(ResourceDict):
     '''
     a configtable for all input arrays
     '''
     def __init__(self):
-        super(ArrayTable, self).__init__(ARRAY_HEADER)
+        super(ArrayDict, self).__init__(ARRAY_HEADER)
         self.name = 'Arrays'
 
 
-class ColumnTable(ConfigTable):
+class ColumnDict(ResourceDict):
     '''
     a configtable for all table columns
     '''
     def __init__(self):
-        super(ColumnTable, self).__init__(COLUMN_HEADER)
+        super(ColumnDict, self).__init__(COLUMN_HEADER)
         self.name = 'Columns'
 
 
 ##### parse the input files ####
 
-class ConfigParser(object):
+class ResourceConfigParser(object):
     '''
     base class for parsing a resource file
     '''
     def __init__(self, filename):
         self.filename = filename
-        self.input_table = InputTable()
+        self.input_table = FileDict()
 
     def parse(self):
         '''
@@ -289,15 +289,15 @@ class ConfigParser(object):
         return self.input_table
 
 
-class H5ConfigParser(ConfigParser):
+class H5ConfigParser(ResourceConfigParser):
     '''
     parser specifically for HDF5 files and their nodes
     '''
     def __init__(self, filename):
         super(H5ConfigParser, self).__init__(filename)
-        self.tables = TableTable()
-        self.arrays = ArrayTable()
-        self.columns = ColumnTable()
+        self.tables = TableDict()
+        self.arrays = ArrayDict()
+        self.columns = ColumnDict()
 
     def parse(self):
         '''
@@ -322,12 +322,12 @@ class H5ConfigParser(ConfigParser):
         h5_input = HDF5(self.filename)
         h5_input.read()
         for table in h5_input.h5_file:
-            in_table = InputTable()
+            in_table = FileDict()
             in_table['resource_name'] = name
             in_table['type'] = 'H5{}'.format(table._c_classId.title())
             if table._c_classId == 'TABLE':
                 in_table['subdivision'] = table._v_pathname
-                t_table = TableTable()
+                t_table = TableDict()
                 t_table['resource_name'] = name
                 t_table['subdivision'] = table._v_pathname
                 t_table['n_rows'] = table.nrows
@@ -336,16 +336,17 @@ class H5ConfigParser(ConfigParser):
                 columns = table_data.dtype
                 for col in columns.names:
                     dtype = columns[col]
-                    c_table = ColumnTable()
+                    c_table = ColumnDict()
                     c_table['resource_name'] = name
                     c_table['subdivision'] = table._v_pathname
                     c_table['column_name'] = col
+                    c_table['joker'] = ''
                     c_table['type'] = dtype
                     c_table['is_primary_key'] = 0
                     self.columns += c_table
             elif table._c_classId == 'ARRAY':
                 in_table['subdivision'] = table._v_pathname
-                a_table = ArrayTable()
+                a_table = ArrayDict()
                 a_table['resource_name'] = name
                 a_table['subdivision'] = table._v_pathname
                 shape = table.shape

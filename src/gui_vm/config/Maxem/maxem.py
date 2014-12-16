@@ -49,21 +49,6 @@ class SpecificModel(TrafficModel):
 
         ####special rules for the maxem model#####
 
-        #track the activities
-        activities = self.resources['Params'].get_child('activities')
-        activities.get_child('code').track_content = True
-        activities.get_child('name').track_content = True
-
-        attraction = self.resources['Zonen'].get_child('attraction')
-        activity_track = ActivityTracking('column_names', 'ZP_?',
-                                          'activity_codes', reference=self)
-        attraction.add_rule(activity_track)
-
-        activity_kf = self.resources['Zonen'].get_child('activity_kf')
-        activity_track = ActivityTracking('column_names', 'KF_?',
-                                          'activity_codes', reference=self)
-        activity_kf.add_rule(activity_track)
-
         if path is not None:
             self.update()
 
@@ -71,7 +56,7 @@ class SpecificModel(TrafficModel):
     def n_zones(self):
         #number of zones is determined by the number of rows in
         #/zones/zones
-        shape = self.resources['Zonen'].get_child('zones').shape
+        shape = self.resources['Zonen'].get_child('/zones/zones').shape
         if shape is None:
             return None
         else:
@@ -81,7 +66,7 @@ class SpecificModel(TrafficModel):
     def n_time_series(self):
         #time series is determined by the number of rows in
         #/activities/time_series
-        shape = self.resources['Params'].get_child('time_series').shape
+        shape = self.resources['Params'].get_child('/activities/time_series').shape
         if shape is None:
             return None
         else:
@@ -89,7 +74,7 @@ class SpecificModel(TrafficModel):
 
     @property
     def n_activity_pairs(self):
-        shape = self.resources['Params'].get_child('activitypairs').shape
+        shape = self.resources['Params'].get_child('/activities/activitypairs').shape
         if shape is None:
             return None
         else:
@@ -97,13 +82,11 @@ class SpecificModel(TrafficModel):
 
     @property
     def activity_codes(self):
-        activities = self.resources['Params'].get_child('activities')
-        return activities.get_child('code').content
+        return self.resources['Params'].get_content('/activities/activities', 'code')
 
     @property
     def activity_names(self):
-        activities = self.resources['Params'].get_child('activities')
-        return activities.get_child('name').content
+        return self.resources['Params'].get_content('/activities/activities', 'name')
 
     def update(self, path):
         super(SpecificModel, self).update(path)

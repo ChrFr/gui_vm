@@ -282,6 +282,7 @@ class H5Resource(ResourceFile):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
             filename=filename)
+        self._content = {}
 
     def update(self, path):
         '''
@@ -294,6 +295,8 @@ class H5Resource(ResourceFile):
         '''
         super(H5Resource, self).update(path)
         h5 = None
+        #reset contents
+        self._content = {}
         if self.status_flags['filename'] == FOUND:
             h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
             successful = h5.read()
@@ -307,6 +310,10 @@ class H5Resource(ResourceFile):
         del(h5)
         self.set_overall_status()
 
+    def get_content(self, table_name, col_name):
+        if col_name not in self._content:
+            pass
+        return None
 
 class H5Node(Resource):
     '''
@@ -320,8 +327,8 @@ class H5Node(Resource):
                              ('shape', 'Dimension')])
 
     def __init__(self, table_path):
-        name = os.path.split(table_path)[1]
-        super(H5Node, self).__init__(name)
+        #name = os.path.split(table_path)[1]
+        super(H5Node, self).__init__(table_path)
         self.table_path = table_path
         self.shape = None
         #set flags to not checked
@@ -415,7 +422,8 @@ class H5Table(H5Node):
         col_names = self.column_names
         for existing_col in table.dtype.names:
             if existing_col not in self.column_names:
-                self.add_column(existing_col)
+                col = H5TableColumn(existing_col)
+                self.add_child(col)
         for child in self.children:
             child.update(table)
 
@@ -429,63 +437,6 @@ class H5Table(H5Node):
             column_names.append(col.name)
         return column_names
 
-    def add_column(self, col_name, dtype=None,
-                   minimum=None, maximum=None,
-                   is_primary_key=False, reference=None,
-                   required=False):
-        '''
-        add a column to the table, apply rules (min, max, dtype,
-        primary unique check)
-
-        Parameter
-        ---------
-        col_name:  String,
-                   the name of the column to add
-        dtype:     String, optional
-                   expected dtype
-        minimum:   String, optional
-                   expected minimum
-        maximum:   String, optional
-                   expected maximum
-        is_primary_key: bool, optional
-                        is the column expected to contain primary keys
-        reference: object, optional
-                   a referenced object, by name referenced minima or maxima are
-                   are taken from this object
-        required:  bool, optional
-                   determines, if the column is required by the traffic model
-        '''
-        col = H5TableColumn(col_name, is_primary_key)
-        if minimum:
-            if is_number(minimum):
-                ref = None
-            else:
-                ref = reference
-            min_rule = CompareRule('min_value', '>=', minimum,
-                                   reference=ref,
-                                   error_msg='Minimum von '
-                                   + minimum + ' unterschritten',
-                                   success_msg='Minimum überprüft')
-            col.add_rule(min_rule)
-        if maximum:
-            if is_number(maximum):
-                ref = None
-            else:
-                ref = reference
-            max_rule = CompareRule('max_value', '<=', maximum,
-                                   reference=ref,
-                                   error_msg='Maximum von '
-                                   + maximum + ' überschritten',
-                                   success_msg='Maximum überprüft')
-            col.add_rule(max_rule)
-        if dtype:
-            type_rule = CompareRule('dtype', '==', dtype,
-                                    error_msg='falscher dtype',
-                                    success_msg='dtype überprüft')
-            col.add_rule(type_rule)
-        col.required = required
-        self.add_child(col)
-
 
 class H5TableColumn(Resource):
     '''
@@ -493,27 +444,67 @@ class H5TableColumn(Resource):
 
     Parameter
     ---------
-    name: the name the column gets
-    primary_key: bool, optional
-                 if True the column is assumed to contain only unique values
-                 will be checked at update
-    track_content: bool, optional
-                   if True the content of the table will be saved in the
-                   attribute self.content with every update
+    name:           the name the column gets
+    dtype:          String, optional
+                    expected dtype
+    minimum:        String, optional
+                    expected minimum
+    maximum:        String, optional
+                    expected maximum
+    is_primary_key: bool, optional
+                    is the column expected to contain primary keys
+    reference:      object, optional
+                    a referenced object, by name referenced minima or maxima are
+                    are taken from this object
+    required:       bool, optional
+                    determines, if the column is required by the traffic model
     '''
     monitored = OrderedDict([('dtype', 'dtype'),
                              ('primary_key', 'Primaerschluessel'),
                              ('max_value', 'Maximum'),
                              ('min_value', 'Minimum')])
 
-    def __init__(self, name, primary_key=False, track_content=False):
+    def __init__(self, name, primary_key=False, exp_dtype=None,
+                   exp_minimum=None, exp_maximum=None,
+                   is_primary_key=False, reference=None,
+                   required=False):
         super(H5TableColumn, self).__init__(name)
+
         self.max_value = None
         self.min_value = None
-        self.primary_key = primary_key
         self.dtype = None
-        self.track_content = track_content
-        self.content = None
+        self.required = required
+        self.primary_key = primary_key
+
+        if exp_minimum:
+            if is_number(exp_minimum):
+                ref = None
+            else:
+                ref = reference
+            min_rule = CompareRule('min_value', '>=', exp_minimum,
+                                   reference=ref,
+                                   error_msg='Minimum von '
+                                   + exp_minimum + ' unterschritten',
+                                   success_msg='Minimum überprüft')
+            self.add_rule(min_rule)
+
+        if exp_maximum:
+            if is_number(exp_maximum):
+                ref = None
+            else:
+                ref = reference
+            max_rule = CompareRule('max_value', '<=', exp_maximum,
+                                   reference=ref,
+                                   error_msg='Maximum von '
+                                   + exp_maximum + ' überschritten',
+                                   success_msg='Maximum überprüft')
+            self.add_rule(max_rule)
+
+        if exp_dtype:
+            type_rule = CompareRule('dtype', '==', exp_dtype,
+                                    error_msg='falscher dtype',
+                                    success_msg='dtype überprüft')
+            self.add_rule(type_rule)
 
     def update(self, table):
         '''
@@ -526,7 +517,6 @@ class H5TableColumn(Resource):
             self.max_value = None
             self.min_value = None
             self.dtype = None
-            self.content = None
         else:
             self.dtype = table.dtype[self.name]
             if self.required:
@@ -539,8 +529,6 @@ class H5TableColumn(Resource):
             if self.primary_key and np.unique(col).size != col.size:
                 self.status_flags['primary_key'] = (MISMATCH,
                                                     'Werte nicht eindeutig')
-            if self.track_content:
-                self.content = list(col)
 
 
 class H5Array(H5Node):

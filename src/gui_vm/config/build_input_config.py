@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
 import os
 import numpy as np
-from gui_vm.model.resource_parser import (H5ConfigParser, InputTable,
-                                          TableTable, ArrayTable, ColumnTable,
-                                          ConfigParser)
+from gui_vm.model.resource_parser import (H5ConfigParser, FileDict,
+                                          TableDictArrayDict, ArrayDict, ColumnDict,
+                                          ResourceConfigParser)
 
 
 def main(folder, model):
@@ -16,10 +16,10 @@ def main(folder, model):
     """
     filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(folder)) for f in fn]
-    input_table = InputTable()
-    tables = TableTable()
-    arrays = ArrayTable()
-    columns = ColumnTable()
+    input_table = FileDict()
+    tables = TableDictArrayDict()
+    arrays = ArrayDict()
+    columns = ColumnDict()
 
     #iterate over all files in directory (incl. subdirectories)
     for filename in filenames:
@@ -30,7 +30,7 @@ def main(folder, model):
             arrays += a
             columns += c
         else:
-            i = ConfigParser(filename).parse()
+            i = ResourceConfigParser(filename).parse()
         input_table += i
 
     #write tables to csv
