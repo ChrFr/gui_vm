@@ -5,6 +5,7 @@ import numpy as np
 import operator as op
 import time
 from collections import OrderedDict
+from gui_vm.model.observable import Observable
 import copy
 
 #status flags (with ascending priority)
@@ -18,7 +19,7 @@ DEFAULT_MESSAGES = ['', 'vorhanden', 'überprüft',
                     'nicht vorhanden', 'Fehler']
 
 
-class Resource(object):
+class Resource(Observable):
     '''
     base class for resource files and their subdivisions, may have further
     subdivisions of this resource as children
@@ -34,6 +35,7 @@ class Resource(object):
     monitored = OrderedDict()
 
     def __init__(self, name):
+        super(Resource, self).__init__()
         self.name = name
         self.children = []
         self.rules = []
@@ -42,6 +44,7 @@ class Resource(object):
         #add status flags for the monitored attributes
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
                              for k, v in self.monitored.items()}
+
 
     def add_child(self, child):
         '''
@@ -65,14 +68,6 @@ class Resource(object):
         add a rule to this resource
         '''
         self.rules.append(rule)
-
-    #def set_model(self, model):
-        #'''
-        #add this node to a model and reference the rules to this model
-        #'''
-        #model.resources[self.name]=...
-        #for child in self.children:
-            #child.set_model(model)
 
     def update(self, path):
         '''
@@ -282,7 +277,6 @@ class H5Resource(ResourceFile):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
             filename=filename)
-        self._content = {}
 
     def update(self, path):
         '''
@@ -310,10 +304,6 @@ class H5Resource(ResourceFile):
         del(h5)
         self.set_overall_status()
 
-    def get_content(self, table_name, col_name):
-        if col_name not in self._content:
-            pass
-        return None
 
 class H5Node(Resource):
     '''
@@ -473,6 +463,7 @@ class H5TableColumn(Resource):
         self.max_value = None
         self.min_value = None
         self.dtype = None
+        self.content = None
         self.required = required
         self.primary_key = primary_key
 
@@ -517,18 +508,22 @@ class H5TableColumn(Resource):
             self.max_value = None
             self.min_value = None
             self.dtype = None
+            self.content = None
         else:
             self.dtype = table.dtype[self.name]
             if self.required:
                 self.status_flags['dtype'] = FOUND
-            col = table[self.name]
+            content = table[self.name]
             if self.dtype.char != 'S':
-                self.max_value = col.max()
-                self.min_value = col.min()
+                self.max_value = content.max()
+                self.min_value = content.min()
             #check if all values are unique if primary key
-            if self.primary_key and np.unique(col).size != col.size:
+            if self.primary_key and np.unique(content).size != content.size:
                 self.status_flags['primary_key'] = (MISMATCH,
                                                     'Werte nicht eindeutig')
+            #if content of column is observed, set it
+            if 'content' in self._observed:
+                self.set('content', list(content))
 
 
 class H5Array(H5Node):

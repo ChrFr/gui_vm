@@ -46,9 +46,23 @@ class SpecificModel(TrafficModel):
             arrays_config_file=arrays_config_file,
             columns_config_file=columns_config_file)
 
+        self.activity_codes = None
+        self._activity_names = None
 
+        self.read_resource_config()
+
+        ####observe columns####
+        activities = self.resources['Params'].get_child(
+            '/activities/activities')
+        #observe activity codes
+        code_column = activities.get_child('code')
+        code_column.bind('content',
+                         lambda value: self.set('activity_codes', value))
+        #observe activity codes
+        name_column = activities.get_child('name')
+        name_column.bind('content',
+                         lambda value: self.set('activity_names', value))
         ####special rules for the maxem model#####
-
         if path is not None:
             self.update()
 
@@ -79,14 +93,6 @@ class SpecificModel(TrafficModel):
             return None
         else:
             return int(shape[0])
-
-    @property
-    def activity_codes(self):
-        return self.resources['Params'].get_content('/activities/activities', 'code')
-
-    @property
-    def activity_names(self):
-        return self.resources['Params'].get_content('/activities/activities', 'name')
 
     def update(self, path):
         super(SpecificModel, self).update(path)

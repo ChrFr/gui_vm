@@ -5,10 +5,11 @@ from resource_dict import (TableDict, FileDict, ArrayDict, ColumnDict)
 from collections import OrderedDict
 import numpy as np
 import os, imp
+from gui_vm.model.observable import Observable
 from gui_vm.config.config import Config
 
 
-class TrafficModel(object):
+class TrafficModel(Observable):
     '''
     base class for traffic models
 
@@ -36,6 +37,7 @@ class TrafficModel(object):
     def __init__(self, name,
                  input_config_file=None, tables_config_file=None,
                  arrays_config_file=None, columns_config_file=None):
+        super(TrafficModel, self).__init__()
         self.name = name
         #names of the config files containing the
         #target status of all input data
@@ -60,7 +62,6 @@ class TrafficModel(object):
         #dictionary with categories of resources as keys
         #items are lists of the resources to this category
         self.resources = {}
-        self.read_resource_config()
 
     def process(self):
         pass
