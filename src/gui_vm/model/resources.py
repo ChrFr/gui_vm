@@ -76,7 +76,7 @@ class Resource(Observable):
         in the given project path
         '''
         self.clear_status()
-        #self.reset()
+        self.reset()
         for child in self.children:
             child.update(path)
         self.set_overall_status()
@@ -241,7 +241,7 @@ class ResourceFile(Resource):
         base class only checks if file exists, actual reading has to be done
         in the subclasses
         '''
-        #self.reset()
+        self.reset()
         self.clear_status()
         if self.filename != '' and self.filename is not None:
             filename = os.path.join(path, self.subfolder, self.filename)
@@ -339,7 +339,7 @@ class H5Node(Resource):
         path: String, name of the working directory,
                       where the file is in (without subfolder)
         '''
-        #self.reset()
+        self.reset()
         table = None
         if h5_in is not None:
             table = h5_in.get_table(self.table_path)
@@ -407,6 +407,7 @@ class H5Table(H5Node):
             if not child.required:
                 child.remove_children()
             else:
+                child.reset()
                 tmp.append(child)
         self.children = tmp
         table = super(H5Table, self).update(h5_in)
@@ -508,7 +509,7 @@ class H5TableColumn(Resource):
         by the dtype flag
         check for uniqueness of primary keys
         '''
-        #self.reset()
+        self.reset()
         if table is None or self.name not in table.dtype.names:
             self.status_flags['dtype'] = NOT_FOUND
             self.max_value = None

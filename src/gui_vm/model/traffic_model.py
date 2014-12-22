@@ -155,9 +155,22 @@ class TrafficModel(Observable):
             joker = d_col['joker'][0]
             if '?' in col_name or '*' in col_name:
 
-                def add_joker_cols(c):
+                def add_dynamic_cols(c):
                     field_name = c['joker'][0]
                     replace = self.get(field_name)
+                    resource = self.resources[c['resource_name'][0]]
+                    h5table = resource.get_child(c['subdivision'][0])
+                    tmp = []
+                    # remove old dynamic columns
+                    # WARNING: removes all dynamic columns, so there can only
+                    # be one pattern for dynamic cols per table
+                    for i in xrange(len(h5table.children)):
+                        col = h5table.children.pop(0)
+                        if col.dynamic:
+                            col.remove_children()
+                        else:
+                            tmp.append(col)
+                    h5table.children = tmp
                     if not replace:
                         return
                     c_n = c['column_name'][0]
@@ -167,14 +180,10 @@ class TrafficModel(Observable):
                     # build a column dict with the new column names
                     for r in replace:
                         new_col_name = c_n.replace('?', r).replace('*', r)
-
-                        print (new_col_name)
                         c2['column_name'] = new_col_name
                         c1.merge_table(c2)
                     #create h5 columns
                     columns = column_dict_to_h5column(c1, reference=self)[0]
-                    resource = self.resources[c['resource_name'][0]]
-                    h5table = resource.get_child(c['subdivision'][0])
                     for col in columns:
                         col.dynamic = True
                         h5table.add_child(col)
@@ -182,7 +191,7 @@ class TrafficModel(Observable):
                 # on change of the field the joker is referenced to,
                 # the dynamic cols will be be added
                 self.bind(joker, partial((lambda d, value:
-                          add_joker_cols(d)), d_col))
+                          add_dynamic_cols(d)), d_col))
 
 
     def create_H5ArrayNode(self, res_name, node_name):
