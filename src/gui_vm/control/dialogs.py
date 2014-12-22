@@ -45,9 +45,9 @@ QProgressBar::chunk {
 }
 """
 
+
 class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
     '''
-
     Parameter
     ---------
     filenames: list of Strings,

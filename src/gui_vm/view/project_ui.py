@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Fri Nov 28 16:47:15 2014
+# Created: Mon Dec 22 17:20:23 2014
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,13 @@ except AttributeError:
 class Ui_DetailsProject(object):
     def setupUi(self, DetailsProject):
         DetailsProject.setObjectName(_fromUtf8("DetailsProject"))
-        DetailsProject.resize(394, 406)
+        DetailsProject.resize(400, 406)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(DetailsProject.sizePolicy().hasHeightForWidth())
+        DetailsProject.setSizePolicy(sizePolicy)
+        DetailsProject.setMinimumSize(QtCore.QSize(400, 0))
         self.gridLayoutWidget = QtGui.QWidget(DetailsProject)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 20, 371, 331))
         self.gridLayoutWidget.setObjectName(_fromUtf8("gridLayoutWidget"))

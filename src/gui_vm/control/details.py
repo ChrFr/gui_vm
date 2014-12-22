@@ -51,6 +51,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
                 edit = QtGui.QTextEdit(txt)
+                edit.setMinimumHeight(100)
             else:
                 edit = QtGui.QLineEdit(str(simrun_node.meta[meta]))
             edit.setReadOnly(True)
@@ -105,7 +106,6 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
                         meta))
             self.meta_layout.addRow(label, edit)
         self.folder_edit.setText(str(self.project_node.project_folder))
-
         #self.folder_browse_button.clicked.connect(self.browse_folder)
         self.folder_edit.textChanged.connect(self.update)
 

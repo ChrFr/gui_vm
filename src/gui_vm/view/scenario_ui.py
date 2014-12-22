@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Fri Nov 28 16:47:15 2014
+# Created: Mon Dec 22 17:44:53 2014
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,11 +26,18 @@ except AttributeError:
 class Ui_DetailsScenario(object):
     def setupUi(self, DetailsScenario):
         DetailsScenario.setObjectName(_fromUtf8("DetailsScenario"))
-        DetailsScenario.resize(411, 309)
+        DetailsScenario.resize(450, 309)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(DetailsScenario.sizePolicy().hasHeightForWidth())
+        DetailsScenario.setSizePolicy(sizePolicy)
+        DetailsScenario.setMinimumSize(QtCore.QSize(450, 0))
         self.formLayoutWidget = QtGui.QWidget(DetailsScenario)
         self.formLayoutWidget.setGeometry(QtCore.QRect(10, 20, 391, 281))
         self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
         self.formLayout = QtGui.QFormLayout(self.formLayoutWidget)
+        self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
         self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
         self.combo_model = QtGui.QComboBox(self.formLayoutWidget)
