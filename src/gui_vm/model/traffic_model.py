@@ -7,6 +7,7 @@ import numpy as np
 import os, imp
 from gui_vm.model.observable import Observable
 from gui_vm.config.config import Config
+from functools import partial
 
 
 class TrafficModel(Observable):
@@ -148,17 +149,40 @@ class TrafficModel(Observable):
                         resource.add_child(node)
                     self.add_resources(resource)
 
-        #compute the delayed columns (joker names)
+        # compute the delayed columns (joker names)
         for d_col in delayed_columns:
             col_name = d_col['column_name'][0]
             joker = d_col['joker'][0]
             if '?' in col_name or '*' in col_name:
-                resource = self.resources[d_col['resource_name'][0]]
-                h5table = resource.get_child(d_col['subdivision'][0])
-                self.bind(joker, lambda value:
-                          h5table.add_child(column_dict_to_h5column(
-                              d_col, reference=self,
-                              ignore_jokers=False)[0][0]))
+
+                def add_joker_cols(c):
+                    field_name = c['joker'][0]
+                    replace = self.get(field_name)
+                    if not replace:
+                        return
+                    c_n = c['column_name'][0]
+                    c1 = c.clone()
+                    c2 = c.clone()
+                    c1.clear()
+                    # build a column dict with the new column names
+                    for r in replace:
+                        new_col_name = c_n.replace('?', r).replace('*', r)
+
+                        print (new_col_name)
+                        c2['column_name'] = new_col_name
+                        c1.merge_table(c2)
+                    #create h5 columns
+                    columns = column_dict_to_h5column(c1, reference=self)[0]
+                    resource = self.resources[c['resource_name'][0]]
+                    h5table = resource.get_child(c['subdivision'][0])
+                    for col in columns:
+                        col.dynamic = True
+                        h5table.add_child(col)
+
+                # on change of the field the joker is referenced to,
+                # the dynamic cols will be be added
+                self.bind(joker, partial((lambda d, value:
+                          add_joker_cols(d)), d_col))
 
 
     def create_H5ArrayNode(self, res_name, node_name):
@@ -353,12 +377,9 @@ def column_dict_to_h5column(column_dict, reference=None, ignore_jokers=True):
         maximum = column['maximum'][0]
         primary = column['is_primary_key'][0]
         #ignore columns depending on other columns (identified by joker chars)
-        if '?' in col_name or '*' in col_name:
-            if ignore_jokers:
-                ignored.append(column)
-                continue
-            else:
-                print 'hallo'
+        if ignore_jokers and ('?' in col_name or '*' in col_name):
+            ignored.append(column)
+            continue
         if primary == '1' or primary == 'True':
             is_primary_key = True
         else:

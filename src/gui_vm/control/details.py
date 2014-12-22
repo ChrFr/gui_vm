@@ -255,13 +255,13 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.resource_node.set_source(src_filename)
         dest_filename = self.resource_node.full_source
         self.project_copy.setText(dest_filename)
-        self.value_changed.emit()
         #only try to copy file, if not the same file as before is selected
         if os.path.normpath(src_filename) != os.path.normpath(dest_filename):
             dialog = CopyFilesDialog(src_filename,
                                      self.resource_node.full_path,
                                      parent=self)
         self.resource_node.update()
+        self.value_changed.emit()
         self.show_attributes()
 
     def get_status(self):

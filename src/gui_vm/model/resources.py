@@ -40,6 +40,7 @@ class Resource(Observable):
         self.children = []
         self.rules = []
         self.required = False
+        self.dynamic = False
         self.overall_status = NOT_CHECKED, []
         #add status flags for the monitored attributes
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
@@ -75,6 +76,7 @@ class Resource(Observable):
         in the given project path
         '''
         self.clear_status()
+        #self.reset()
         for child in self.children:
             child.update(path)
         self.set_overall_status()
@@ -239,6 +241,7 @@ class ResourceFile(Resource):
         base class only checks if file exists, actual reading has to be done
         in the subclasses
         '''
+        #self.reset()
         self.clear_status()
         if self.filename != '' and self.filename is not None:
             filename = os.path.join(path, self.subfolder, self.filename)
@@ -336,6 +339,7 @@ class H5Node(Resource):
         path: String, name of the working directory,
                       where the file is in (without subfolder)
         '''
+        #self.reset()
         table = None
         if h5_in is not None:
             table = h5_in.get_table(self.table_path)
@@ -396,7 +400,6 @@ class H5Table(H5Node):
         ---------
         h5_in: HDF5, opened hdf5 file containing this table
         '''
-        table = super(H5Table, self).update(h5_in)
         #clear extra columns, only keep those that are required by definition
         tmp = []
         for i in xrange(len(self.children)):
@@ -406,6 +409,7 @@ class H5Table(H5Node):
             else:
                 tmp.append(child)
         self.children = tmp
+        table = super(H5Table, self).update(h5_in)
         if table is None:
             return
         #add extra columns inside the given h5 (not required ones)
@@ -414,6 +418,7 @@ class H5Table(H5Node):
             if existing_col not in self.column_names:
                 col = H5TableColumn(existing_col)
                 self.add_child(col)
+
         for child in self.children:
             child.update(table)
 
@@ -503,6 +508,7 @@ class H5TableColumn(Resource):
         by the dtype flag
         check for uniqueness of primary keys
         '''
+        #self.reset()
         if table is None or self.name not in table.dtype.names:
             self.status_flags['dtype'] = NOT_FOUND
             self.max_value = None

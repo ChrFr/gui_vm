@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import csv
 import numpy as np
+from copy import deepcopy
 
 INPUT_HEADER = ['resource_name', 'subdivision', 'category', 'type']
 TABLE_HEADER = ['resource_name', 'subdivision', 'n_rows']
@@ -44,7 +45,7 @@ class ResourceDict(object):
         '''
         override +=, add rows of another table to this table
         '''
-        self.add_table(table)
+        self.merge_table(table)
         return self
 
     def __repr__(self):
@@ -213,7 +214,7 @@ class ResourceDict(object):
                 table[col_name] = row[col_nr]
             self += table
 
-    def add_table(self, table):
+    def merge_table(self, table):
         '''
         add the rows of another table to this one, table has to have the
         same columns
@@ -231,6 +232,16 @@ class ResourceDict(object):
             else:
                 raise Exception('column {} is missing in given table'
                                 .format(column))
+    def add_rows(self, count=1):
+        for column in self:
+            self[column].extend(count * [''])
+
+    def clone(self):
+        return deepcopy(self)
+
+    def clear(self):
+        for column in self:
+            self.columns[column] = []
 
 
 class FileDict(ResourceDict):
