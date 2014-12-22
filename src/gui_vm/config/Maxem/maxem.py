@@ -28,7 +28,8 @@ class SpecificModel(TrafficModel):
                              ('n_time_series', 'Anzahl Zeitscheiben'),
                              ('n_activity_pairs', 'Aktivitaetenpaare'),
                              ('activity_names', 'Aktivitaeten'),
-                             ('activity_codes', 'Aktivitaetencodes')])
+                             ('activity_codes', 'Aktivitaetencodes'),
+                             ('group_dest_mode', 'Personengruppen')])
 
     def __init__(self, path=None):
         input_config_file = os.path.join(os.path.dirname(__file__),
@@ -47,7 +48,8 @@ class SpecificModel(TrafficModel):
             columns_config_file=columns_config_file)
 
         self.activity_codes = None
-        self._activity_names = None
+        self.activity_names = None
+        self.group_dest_mode = None
 
         self.read_resource_config()
 
@@ -62,6 +64,14 @@ class SpecificModel(TrafficModel):
         name_column = activities.get_child('name')
         name_column.bind('content',
                          lambda value: self.set('activity_names', value))
+
+        groups = self.resources['Params'].get_child(
+            '/groups/groups_dest_mode')
+        #observe group destination modes
+        grp_column = groups.get_child('code')
+        grp_column.bind('content',
+                         lambda value: self.set('group_dest_mode',
+                                                value))
 
         if path is not None:
             self.update()
@@ -146,65 +156,31 @@ class SpecificModel(TrafficModel):
 
         # create full command
         full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor])
-
+        self.already_done = 0.
         self.group = None
-        self.progressMax = 15
+        groups_count = len(self.get('group_dest_mode'))
+        self.to_do = 0
+        self.group_share = 100. / groups_count
+        self.group_counter = 0
+
         def show_progress():
             if callback:
                 message = str(process.readAllStandardError())
-                already_done = None
                 l = message.split("INFO->['")
                 if len(l)>1:
                     l2 = l[1].split("'")
                     new_group = l2[0]
                     l3 = l[1].split(',')
-                    to_do = int(l3[1].strip())
+                    self.to_do = max(self.to_do, int(l3[1].strip()))
+                    self.already_done += self.group_share / self.to_do
                     if self.group != new_group:
                         self.group = new_group
-                        self.progressMax = to_do
-                    already_done = self.progressMax - to_do
-                callback(message, already_done)
+                        self.group_counter += self.group_share
+                        self.to_do = 0
+                callback(message, self.already_done)
 
         # QProcess emits `readyRead` when there is data to be read
         process.readyReadStandardOutput.connect(show_progress)
         process.readyReadStandardError.connect(show_progress)
 
         process.start(full_cmd)
-
-
-class ActivityTracking(Rule):
-    '''
-    special rule to determine if the activity codes are represented in
-    a table
-
-    Parameter
-    --------
-    field_name: String, name of the field that contains the column names
-    identifier: String, common name of the columns, the ? will be replaced
-                with the activity code
-    referenced_field: String, name of the field of the referenced object that
-                      holds the activities
-    reference: object, the object that holds the activities
-    '''
-
-    def __init__(self, field_name, identifier, referenced_field, reference):
-        self.identifier = identifier
-        super(ActivityTracking, self).__init__(field_name, referenced_field,
-                                               self.is_in, reference=reference)
-
-    def is_in(self, column_names, activity_list):
-        '''
-        check if activity is represented in the columns
-        '''
-        if activity_list is None:
-            return False, 'Aktivität nicht definiert'
-        #make activity list iterable (e.g. if only one activity)
-        if not hasattr(activity_list, '__iter__'):
-            activity_list = [activity_list]
-
-        for activity in activity_list:
-            col_name = self.identifier
-            col_name = col_name.replace('?', activity)
-            if col_name not in column_names:
-                return False, 'Spalte {} fehlt'.format(col_name)
-        return True, 'Aktivitäten vorhanden'

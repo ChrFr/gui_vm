@@ -17,6 +17,33 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
+DEFAULT_STYLE = """
+QProgressBar{
+    border: 2px solid grey;
+    border-radius: 5px;
+    text-align: center
+}
+
+QProgressBar::chunk {
+    background-color: lightblue;
+    width: 10px;
+    margin: 1px;
+}
+"""
+
+ABORTED_STYLE = """
+QProgressBar{
+    border: 2px solid grey;
+    border-radius: 5px;
+    text-align: center
+}
+
+QProgressBar::chunk {
+    background-color: red;
+    width: 10px;
+    margin: 1px;
+}
+"""
 
 class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
     '''
@@ -97,7 +124,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         # Just to prevent accidentally running multiple times
         # Disable the button when process starts, and enable it when it finishes
         self.process.started.connect(self.running)
-        self.process.finished.connect(self.stopped)
+        self.process.finished.connect(self.finished)
         self.show()
 
     def call_cmd(self):
@@ -108,6 +135,8 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
                               callback=self.show_status)
 
     def running(self):
+        self.progress_bar.setStyleSheet(DEFAULT_STYLE)
+        self.progress_bar.setValue(0)
         self.startButton.setEnabled(False)
         self.cancelButton.setText('Stoppen')
         self.cancelButton.clicked.disconnect(self.close)
@@ -119,7 +148,12 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.cancelButton.clicked.disconnect(self.kill)
         self.cancelButton.clicked.connect(self.close)
 
+    def finished(self):
+        self.progress_bar.setValue(100)
+        self.stopped()
+
     def kill(self):
+        self.progress_bar.setStyleSheet(ABORTED_STYLE)
         self.process.kill()
 
     def show_status(self, text, progress=None):
