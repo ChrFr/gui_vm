@@ -173,6 +173,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         super(NewProjectDialog, self).__init__()
         self.setupUi(self)
         h = config.settings['history']
+        recent = ''
         if len(h) > 0:
             recent = h[0]
         #default = config.settings['environment']['default_project_folder']

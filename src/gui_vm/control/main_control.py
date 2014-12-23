@@ -257,7 +257,7 @@ class WelcomeDialog(QtGui.QDialog, Ui_Welcome):
             self.close()
 
     def create_project(self):
-        created = self.parent.new_project()
+        created = self.parent.create_project()
         if created:
             self.close()
 

@@ -795,6 +795,8 @@ class XMLParser(object):
         root_element = tree.getroot()
         if root_element.tag == 'GUI_VM_PROJECT':
             self.build_xml(root_element, root)
+        else:
+            print "Warning: node GUI_VM_PROJECT not found in {0}".format(filename)
         return root
 
     @classmethod
