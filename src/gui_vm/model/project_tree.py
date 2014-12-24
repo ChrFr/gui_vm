@@ -716,7 +716,7 @@ class ResourceNode(TreeNode):
     @source.setter
     def source(self, subpath):
         if subpath is not None:
-            subfolder, filename = os.path.split(subpath)
+            subfolder, filename = os.path.split(subpath.replace('\\','/'))
         else:
             filename = None
         #only set filename, because subfolder will be determined
