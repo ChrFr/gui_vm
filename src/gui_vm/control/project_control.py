@@ -448,6 +448,7 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_row(self.current_index.row(),
                             self.parent(self.current_index))
         self.model.add_child(Project(name, project_folder=project_folder))
+        self.project.on_change(self.project_changed.emit)
         self.item_clicked(self.createIndex(0, 0, self.project))
 
     def read_project(self, filename):
@@ -457,6 +458,7 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_row(self.current_index.row(),
                             self.parent(self.current_index))
         self.model = XMLParser.read_xml(self.model, filename)
+        self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
         self.project_changed.emit()

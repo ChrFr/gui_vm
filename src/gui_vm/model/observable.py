@@ -1,6 +1,9 @@
 class Observable(object):
     def __init__(self):
+        # stores observed attributes and callbacks
         self._observed = {}
+        # stores connected callbacks that shall be called on emit
+        self.connected = []
 
     def get(self, attribute):
         '''
@@ -17,10 +20,19 @@ class Observable(object):
             callbacks = self._observed[attribute]
             for callback in callbacks:
                 callback(value)
+        self.emit()
 
     def reset(self):
         for attribute in self._observed:
             self.set(attribute, None)
+        self.emit()
+            
+    def on_change(self, callback):        
+        self.connected.append(callback)
+    
+    def emit(self):
+        for callback in self.connected:
+            callback()
 
     def bind(self, attribute, callback):
         '''

@@ -7,7 +7,7 @@ from shutil import copytree
 from gui_vm.config.config import Config
 from gui_vm.model.resources import ResourceFile
 from gui_vm.model.traffic_model import TrafficModel
-from compiler.ast import Node
+from gui_vm.model.observable import Observable
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -15,18 +15,20 @@ XML_CLASS_NAMES = {
     'Scenario': 'Szenario',
     'Project': 'Projekt',
     'ResourceNode': 'Ressource',
-    'TreeNode': 'Layer'
+    'TreeNode': 'Layer',
+    'ResultNode': 'Ergebnis'
 }
 
 config = Config()
 config.read()
 
 
-class TreeNode(object):
+class TreeNode(Observable):
     '''
     Base class of nodes in the project tree
     '''
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent=None):    
+        super(TreeNode, self).__init__()         
         self.parent = parent
         self.name = name
         self.children = []
@@ -388,6 +390,21 @@ class Scenario(TreeNode):
         '''
         note = self.model.name
         return note
+    
+    def run(self, process, callback=None):
+        self.model.run(self.name,
+                       process,
+                       self.get_resources(),
+                       callback=callback) 
+        self.add_results('Platzhalter')
+        self.get_parent_by_class(Project).emit()
+    
+    def add_results(self, filename):    
+        results_node = self.get_child(self.OUTPUT_NODES)
+        if not results_node:
+            results_node = TreeNode(self.OUTPUT_NODES) 
+            self.add_child(results_node)                 
+        results_node.add_child(ResultNode(filename)) 
 
     def validate(self):
         resource_nodes = self.get_resources()
@@ -467,7 +484,7 @@ class Scenario(TreeNode):
         resource_node = self.get_child(self.INPUT_NODES)
         if not resource_node:
             resource_node = TreeNode(self.INPUT_NODES)
-            self.add_child(resource_node)
+            self.add_child(resource_node)              
         model = TrafficModel.new_specific_model(name)
         if model:
             self.model = model
@@ -839,6 +856,7 @@ class XMLParser(object):
         project_tree.add_to_xml(xml_tree)
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
 
-class ResultsNode(TreeNode):
+class ResultNode(TreeNode):
     def __init__(self, name=None, parent=None):
-        super(ResultsNode, self).__init__(name, parent=parent)
+        super(ResultNode, self).__init__(name, parent=parent)
+        #self.add_child()

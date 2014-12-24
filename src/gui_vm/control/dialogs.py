@@ -129,10 +129,8 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
     def call_cmd(self):
         # run the process
-        self.scenario.model.run(self.scenario.name,
-                              self.process,
-                              self.scenario.get_resources(),
-                              callback=self.show_status)
+        self.scenario.run(self.process,
+                          callback=self.show_status)
 
     def running(self):
         self.progress_bar.setStyleSheet(DEFAULT_STYLE)
