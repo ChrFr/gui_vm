@@ -3,7 +3,7 @@ from gui_vm.view.progress_ui import Ui_ProgressDialog
 from gui_vm.view.new_project_ui import Ui_NewProject
 from gui_vm.view.new_scenario_ui import Ui_NewScenario
 from gui_vm.view.settings_ui import Ui_Settings
-from gui_vm.model.backend import hard_copy
+from gui_vm.model.backend import hard_copy, get_free_space
 from PyQt4 import QtGui, QtCore
 import sys, os
 from gui_vm.config.config import Config
@@ -75,36 +75,68 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
             filenames = [filenames]
         if not hasattr(destinations, '__iter__'):
             destinations = [destinations]
-        for i in xrange(len(filenames)):
-            d, filename = os.path.split(filenames[i])
-            dest_filename = os.path.join(destinations[i], filename)
-            do_copy = True
-            if os.path.exists(dest_filename):
-                reply = QtGui.QMessageBox.question(
-                    self, _fromUtf8("Überschreiben"),
-                    _fromUtf8("Die Datei {} existiert bereits."
-                              .format(filename) +
-                              "\nWollen Sie sie überschreiben?"),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-                do_copy = reply == QtGui.QMessageBox.Yes
-            if do_copy:
-                status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
-                    filename, destinations[i])
-                self.log_edit.insertHtml(status_txt)
-                success = hard_copy(filenames[i], dest_filename,
-                                    callback=self.progress_bar.setValue)
-                if success:
-                    status_txt = '{} erfolgreich kopiert<br>'.format(filename)
+        yes_to_all = False
+
+        #check if sum of filesizes exceed free disk space
+        #(assuming all files are copied to the same drive)
+        size = 0
+        for filename in filenames:
+            statinfo = os.stat(filename)
+            size += statinfo.st_size
+        free = get_free_space(destinations[0])
+        if size >= free:
+            status_txt = _fromUtf8("Nicht genug Platz auf {} vorhanden!\n".format(
+                destinations[0]) + "Es werden {} kB benötigt".format(
+                size/1024) + " aber nur {} kB sind frei".format(
+                free/1024))
+            QtGui.QMessageBox.about(None, "Fehler", status_txt)
+            self.close()
+
+        else:
+            for i in xrange(len(filenames)):
+                d, filename = os.path.split(filenames[i])
+                dest_filename = os.path.join(destinations[i], filename)
+                do_copy = True
+                if os.path.exists(dest_filename) and not yes_to_all:
+                    msgBox = QtGui.QMessageBox()
+                    msgBox.setText(_fromUtf8("Die Datei {} existiert bereits."
+                                    .format(filename) +
+                                    "\nWollen Sie sie überschreiben?"))
+                    msgBox.addButton(QtGui.QPushButton('Ja'),
+                                     QtGui.QMessageBox.YesRole)
+                    msgBox.addButton(QtGui.QPushButton(_fromUtf8('Ja für Alle')),
+                                     QtGui.QMessageBox.YesRole)
+                    msgBox.addButton(QtGui.QPushButton('Nein'),
+                                     QtGui.QMessageBox.NoRole)
+                    msgBox.addButton(QtGui.QPushButton('Abbrechen'),
+                                     QtGui.QMessageBox.RejectRole)
+                    reply = msgBox.exec_()
+                    do_copy = reply == 0
+                    yes_to_all = reply == 1
+                    cancel = reply == 3
+                    if cancel:
+                        self.cancelButton.setText('OK')
+                        return
+                if do_copy or yes_to_all:
+                    status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
+                        filename, destinations[i])
+                    self.log_edit.insertHtml(status_txt)
+                    success, msg = hard_copy(filenames[i], dest_filename,
+                                             callback=self.progress_bar.setValue)
+                    if success:
+                        status_txt = '{} erfolgreich kopiert<br>'.format(filename)
+                    else:
+                        status_txt = ('<b>Fehler</b> beim Kopieren von {}<br>'
+                                      .format(filename) +
+                                      ': ' + msg)
+                    self.log_edit.insertHtml(status_txt)
                 else:
-                    status_txt = ('<b>Fehler</b> beim Kopieren von {}<br>'
-                                  .format(filename))
-                self.log_edit.insertHtml(status_txt)
-            else:
-                status_txt = '<b>{}</b> nicht kopiert<br>'.format(
-                    filename, destinations[i])
-                self.log_edit.insertHtml(status_txt)
-        self.cancelButton.setText('OK')
-        self.progress_bar.setValue(100)
+                    status_txt = '<b>{}</b> nicht kopiert<br>'.format(
+                        filename, destinations[i])
+                    self.log_edit.insertHtml(status_txt)
+                self.log_edit.moveCursor(QtGui.QTextCursor.End)
+            self.cancelButton.setText('OK')
+            self.progress_bar.setValue(100)
 
 
 class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):

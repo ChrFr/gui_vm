@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
 import tables
 import os
 import sys
+import ctypes
+import platform
 
 def hard_copy(src_filename, dest_filename,
               callback=None, block_size=512):
@@ -27,12 +30,17 @@ def hard_copy(src_filename, dest_filename,
     src = open(src_filename, "rb")
     #you can't copy a file into itself
     if os.path.normpath(src_filename) == os.path.normpath(dest_filename):
-        return False
+        return False, 'Quelle und Ziel sind identisch!'
     dest_dir, dest_fn = os.path.split(dest_filename)
+    src_size = os.stat(src_filename).st_size
+    free = get_free_space(dest_dir)
+    if src_size >= free:
+        return (False,
+                'Nicht genug Speicherplatz in {} vorhanden!'.format(dest_dir))
+    #create directory, if not exists
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     dest = open(dest_filename, "wb")
-    src_size = os.stat(src_filename).st_size
     callback(0)
     cur_block_pos = 0
 
@@ -56,10 +64,24 @@ def hard_copy(src_filename, dest_filename,
     #check if destination file has same file size as input file
     dest_size = os.stat(dest_filename).st_size
     if dest_size != src_size:
-        return False
+        return False, 'Datei wurde nicht vollständig kopiert!'
 
     else:
-        return True
+        return True, 'Datei erfolgreich kopiert.'
+
+def get_free_space(folder):
+    """
+    Return folder/drive free space (in bytes)
+    """
+    if platform.system() == 'Windows':
+        free_bytes = ctypes.c_ulonglong(0)
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder),
+                                                   None, None,
+                                                   ctypes.pointer(free_bytes))
+        return free_bytes.value
+    else:
+        st = os.statvfs(folder)
+        return st.f_bavail * st.f_frsize
 
 class HDF5(object):
     """
