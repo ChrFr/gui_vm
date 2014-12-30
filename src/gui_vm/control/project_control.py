@@ -37,6 +37,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     resetable = QtCore.pyqtSignal(bool)
     executable = QtCore.pyqtSignal(bool)
     lockable = QtCore.pyqtSignal(bool)
+    copyable = QtCore.pyqtSignal(bool)
 
     def __init__(self, view=None):
         super(ProjectTreeControl, self).__init__()
@@ -213,6 +214,9 @@ class VMProjectControl(ProjectTreeControl):
             'switch_lock': {
                 Scenario: [self._switch_lock, 'Szenario sperren'],
             },
+            'copy': {
+                Scenario: [self._clone_scenario, 'Szenario klonen'],
+            },
         }
 
     def compute_selected_node(self, function_name):
@@ -257,6 +261,7 @@ class VMProjectControl(ProjectTreeControl):
         self.editable.emit(cls in self.context_map['edit'] and not locked)
         self.executable.emit(cls in self.context_map['execute'])
         self.lockable.emit(cls in self.context_map['switch_lock'])
+        self.copyable.emit(cls in self.context_map['copy'])
 
         self.dataChanged.emit(index, index)
 
@@ -302,6 +307,9 @@ class VMProjectControl(ProjectTreeControl):
 
     def switch_lock(self):
         self.compute_selected_node('switch_lock')
+
+    def copy(self):
+        self.compute_selected_node('copy')
 
     def _remove_node(self):
         node = self.selected_item
@@ -353,6 +361,52 @@ class VMProjectControl(ProjectTreeControl):
             node.name = str(text)
             self.project_changed.emit()
 
+    def _clone_scenario(self, scenario_node=None):
+        if not scenario_node:
+            scenario_node = self.selected_item
+        text, ok = QtGui.QInputDialog.getText(
+                    None, 'Szenario kopieren', 'Name des neuen Szenarios:',
+                    QtGui.QLineEdit.Normal, scenario_node.name + ' - Kopie')
+        if ok:
+            new_scen_name = str(text)
+            if new_scen_name in self.project.children_names:
+                QtGui.QMessageBox.about(
+                    None, "Fehler",
+                    _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
+                              .format(new_scen_name)))
+                return
+            new_scenario_node = scenario_node.clone(new_scen_name)
+            path = new_scenario_node.path
+            if os.path.exists(new_scenario_node.path):
+                QtGui.QMessageBox.about(
+                    None, "Fehler",
+                    _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
+                              .format(path)))
+                reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8("Fehler"),
+                    _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
+                                  .format(path)),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                if reply == QtGui.QMessageBox.No:
+                    return
+            scenario_node.parent.add_child(new_scenario_node)
+            filenames = []
+            destinations = []
+            for res_node in scenario_node.get_resources():
+                new_res_node = new_scenario_node.get_resource(res_node.name)
+                if new_res_node:
+                    filenames.append(res_node.full_source)
+                    destinations.append(new_res_node.full_path)
+
+            #bad workaround (as it has to know the parents qtreeview)
+            #but the view crashes otherwise, maybe make update signal
+            self.view.setUpdatesEnabled(False)
+            dialog = CopyFilesDialog(filenames, destinations,
+                                     parent=self.view)
+            self.view.setUpdatesEnabled(True)
+            scenario_node.update()
+            self.project_changed.emit()
+
     def edit_resource(self, resource_node=None):
         if not resource_node:
             resource_node = self.selected_item
@@ -375,7 +429,7 @@ class VMProjectControl(ProjectTreeControl):
                     _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
                               .format(scenario_name)))
             else:
-                project.add_run(model=model_name, name=scenario_name)
+                project.add_scenario(model=model_name, name=scenario_name)
                 reply = QtGui.QMessageBox.question(
                     None, _fromUtf8("Neues Szenario erstellen"),
                     _fromUtf8("Möchten Sie die Standarddateien " +

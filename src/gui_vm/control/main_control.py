@@ -52,6 +52,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.reset_button.clicked.connect(self.project_control.reset)
         self.start_button.clicked.connect(self.project_control.execute)
         self.lock_button.clicked.connect(self.project_control.switch_lock)
+        self.copy_button.clicked.connect(self.project_control.copy)
 
         # activation of buttons depending on the selected item
         self.project_control.editable[bool].connect(
@@ -66,6 +67,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.start_button.setEnabled)
         self.project_control.lockable[bool].connect(
             self.switch_lock)
+        self.project_control.copyable[bool].connect(
+            self.copy_button.setEnabled)
 
         #self.lock_button.sets
 

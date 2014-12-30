@@ -27,8 +27,8 @@ class TreeNode(Observable):
     '''
     Base class of nodes in the project tree
     '''
-    def __init__(self, name, parent=None):    
-        super(TreeNode, self).__init__()         
+    def __init__(self, name, parent=None):
+        super(TreeNode, self).__init__()
         self.parent = parent
         self.name = name
         self.children = []
@@ -344,6 +344,12 @@ class TreeNode(Observable):
             names.append(child.name)
         return names
 
+    def clone(self, name=None):
+        clone = deepcopy(self)
+        if name:
+            clone.name = name
+        return clone
+
 
 class Scenario(TreeNode):
     '''
@@ -390,21 +396,21 @@ class Scenario(TreeNode):
         '''
         note = self.model.name
         return note
-    
+
     def run(self, process, callback=None):
         self.model.run(self.name,
                        process,
                        self.get_resources(),
-                       callback=callback) 
+                       callback=callback)
         self.add_results('Platzhalter')
         self.get_parent_by_class(Project).emit()
-    
-    def add_results(self, filename):    
+
+    def add_results(self, filename):
         results_node = self.get_child(self.OUTPUT_NODES)
         if not results_node:
-            results_node = TreeNode(self.OUTPUT_NODES) 
-            self.add_child(results_node)                 
-        results_node.add_child(ResultNode(filename)) 
+            results_node = TreeNode(self.OUTPUT_NODES)
+            self.add_child(results_node)
+        results_node.add_child(ResultNode(filename))
 
     def validate(self):
         resource_nodes = self.get_resources()
@@ -484,7 +490,7 @@ class Scenario(TreeNode):
         resource_node = self.get_child(self.INPUT_NODES)
         if not resource_node:
             resource_node = TreeNode(self.INPUT_NODES)
-            self.add_child(resource_node)              
+            self.add_child(resource_node)
         model = TrafficModel.new_specific_model(name)
         if model:
             self.model = model
@@ -617,7 +623,7 @@ class Project(TreeNode):
         note = self.meta['Datum']
         return note
 
-    def add_run(self, model, name=None):
+    def add_scenario(self, model, name=None):
         if name is None:
             name = 'Szenario {}'.format(self.child_count)
         #copytree(os.path.join(DEFAULT_FOLDER, 'Maxem'),
