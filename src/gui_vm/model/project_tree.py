@@ -15,9 +15,9 @@ from gui_vm.model.backend import hard_copy
 XML_CLASS_NAMES = {
     'Scenario': 'Szenario',
     'Project': 'Projekt',
-    'ResourceNode': 'Ressource',
+    'InputNode': 'Eingabe',
     'TreeNode': 'Layer',
-    'ResultNode': 'Ergebnis'
+    'OutputNode': 'Ergebnis'
 }
 
 config = Config()
@@ -359,8 +359,8 @@ class Scenario(TreeNode):
     used traffic model)
     the resources are its children
     '''
-    INPUT_NODES = 'Ressourcen'
-    OUTPUT_NODES = 'Ergebnisse'
+    INPUT_NODES = 'Eingaben'
+    OUTPUT_NODES = 'Ausgaben'
 
     def __init__(self, model=None, name=None, parent=None):
         super(Scenario, self).__init__(name, parent=parent)
@@ -401,7 +401,7 @@ class Scenario(TreeNode):
     def run(self, process, callback=None):
         results_file = self.model.run(self.name,
                                       process,
-                                      self.get_resources(),
+                                      self.get_inputs(),
                                       callback=callback)
         result = self.add_results(results_file)
         hard_copy(results_file, result.full_path)
@@ -412,11 +412,12 @@ class Scenario(TreeNode):
         if not results_node:
             results_node = TreeNode(self.OUTPUT_NODES)
             self.add_child(results_node)
-        res = ResultNode(filename, parent=results_node)
+        res = OutputNode(name='Gesamtlauf', parent=results_node)
+        res.full_source = filename
         return res
 
     def validate(self):
-        resource_nodes = self.get_resources()
+        resource_nodes = self.get_inputs()
         self.is_valid = True
         for node in resource_nodes:
             node.validate()
@@ -450,7 +451,7 @@ class Scenario(TreeNode):
         if not default_model:
             return None
         #set the original sources to the files in the default folder
-        for res_node in default_model.get_resources():
+        for res_node in default_model.get_inputs():
             res_node.original_source = os.path.join(self.default_folder,
                                                     res_node.source)
         #swap this node with the default one
@@ -459,7 +460,7 @@ class Scenario(TreeNode):
         default_model.name = self.name
         return default_model
 
-    def get_resource(self, name):
+    def get_input(self, name):
         '''
         get a resource node by name
 
@@ -477,8 +478,8 @@ class Scenario(TreeNode):
                             .format(self.name))
         return res_nodes[0]
 
-    def get_resources(self):
-        return self.find_all_by_class(ResourceNode)
+    def get_inputs(self):
+        return self.find_all_by_class(InputNode)
 
     def set_model(self, name):
         '''
@@ -490,16 +491,16 @@ class Scenario(TreeNode):
         name: String, name of the traffic model
         '''
         #append resources of model to resource subnode
-        resource_node = self.get_child(self.INPUT_NODES)
-        if not resource_node:
-            resource_node = TreeNode(self.INPUT_NODES)
-            self.add_child(resource_node)
+        input_nodes = self.get_child(self.INPUT_NODES)
+        if not input_nodes:
+            input_nodes = TreeNode(self.INPUT_NODES)
+            self.add_child(input_nodes)
         model = TrafficModel.new_specific_model(name)
         if model:
             self.model = model
             self.model.update(self.path)
             #remove the old children of the sim run (including resources)
-            resource_node.remove_all_children()
+            input_nodes.remove_all_children()
 
             #categorize resources
             res_dict = {}
@@ -511,10 +512,10 @@ class Scenario(TreeNode):
             #add the resources needed by the traffic model, categorized
             for subfolder in res_dict:
                 layer_node = TreeNode(subfolder)
-                resource_node.add_child(layer_node)
+                input_nodes.add_child(layer_node)
                 for resource in res_dict[subfolder]:
-                    layer_node.add_child(ResourceNode(resource.name,
-                                                      parent=resource_node))
+                    layer_node.add_child(InputNode(resource.name,
+                                                   parent=layer_node))
         else:
             raise Exception('Traffic Model {0} not available'.format(name))
 
@@ -651,17 +652,6 @@ class ResourceNode(TreeNode):
         super(ResourceNode, self).__init__(name, parent=parent)
         self.original_source = self.full_source
 
-    @property
-    def resource(self):
-        '''
-        the resources are held by the traffic model, this node only
-        holds a kind of reference to it (via the dict)
-        '''
-        if self.resource_name in self.model.resources.keys():
-            return self.model.resources[self.resource_name]
-        else:
-            return None
-
     def add_to_xml(self, parent):
         '''
         converts all needed information of this node and recursive of
@@ -731,7 +721,8 @@ class ResourceNode(TreeNode):
             self.resource.filename is None or
             self.resource.filename == ''):
             return None
-        source = os.path.join(self.resource.subfolder,
+        source = os.path.join(Scenario.INPUT_NODES,
+                              self.resource.subfolder,
                               self.resource.filename)
         return source
 
@@ -804,13 +795,48 @@ class ResourceNode(TreeNode):
         scenario = self.get_parent_by_class(Scenario)
         default_model = scenario.get_default_scenario()
         #find corresponding default resource node
-        res_default = default_model.get_resource(self.name)
+        res_default = default_model.get_input(self.name)
         #rename source
         self.resource.filename = res_default.resource.filename
         self.resource.subfolder = res_default.resource.subfolder
         self.original_source = os.path.join(scenario.default_folder,
                                             self.source)
 
+
+class InputNode(ResourceNode):
+    '''
+    wrap a resource in a node, link to the resource held by the
+    traffic model
+
+    Parameters
+    ----------
+    resource: Resource,
+              resource of the traffic model
+    '''
+    def __init__(self, name,
+                 parent=None):
+        super(InputNode, self).__init__(name, parent=parent)
+
+    @property
+    def resource(self):
+        '''
+        the resources are held by the traffic model, this node only
+        holds a kind of reference to it (via the dict)
+        '''
+        if self.resource_name in self.model.resources.keys():
+            return self.model.resources[self.resource_name]
+        else:
+            return None
+
+
+class OutputNode(ResourceNode):
+    def __init__(self, name=None, filename=None, parent=None):
+        super(ResultNode, self).__init__(name, parent=parent)
+        self.resource = ResourceFile(name, filename=filename)
+
+    @property
+    def scenario_path(self):
+        return self.get_parent_by_class(Scenario).path
 
 class XMLParser(object):
     '''
@@ -871,11 +897,3 @@ class XMLParser(object):
         project_tree.add_to_xml(xml_tree)
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
 
-class ResultNode(TreeNode):
-    def __init__(self, name=None, filename=None, parent=None):
-        super(ResultNode, self).__init__(name, parent=parent)
-        self.resource = ResourceFile(name, filename=filename)
-
-    @property
-    def scenario_path(self):
-        return self.get_parent_by_class(Scenario).path

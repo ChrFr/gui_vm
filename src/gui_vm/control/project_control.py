@@ -416,8 +416,8 @@ class VMProjectControl(ProjectTreeControl):
             scenario_node.parent.add_child(new_scenario_node)
             filenames = []
             destinations = []
-            for res_node in scenario_node.get_resources():
-                new_res_node = new_scenario_node.get_resource(res_node.name)
+            for res_node in scenario_node.get_inputs():
+                new_res_node = new_scenario_node.get_input(res_node.name)
                 if new_res_node:
                     filenames.append(res_node.full_source)
                     destinations.append(new_res_node.full_path)
@@ -484,7 +484,7 @@ class VMProjectControl(ProjectTreeControl):
         else:
             filenames = []
             destinations = []
-            for res_node in scenario_node.get_resources():
+            for res_node in scenario_node.get_inputs():
                 filenames.append(res_node.original_source)
                 destinations.append(res_node.full_path)
 
