@@ -346,6 +346,7 @@ class TreeNode(Observable):
 
     def clone(self, name=None):
         clone = deepcopy(self)
+        clone.parent = None
         if name:
             clone.name = name
         return clone

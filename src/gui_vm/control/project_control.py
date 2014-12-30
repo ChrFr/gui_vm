@@ -7,6 +7,7 @@ from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
                                  NewScenarioDialog)
 from gui_vm.config.config import Config
 import os, subprocess
+from shutil import rmtree
 
 config = Config()
 config.read()
@@ -196,7 +197,7 @@ class VMProjectControl(ProjectTreeControl):
                 Scenario: [self.add_scenario, 'Szenario hinzufügen'],
             },
             'remove': {
-                Scenario: [self._remove_node, 'Szenario entfernen'],
+                Scenario: [self._remove_scenario, 'Szenario entfernen'],
                 ResourceNode: [self.remove_resource, 'Ressource entfernen'],
             },
             'reset': {
@@ -311,13 +312,34 @@ class VMProjectControl(ProjectTreeControl):
     def copy(self):
         self.compute_selected_node('copy')
 
-    def _remove_node(self):
-        node = self.selected_item
+    def _remove_node(self, node):
+        if not node:
+            node = self.selected_item
         parent_idx = self.parent(self.current_index)
         self.remove_row(self.current_index.row(),
                         parent_idx)
         node.remove_all_children()
         self.item_clicked(parent_idx)
+
+    def _remove_scenario(self, scenario_node=None):
+        if not scenario_node:
+            scenario_node = self.selected_item
+        path = scenario_node.path
+        reply = QtGui.QMessageBox.question(
+            None, _fromUtf8("Löschen"),
+            _fromUtf8("Soll das gesamte Szenario-Verzeichnis {}\n".format(
+                path) + "von der Festplatte entfernt werden?"),
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        do_delete = reply == QtGui.QMessageBox.Yes
+        if do_delete:
+            try:
+                rmtree(scenario_node.path)
+            except Exception, e:
+                QtGui.QMessageBox.about(
+                None, "Fehler", str(e))
+                return
+        self._remove_node(scenario_node)
+
 
     def remove_resource(self, resource_node=None):
         '''
@@ -326,6 +348,12 @@ class VMProjectControl(ProjectTreeControl):
         '''
         if not resource_node:
             resource_node = self.selected_item
+        if resource_node.locked:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Die Ressource ist gesperrt und kann nicht " +
+                          "gelöscht werden."))
+            return
         full_source = resource_node.full_source
         if full_source and os.path.exists(full_source):
             reply = QtGui.QMessageBox.question(
@@ -378,10 +406,6 @@ class VMProjectControl(ProjectTreeControl):
             new_scenario_node = scenario_node.clone(new_scen_name)
             path = new_scenario_node.path
             if os.path.exists(new_scenario_node.path):
-                QtGui.QMessageBox.about(
-                    None, "Fehler",
-                    _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
-                              .format(path)))
                 reply = QtGui.QMessageBox.question(
                     None, _fromUtf8("Fehler"),
                     _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
