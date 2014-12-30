@@ -8,6 +8,7 @@ from gui_vm.config.config import Config
 from gui_vm.model.resources import ResourceFile
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.observable import Observable
+from gui_vm.model.backend import hard_copy
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -383,8 +384,7 @@ class Scenario(TreeNode):
             return None
         return os.path.join(
             self.get_parent_by_class(Project).project_folder,
-            self.name,
-            self.INPUT_NODES)
+            self.name)
 
     @property
     def note(self):
@@ -403,7 +403,8 @@ class Scenario(TreeNode):
                                       process,
                                       self.get_resources(),
                                       callback=callback)
-        self.add_results(results_file)
+        result = self.add_results(results_file)
+        hard_copy(results_file, result.full_path)
         self.get_parent_by_class(Project).emit()
 
     def add_results(self, filename):
@@ -411,7 +412,8 @@ class Scenario(TreeNode):
         if not results_node:
             results_node = TreeNode(self.OUTPUT_NODES)
             self.add_child(results_node)
-        results_node.add_child(ResultNode(filename))
+        res = ResultNode(filename, parent=results_node)
+        return res
 
     def validate(self):
         resource_nodes = self.get_resources()
@@ -700,7 +702,7 @@ class ResourceNode(TreeNode):
         return self.get_parent_by_class(Scenario).model
 
     @property
-    def simrun_path(self):
+    def scenario_path(self):
         return self.get_parent_by_class(Scenario).path
 
     @property
@@ -723,7 +725,7 @@ class ResourceNode(TreeNode):
         '''
         Return
         ------
-        path of the resource file within the project folder
+        path of the resource file within the ressources folder
         '''
         if (self.resource is None or
             self.resource.filename is None or
@@ -735,7 +737,7 @@ class ResourceNode(TreeNode):
 
     @property
     def full_path(self):
-        return os.path.join(self.run_path, self.resource.subfolder)
+        return os.path.join(self.resources_path, self.resource.subfolder)
 
     @source.setter
     def source(self, subpath):
@@ -756,16 +758,22 @@ class ResourceNode(TreeNode):
         '''
         #join path with simrun path to get full source
         source = self.source
-        if self.run_path is None:
+        if self.resources_path is None:
             return None
         if self.source is not None:
             source = os.path.join(
-                self.run_path, self.source)
+                self.resources_path, self.source)
         return source
 
     @property
-    def run_path(self):
-        return self.get_parent_by_class(Scenario).path
+    def resources_path(self):
+        '''
+        path to the resources folder
+        '''
+        scen_path = self.scenario_path
+        if not scen_path:
+            return None
+        return os.path.join(scen_path, Scenario.INPUT_NODES)
 
     def set_source(self, filename):
         '''
@@ -779,10 +787,10 @@ class ResourceNode(TreeNode):
         self.source = filename
 
     def update(self):
-        self.resource.update(self.run_path)
+        self.resource.update(self.resources_path)
 
     def validate(self):
-        self.resource.validate(self.simrun_path)
+        self.resource.validate(self.resources_path)
         self.is_checked = self.resource.is_checked
         self.is_valid = self.resource.is_valid
 
@@ -793,14 +801,14 @@ class ResourceNode(TreeNode):
         set to the old model (incl. references of rules and resource list
         of model) at the moment
         '''
-        sim_run = self.get_parent_by_class(Scenario)
-        default_model = sim_run.get_default_scenario()
+        scenario = self.get_parent_by_class(Scenario)
+        default_model = scenario.get_default_scenario()
         #find corresponding default resource node
         res_default = default_model.get_resource(self.name)
         #rename source
         self.resource.filename = res_default.resource.filename
         self.resource.subfolder = res_default.resource.subfolder
-        self.original_source = os.path.join(sim_run.default_folder,
+        self.original_source = os.path.join(scenario.default_folder,
                                             self.source)
 
 
@@ -867,3 +875,7 @@ class ResultNode(TreeNode):
     def __init__(self, name=None, filename=None, parent=None):
         super(ResultNode, self).__init__(name, parent=parent)
         self.resource = ResourceFile(name, filename=filename)
+
+    @property
+    def scenario_path(self):
+        return self.get_parent_by_class(Scenario).path
