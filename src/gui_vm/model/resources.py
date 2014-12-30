@@ -107,7 +107,6 @@ class Resource(Observable):
             if child_status > status_flag:
                 status_flag = child_status
         self.overall_status = status_flag, messages
-        #self.overall_status[1] = msg
 
     @property
     def status(self, overwrite=None):
@@ -258,6 +257,12 @@ class ResourceFile(Resource):
     def is_set(self):
         if self.filename is None:
             return False
+
+    def set_overall_status(self):
+        #don't show all child messages for resource files (confusing)
+        super(ResourceFile, self).set_overall_status()
+        status_flag = self.overall_status[0]
+        self.overall_status = status_flag, [DEFAULT_MESSAGES[status_flag]]
 
 
 class H5Resource(ResourceFile):
