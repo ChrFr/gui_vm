@@ -383,8 +383,8 @@ class Scenario(TreeNode):
             return None
         return os.path.join(
             self.get_parent_by_class(Project).project_folder,
-            self.INPUT_NODES,
-            self.name)
+            self.name,
+            self.INPUT_NODES)
 
     @property
     def note(self):
@@ -399,11 +399,11 @@ class Scenario(TreeNode):
         return note
 
     def run(self, process, callback=None):
-        self.model.run(self.name,
-                       process,
-                       self.get_resources(),
-                       callback=callback)
-        self.add_results('Platzhalter')
+        results_file = self.model.run(self.name,
+                                      process,
+                                      self.get_resources(),
+                                      callback=callback)
+        self.add_results(results_file)
         self.get_parent_by_class(Project).emit()
 
     def add_results(self, filename):
@@ -864,6 +864,6 @@ class XMLParser(object):
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
 
 class ResultNode(TreeNode):
-    def __init__(self, name=None, parent=None):
+    def __init__(self, name=None, filename=None, parent=None):
         super(ResultNode, self).__init__(name, parent=parent)
-        #self.add_child()
+        self.resource = ResourceFile(name, filename=filename)

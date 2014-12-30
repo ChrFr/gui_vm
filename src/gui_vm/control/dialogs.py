@@ -83,7 +83,7 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
         for filename in filenames:
             statinfo = os.stat(filename)
             size += statinfo.st_size
-        free = get_free_space(destinations[0])
+        free = get_free_space(os.path.splitdrive(destinations[0])[0])
         if size >= free:
             status_txt = _fromUtf8("Nicht genug Platz auf {} vorhanden!\n".format(
                 destinations[0]) + "Es werden {} kB benötigt".format(
@@ -179,7 +179,8 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.cancelButton.clicked.connect(self.close)
 
     def finished(self):
-        self.progress_bar.setValue(100)
+        if not self.process.Crashed:
+            self.progress_bar.setValue(100)
         self.stopped()
 
     def kill(self):

@@ -133,7 +133,8 @@ class SpecificModel(TrafficModel):
 
         python_path = config.settings['environment']['python_path']
         executable = config.settings['trafficmodels'][self.name]['executable']
-        #cmd = r'C:\Anaconda\envs\tdmks\python -m tdmks.main'
+        demand_folder = 'F:\\Modell\\tdm\\kassel\\demand'
+        demand_file = os.path.join(demand_folder, scenario_name + '.h5')
         cmd = python_path + ' ' + executable
         cmd_name = '-n "{}"'.format(scenario_name)
 
@@ -182,5 +183,6 @@ class SpecificModel(TrafficModel):
         # QProcess emits `readyRead` when there is data to be read
         process.readyReadStandardOutput.connect(show_progress)
         process.readyReadStandardError.connect(show_progress)
-
-        process.start(full_cmd)
+        #process.finished.connect(self.finished)
+        #process.start(full_cmd)
+        return demand_file

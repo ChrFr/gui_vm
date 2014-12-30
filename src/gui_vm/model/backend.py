@@ -33,13 +33,13 @@ def hard_copy(src_filename, dest_filename,
         return False, 'Quelle und Ziel sind identisch!'
     dest_dir, dest_fn = os.path.split(dest_filename)
     src_size = os.stat(src_filename).st_size
+    #create directory, if not exists
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
     free = get_free_space(dest_dir)
     if src_size >= free:
         return (False,
                 'Nicht genug Speicherplatz in {} vorhanden!'.format(dest_dir))
-    #create directory, if not exists
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
     dest = open(dest_filename, "wb")
     callback(0)
     cur_block_pos = 0
