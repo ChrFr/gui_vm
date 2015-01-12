@@ -134,7 +134,7 @@ class SpecificModel(TrafficModel):
         python_path = config.settings['environment']['python_path']
         executable = config.settings['trafficmodels'][self.name]['executable']
         demand_folder = 'F:\\Modell\\tdm\\kassel\\demand'
-        demand_file = os.path.join(demand_folder, scenario_name + '.h5')
+        demand_file_name = os.path.join(demand_folder, scenario_name + '.h5')
         cmd = python_path + ' ' + executable
         cmd_name = '-n "{}"'.format(scenario_name)
 
@@ -185,4 +185,4 @@ class SpecificModel(TrafficModel):
         process.readyReadStandardError.connect(show_progress)
         #process.finished.connect(self.finished)
         #process.start(full_cmd)
-        return demand_file
+        return demand_file_name
