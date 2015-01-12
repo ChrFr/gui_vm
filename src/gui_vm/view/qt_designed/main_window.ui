@@ -187,7 +187,7 @@
            <widget class="QGroupBox" name="context_button_group">
             <property name="minimumSize">
              <size>
-              <width>235</width>
+              <width>265</width>
               <height>35</height>
              </size>
             </property>
@@ -215,8 +215,8 @@
              </property>
              <property name="iconSize">
               <size>
-               <width>30</width>
-               <height>30</height>
+               <width>21</width>
+               <height>21</height>
               </size>
              </property>
             </widget>
@@ -241,8 +241,8 @@
              </property>
              <property name="iconSize">
               <size>
-               <width>30</width>
-               <height>30</height>
+               <width>21</width>
+               <height>21</height>
               </size>
              </property>
             </widget>
@@ -310,7 +310,7 @@
             <widget class="QPushButton" name="lock_button">
              <property name="geometry">
               <rect>
-               <x>200</x>
+               <x>230</x>
                <y>5</y>
                <width>25</width>
                <height>25</height>
@@ -355,6 +355,32 @@
              <property name="icon">
               <iconset resource="gui.qrc">
                <normaloff>:/buttons/icons/copy.png</normaloff>:/buttons/icons/copy.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>21</width>
+               <height>21</height>
+              </size>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="clean_button">
+             <property name="geometry">
+              <rect>
+               <x>180</x>
+               <y>5</y>
+               <width>25</width>
+               <height>25</height>
+              </rect>
+             </property>
+             <property name="toolTip">
+              <string>Kopieren</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="gui.qrc">
+               <normaloff>:/buttons/icons/clean.png</normaloff>:/buttons/icons/clean.png</iconset>
              </property>
              <property name="iconSize">
               <size>

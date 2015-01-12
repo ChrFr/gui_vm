@@ -30,7 +30,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # define the view on the project and connect to the qtreeview in
         # the main window
         self.project_tree = TreeNode('root')
-        self.project_control = VMProjectControl(view=self.qtreeview)
+        self.project_control = VMProjectControl(
+            view=self.qtreeview, button_group=self.context_button_group)
         self.qtreeview.setModel(self.project_control)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
             self.project_control.item_clicked)
@@ -44,33 +45,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         self.actionProjekt_ffnen.triggered.connect(self.load_project)
         self.open_button.clicked.connect(self.load_project)
-
-        # connect the context buttons with the project control
-        self.plus_button.clicked.connect(self.project_control.add)
-        self.minus_button.clicked.connect(self.project_control.remove)
-        self.edit_button.clicked.connect(self.project_control.edit)
-        self.reset_button.clicked.connect(self.project_control.reset)
-        self.start_button.clicked.connect(self.project_control.execute)
-        self.lock_button.clicked.connect(self.project_control.switch_lock)
-        self.copy_button.clicked.connect(self.project_control.copy)
-
-        # activation of buttons depending on the selected item
-        self.project_control.editable[bool].connect(
-            self.edit_button.setEnabled)
-        self.project_control.addable[bool].connect(
-            self.plus_button.setEnabled)
-        self.project_control.removable[bool].connect(
-            self.minus_button.setEnabled)
-        self.project_control.resetable[bool].connect(
-            self.reset_button.setEnabled)
-        self.project_control.executable[bool].connect(
-            self.start_button.setEnabled)
-        self.project_control.lockable[bool].connect(
-            self.switch_lock)
-        self.project_control.copyable[bool].connect(
-            self.copy_button.setEnabled)
-
-        #self.lock_button.sets
 
         for button in self.context_button_group.children():
             button.setEnabled(False)
@@ -114,13 +88,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                             .columnCount(QtCore.QModelIndex())):
             self.qtreeview.resizeColumnToContents(column)
         self.project_control.update_details(self.details_layout)
-
-    def switch_lock(self, enabled):
-        self.lock_button.setEnabled(enabled)
-        if self.project_control.selected_item.locked:
-            self.lock_button.setChecked(True)
-        else:
-            self.lock_button.setChecked(False)
 
     def create_project(self):
         '''

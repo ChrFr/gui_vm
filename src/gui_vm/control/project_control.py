@@ -2,7 +2,7 @@
 from PyQt4 import (QtCore, QtGui)
 from details import (ScenarioDetails, ProjectDetails, ResourceDetails)
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
-                                       ResourceNode, XMLParser)
+                                       InputNode, XMLParser)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
                                  NewScenarioDialog)
 from gui_vm.config.config import Config
@@ -32,13 +32,6 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
     project_changed = QtCore.pyqtSignal()
     view_changed = QtCore.pyqtSignal()
-    editable = QtCore.pyqtSignal(bool)
-    addable = QtCore.pyqtSignal(bool)
-    removable = QtCore.pyqtSignal(bool)
-    resetable = QtCore.pyqtSignal(bool)
-    executable = QtCore.pyqtSignal(bool)
-    lockable = QtCore.pyqtSignal(bool)
-    copyable = QtCore.pyqtSignal(bool)
 
     def __init__(self, view=None):
         super(ProjectTreeControl, self).__init__()
@@ -187,9 +180,32 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
 
 class VMProjectControl(ProjectTreeControl):
-    def __init__(self, view=None):
+    def __init__(self, view=None, button_group=None):
         super(VMProjectControl, self).__init__(view)
         self.model = TreeNode('root')
+        self.button_group = button_group
+        self.plus_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'plus_button')
+        self.minus_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'minus_button')
+        self.edit_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'edit_button')
+        self.reset_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'reset_button')
+        self.lock_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'lock_button')
+        self.copy_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'copy_button')
+
+        # connect the context buttons with the defined actions
+        self.plus_button.clicked.connect(lambda: self.start_function('add'))
+        self.minus_button.clicked.connect(lambda: self.start_function('remove'))
+        self.edit_button.clicked.connect(lambda: self.start_function('edit'))
+        self.reset_button.clicked.connect(lambda: self.start_function('reset'))
+        #self.start_button.clicked.connect(self.project_control.execute)
+        self.lock_button.clicked.connect(lambda:
+                                         self.start_function('switch_lock'))
+        self.copy_button.clicked.connect(lambda: self.start_function('copy'))
 
         self.context_map = {
             'add': {
@@ -198,16 +214,16 @@ class VMProjectControl(ProjectTreeControl):
             },
             'remove': {
                 Scenario: [self._remove_scenario, 'Szenario entfernen'],
-                ResourceNode: [self.remove_resource, 'Ressource entfernen'],
+                InputNode: [self.remove_resource, 'Ressource entfernen'],
             },
             'reset': {
                 Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
-                ResourceNode: [self._reset_resource, 'Ressource zurücksetzen']
+                InputNode: [self._reset_resource, 'Ressource zurücksetzen']
             },
             'edit': {
                 Scenario: [self._rename, 'Szenario umbenennen'],
                 Project: [self._rename, 'Projekt umbenennen'],
-                ResourceNode: [self.edit_resource, 'Ressource editieren']
+                InputNode: [self.edit_resource, 'Ressource editieren']
             },
             'execute': {
                 Scenario: [self._run_scenario, 'Szenario starten']
@@ -219,13 +235,6 @@ class VMProjectControl(ProjectTreeControl):
                 Scenario: [self._clone_scenario, 'Szenario klonen'],
             },
         }
-
-    def compute_selected_node(self, function_name):
-        node = self.selected_item
-        cls = node.__class__
-        if cls in self.context_map[function_name]:
-            self.context_map[function_name][cls][0]()
-        self.project_changed.emit()
 
     def item_clicked(self, index=None):
         '''
@@ -246,25 +255,40 @@ class VMProjectControl(ProjectTreeControl):
             self.details = ProjectDetails(node)
         elif isinstance(node, Scenario):
             self.details = ScenarioDetails(node)
-        elif isinstance(node, ResourceNode):
+        elif isinstance(node, InputNode):
             self.details = ResourceDetails(node, self)
         #track changes made in details
         if self.details:
             self.details.value_changed.connect(self.project_changed)
 
-        cls = node.__class__
-
-        #emit signal flags for context
-        locked = node.locked
-        self.addable.emit(cls in self.context_map['add'])
-        self.removable.emit(cls in self.context_map['remove'] and not locked)
-        self.resetable.emit(cls in self.context_map['reset'] and not locked)
-        self.editable.emit(cls in self.context_map['edit'] and not locked)
-        self.executable.emit(cls in self.context_map['execute'])
-        self.lockable.emit(cls in self.context_map['switch_lock'])
-        self.copyable.emit(cls in self.context_map['copy'])
+        self.enable_buttons(node)
 
         self.dataChanged.emit(index, index)
+
+    def start_function(self, function_name):
+        node = self.selected_item
+        cls = node.__class__
+        if cls in self.context_map[function_name]:
+            self.context_map[function_name][cls][0]()
+        self.project_changed.emit()
+
+    def enable_buttons(self, node):
+
+        # emit signal flags for context
+        locked = node.locked
+        cls = node.__class__
+
+        self.plus_button.setEnabled(cls in self.context_map['add'])
+        self.minus_button.setEnabled(cls in self.context_map['remove'] and not locked)
+        self.reset_button.setEnabled(cls in self.context_map['reset'] and not locked)
+        self.edit_button.setEnabled(cls in self.context_map['edit'] and not locked)
+        #self.start_button.setEnabled(cls in self.context_map['execute'])
+        self.lock_button.setEnabled(cls in self.context_map['switch_lock'])
+        if node.locked:
+            self.lock_button.setChecked(True)
+        else:
+            self.lock_button.setChecked(False)
+        self.copy_button.setEnabled(cls in self.context_map['copy'])
 
     def pop_context_menu(self, pos):
         node = self.selected_item
@@ -291,27 +315,6 @@ class VMProjectControl(ProjectTreeControl):
             window.addWidget(self.details)
             self.details.update()
 
-    def add(self):
-        self.compute_selected_node('add')
-
-    def remove(self, node=None):
-        self.compute_selected_node('remove')
-
-    def execute(self):
-        self.compute_selected_node('execute')
-
-    def edit(self):
-        self.compute_selected_node('edit')
-
-    def reset(self):
-        self.compute_selected_node('reset')
-
-    def switch_lock(self):
-        self.compute_selected_node('switch_lock')
-
-    def copy(self):
-        self.compute_selected_node('copy')
-
     def _remove_node(self, node):
         if not node:
             node = self.selected_item
@@ -337,7 +340,6 @@ class VMProjectControl(ProjectTreeControl):
             except Exception, e:
                 QtGui.QMessageBox.about(
                 None, "Fehler", str(e))
-                return
         self._remove_node(scenario_node)
 
 

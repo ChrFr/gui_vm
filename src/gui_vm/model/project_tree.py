@@ -801,6 +801,7 @@ class ResourceNode(TreeNode):
         self.resource.filename = res_default.resource.filename
         self.resource.subfolder = res_default.resource.subfolder
         self.original_source = os.path.join(scenario.default_folder,
+                                            default_model.name,
                                             self.source)
 
 

@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="buttons">
+    <file>../icons/clean.png</file>
     <file>../icons/copy.png</file>
     <file>../icons/fragezeichen.png</file>
     <file>../icons/open.png</file>
