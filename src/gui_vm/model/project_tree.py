@@ -94,11 +94,11 @@ class TreeNode(Observable):
             return False
 
     @locked.setter
-    def locked(self, boolean):
+    def locked(self, enabled):
         '''
         Setter for locked status of node
         '''
-        self._locked = boolean
+        self._locked = enabled
 
     def add_child(self, child):
         '''
@@ -387,6 +387,17 @@ class Scenario(TreeNode):
             self.name)
 
     @property
+    def output_path(self):
+        return os.path.join(
+            self.path, self.OUTPUT_NODES)
+
+    @property
+    def complete_demand_file(self):
+        full_out_path = os.path.join(self.output_path, 'Gesamtlauf')
+        demand_file = os.path.join(full_out_path, self.name + '.h5')
+        return demand_file
+
+    @property
     def note(self):
         '''
         short textual info to display in ui tree
@@ -399,11 +410,13 @@ class Scenario(TreeNode):
         return note
 
     def run(self, process, callback=None):
-        results_file = self.model.run(self.name,
-                                      process,
-                                      self.get_inputs(),
-                                      callback=callback)
-        result = self.add_results(results_file)
+        full_out_path = os.path.split(self.complete_demand_file)[0]
+        self.model.run(self.name,
+                       process,
+                       self.get_inputs(),
+                       output_path=full_out_path,
+                       callback=callback)
+        result = self.add_results(self.complete_demand_file)
         #hard_copy(results_file, result.full_path)
         #self.get_parent_by_class(Project).emit()
 
@@ -413,6 +426,7 @@ class Scenario(TreeNode):
             results_node = TreeNode(self.OUTPUT_NODES)
             self.add_child(results_node)
         res = OutputNode(name='Gesamtlauf', parent=results_node)
+        results_node.add_child(res)
         #res.full_source = filename
         return res
 
@@ -460,6 +474,7 @@ class Scenario(TreeNode):
         parent = self.parent
         parent.replace_child(self, default_model)
         default_model.name = self.name
+        default_model.locked = False
         return default_model
 
     def get_input(self, name):

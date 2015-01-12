@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Mon Jan 12 14:00:40 2015
+# Created: Mon Jan 12 15:30:29 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -85,10 +85,6 @@ class Ui_MainWindow(object):
         self.open_button.setIconSize(QtCore.QSize(28, 28))
         self.open_button.setObjectName(_fromUtf8("open_button"))
         self.gridLayout_4.addWidget(self.open_button, 0, 0, 1, 1)
-        self.start_button = QtGui.QPushButton(self.layoutWidget)
-        self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.start_button.setObjectName(_fromUtf8("start_button"))
-        self.gridLayout_4.addWidget(self.start_button, 0, 9, 1, 1)
         self.context_button_group = QtGui.QGroupBox(self.layoutWidget)
         self.context_button_group.setMinimumSize(QtCore.QSize(265, 35))
         self.context_button_group.setTitle(_fromUtf8(""))
@@ -228,7 +224,6 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
-        self.start_button.setText(_translate("MainWindow", "Starten", None))
         self.plus_button.setToolTip(_translate("MainWindow", "Hinzufügen", None))
         self.plus_button.setText(_translate("MainWindow", "...", None))
         self.minus_button.setToolTip(_translate("MainWindow", "Entfernen", None))

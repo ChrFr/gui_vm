@@ -107,7 +107,7 @@ class SpecificModel(TrafficModel):
     def update(self, path):
         super(SpecificModel, self).update(path)
 
-    def run(self, scenario_name, process, resources,
+    def run(self, scenario_name, process, resources, output_path=None,
             callback=None, modal_split=False, correction=False):
         '''
         run the traffic model
@@ -133,8 +133,6 @@ class SpecificModel(TrafficModel):
 
         python_path = config.settings['environment']['python_path']
         executable = config.settings['trafficmodels'][self.name]['executable']
-        demand_folder = 'F:\\Modell\\tdm\\kassel\\demand'
-        demand_file_name = os.path.join(demand_folder, scenario_name + '.h5')
         cmd = python_path + ' ' + executable
         cmd_name = '-n "{}"'.format(scenario_name)
 
@@ -157,6 +155,10 @@ class SpecificModel(TrafficModel):
 
         # create full command
         full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor])
+        if output_path:
+            cmd_demand = '-dp "{}"'.format(output_path)
+            full_cmd = ' '.join([full_cmd, cmd_demand])
+
         self.already_done = 0.
         self.group = None
         groups_count = len(self.get('group_dest_mode'))
@@ -185,4 +187,3 @@ class SpecificModel(TrafficModel):
         process.readyReadStandardError.connect(show_progress)
         #process.finished.connect(self.finished)
         process.start(full_cmd)
-        return demand_file_name

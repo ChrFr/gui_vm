@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Mon Jan 12 14:57:09 2015
+# Created: Mon Jan 12 16:53:01 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,22 +34,23 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setSizePolicy(sizePolicy)
         DetailsScenario.setMinimumSize(QtCore.QSize(450, 0))
         self.formLayoutWidget = QtGui.QWidget(DetailsScenario)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 20, 391, 281))
+        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 60, 391, 241))
         self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
         self.formLayout = QtGui.QFormLayout(self.formLayoutWidget)
         self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
+        self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
-        self.combo_model = QtGui.QComboBox(self.formLayoutWidget)
-        self.combo_model.setObjectName(_fromUtf8("combo_model"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.combo_model)
         self.label = QtGui.QLabel(self.formLayoutWidget)
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
-        self.start_button = QtGui.QPushButton(self.formLayoutWidget)
+        self.combo_model = QtGui.QComboBox(self.formLayoutWidget)
+        self.combo_model.setObjectName(_fromUtf8("combo_model"))
+        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.combo_model)
+        self.start_button = QtGui.QPushButton(DetailsScenario)
+        self.start_button.setGeometry(QtCore.QRect(10, 20, 100, 23))
         self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
         self.start_button.setObjectName(_fromUtf8("start_button"))
-        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.start_button)
 
         self.retranslateUi(DetailsScenario)
         QtCore.QMetaObject.connectSlotsByName(DetailsScenario)
@@ -58,5 +59,5 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setWindowTitle(_translate("DetailsScenario", "GroupBox", None))
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
         self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
-        self.start_button.setText(_translate("DetailsScenario", "Starten", None))
+        self.start_button.setText(_translate("DetailsScenario", "Gesamtlauf starten", None))
 

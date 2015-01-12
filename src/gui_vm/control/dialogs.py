@@ -163,9 +163,29 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.startButton.clicked.emit(True)
 
     def call_cmd(self):
-        # run the process
-        self.scenario.run(self.process,
-                          callback=self.show_status)
+        doStart = True
+        demand_file = self.scenario.complete_demand_file
+        full_out_path = os.path.split(demand_file)[0]
+        if not os.path.exists(full_out_path):
+            os.makedirs(full_out_path)
+
+        # after a successful the demand.h5 is created and is not deleted
+        # a new run might be unnessecary, if file is present
+        if os.path.exists(os.path.join(demand_file)):
+            dialog = QtGui.QMessageBox()
+            reply = dialog.question(
+                self, _fromUtf8("erneuter Gesamtlauf"),
+                _fromUtf8('Das Szenario {} '.format(self.scenario.name) +
+                          'wurde scheinbar bereits einmal komplett berechnet.\n' +
+                          'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?'),
+                QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Cancel:
+                doStart = False
+
+        if doStart:
+            # run the process
+            self.scenario.run(self.process,
+                              callback=self.show_status)
 
     def running(self):
         self.progress_bar.setStyleSheet(DEFAULT_STYLE)
@@ -182,13 +202,19 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.cancelButton.clicked.connect(self.close)
 
     def finished(self):
-        if not self.process.Crashed:
-            self.progress_bar.setValue(100)
+        # strange: process returns 1 even if successful
+        #if not self.process.Crashed:
+        self.progress_bar.setValue(100)
         self.stopped()
 
     def kill(self):
         self.progress_bar.setStyleSheet(ABORTED_STYLE)
         self.process.kill()
+        demand_file = self.scenario.complete_demand_file
+        # tdmks writes during calculations, when aborted file is useless
+        if os.path.exists(demand_file):
+            os.remove(demand_file)
+
 
     def show_status(self, text, progress=None):
         self.log_edit.insertHtml(str(text) + '<br>')

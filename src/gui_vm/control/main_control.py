@@ -46,8 +46,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionProjekt_ffnen.triggered.connect(self.load_project)
         self.open_button.clicked.connect(self.load_project)
 
-        self.start_button.setEnabled(False)
-
         # connect the menubar
         self.actionNeues_Szenario.triggered.connect(
             self.project_control.add_scenario)
@@ -78,7 +76,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.recently_used_actions.append(action)
                 self.menuZuletzt_benutzt.addAction(action)
                 project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
-                action.triggered.connect(partial((lambda filename: self.project_control.read_project(filename)), project_file))
+                action.triggered.connect(partial((
+                    lambda filename: self.project_control.read_project(filename)),
+                                                 project_file))
 
             #open recent project
             project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
