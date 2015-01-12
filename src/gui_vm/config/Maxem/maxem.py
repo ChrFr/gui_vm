@@ -184,5 +184,5 @@ class SpecificModel(TrafficModel):
         process.readyReadStandardOutput.connect(show_progress)
         process.readyReadStandardError.connect(show_progress)
         #process.finished.connect(self.finished)
-        #process.start(full_cmd)
+        process.start(full_cmd)
         return demand_file_name

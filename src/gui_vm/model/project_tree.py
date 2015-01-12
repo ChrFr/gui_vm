@@ -404,8 +404,8 @@ class Scenario(TreeNode):
                                       self.get_inputs(),
                                       callback=callback)
         result = self.add_results(results_file)
-        hard_copy(results_file, result.full_path)
-        self.get_parent_by_class(Project).emit()
+        #hard_copy(results_file, result.full_path)
+        #self.get_parent_by_class(Project).emit()
 
     def add_results(self, filename):
         results_node = self.get_child(self.OUTPUT_NODES)
@@ -413,7 +413,7 @@ class Scenario(TreeNode):
             results_node = TreeNode(self.OUTPUT_NODES)
             self.add_child(results_node)
         res = OutputNode(name='Gesamtlauf', parent=results_node)
-        res.full_source = filename
+        #res.full_source = filename
         return res
 
     def validate(self):
@@ -454,6 +454,7 @@ class Scenario(TreeNode):
         for res_node in default_model.get_inputs():
             res_node.original_source = os.path.join(self.default_folder,
                                                     default_model.name,
+                                                    self.INPUT_NODES,
                                                     res_node.source)
         #swap this node with the default one
         parent = self.parent
@@ -722,8 +723,7 @@ class ResourceNode(TreeNode):
             self.resource.filename is None or
             self.resource.filename == ''):
             return None
-        source = os.path.join(Scenario.INPUT_NODES,
-                              self.resource.subfolder,
+        source = os.path.join(self.resource.subfolder,
                               self.resource.filename)
         return source
 
@@ -802,6 +802,7 @@ class ResourceNode(TreeNode):
         self.resource.subfolder = res_default.resource.subfolder
         self.original_source = os.path.join(scenario.default_folder,
                                             default_model.name,
+                                            Scenario.INPUT_NODES,
                                             self.source)
 
 
@@ -833,8 +834,8 @@ class InputNode(ResourceNode):
 
 class OutputNode(ResourceNode):
     def __init__(self, name=None, filename=None, parent=None):
-        super(ResultNode, self).__init__(name, parent=parent)
         self.resource = ResourceFile(name, filename=filename)
+        super(OutputNode, self).__init__(name, parent=parent)
 
     @property
     def scenario_path(self):

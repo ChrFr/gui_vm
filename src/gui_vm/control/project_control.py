@@ -196,6 +196,8 @@ class VMProjectControl(ProjectTreeControl):
             QtGui.QAbstractButton, 'lock_button')
         self.copy_button = self.button_group.findChild(
             QtGui.QAbstractButton, 'copy_button')
+        self.clean_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'clean_button')
 
         # connect the context buttons with the defined actions
         self.plus_button.clicked.connect(lambda: self.start_function('add'))
@@ -206,6 +208,9 @@ class VMProjectControl(ProjectTreeControl):
         self.lock_button.clicked.connect(lambda:
                                          self.start_function('switch_lock'))
         self.copy_button.clicked.connect(lambda: self.start_function('copy'))
+
+        for button in self.button_group.children():
+            button.setEnabled(False)
 
         self.context_map = {
             'add': {
@@ -226,13 +231,16 @@ class VMProjectControl(ProjectTreeControl):
                 InputNode: [self.edit_resource, 'Ressource editieren']
             },
             'execute': {
-                Scenario: [self._run_scenario, 'Szenario starten']
+                Scenario: [self.run_scenario, 'Szenario starten']
             },
             'switch_lock': {
                 Scenario: [self._switch_lock, 'Szenario sperren'],
             },
             'copy': {
                 Scenario: [self._clone_scenario, 'Szenario klonen'],
+            },
+            'clean': {
+
             },
         }
 
@@ -254,14 +262,14 @@ class VMProjectControl(ProjectTreeControl):
         if isinstance(node, Project):
             self.details = ProjectDetails(node)
         elif isinstance(node, Scenario):
-            self.details = ScenarioDetails(node)
+            self.details = ScenarioDetails(node, self)
         elif isinstance(node, InputNode):
             self.details = ResourceDetails(node, self)
         #track changes made in details
         if self.details:
             self.details.value_changed.connect(self.project_changed)
 
-        self.enable_buttons(node)
+        self._map_buttons(node)
 
         self.dataChanged.emit(index, index)
 
@@ -272,23 +280,35 @@ class VMProjectControl(ProjectTreeControl):
             self.context_map[function_name][cls][0]()
         self.project_changed.emit()
 
-    def enable_buttons(self, node):
+    def _map_buttons(self, node):
 
         # emit signal flags for context
         locked = node.locked
         cls = node.__class__
 
-        self.plus_button.setEnabled(cls in self.context_map['add'])
-        self.minus_button.setEnabled(cls in self.context_map['remove'] and not locked)
-        self.reset_button.setEnabled(cls in self.context_map['reset'] and not locked)
-        self.edit_button.setEnabled(cls in self.context_map['edit'] and not locked)
+        def map_button(button, map_name, depends_on_lock=False):
+            enabled = is_in_map = cls in self.context_map[map_name]
+            if depends_on_lock:
+                enabled = is_in_map and not locked
+            button.setEnabled(enabled)
+            if is_in_map:
+                tooltip = _fromUtf8(self.context_map[map_name][cls][1])
+            else:
+                tooltip = ''
+            button.setToolTip(tooltip)
+
+        map_button(self.plus_button,'add')
+        map_button(self.minus_button, 'remove', True)
+        map_button(self.reset_button, 'reset', True)
+        map_button(self.edit_button, 'edit', True)
         #self.start_button.setEnabled(cls in self.context_map['execute'])
-        self.lock_button.setEnabled(cls in self.context_map['switch_lock'])
+        map_button(self.lock_button, 'switch_lock')
         if node.locked:
             self.lock_button.setChecked(True)
         else:
             self.lock_button.setChecked(False)
-        self.copy_button.setEnabled(cls in self.context_map['copy'])
+        map_button(self.copy_button, 'copy')
+        map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
         node = self.selected_item
@@ -372,9 +392,18 @@ class VMProjectControl(ProjectTreeControl):
         resource_node.update()
         self.project_changed.emit()
 
-    def _run_scenario(self):
-        node = self.selected_item
-        dialog = ExecDialog(node, parent=self.view)
+    def run_scenario(self, scenario_node=None):
+        if not scenario_node:
+            scenario_node = self.selected_item
+        dialog = ExecDialog(scenario_node, parent=self.view)
+
+    def run(self, scenario_name):
+        scenario_node = self.project.get_child(scenario_name)
+        if scenario_node:
+            self.run_scenario(scenario_node)
+        else:
+            QtGui.QMessageBox.about(
+                self, 'Szenario {} nicht gefunden!'.format(scenario_name))
 
     def _switch_lock(self, resource_node=None):
         if not resource_node:

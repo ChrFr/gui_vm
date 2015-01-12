@@ -33,27 +33,29 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
 
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, simrun_node):
+    def __init__(self, scenario_node, project_control):
         super(ScenarioDetails, self).__init__()
         self.setupUi(self)
-        self.setTitle(simrun_node.name)
-        self.simrun_node = simrun_node
+        self.setTitle(scenario_node.name)
+        self.simrun_node = scenario_node
         self.combo_model.addItems(config.settings['trafficmodels'].keys())
         index = self.combo_model.findText(self.simrun_node.model.name)
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
+        self.start_button.clicked.connect(
+            lambda: project_control.run_scenario(scenario_node))
         label = QtGui.QLabel('\n\nKenngroessen:\n')
         self.formLayout.addRow(label)
-        for meta in simrun_node.meta:
+        for meta in scenario_node.meta:
             label = QtGui.QLabel(meta)
-            txt = simrun_node.meta[meta]
+            txt = scenario_node.meta[meta]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
                 edit = QtGui.QTextEdit(txt)
                 edit.setMinimumHeight(100)
             else:
-                edit = QtGui.QLineEdit(str(simrun_node.meta[meta]))
+                edit = QtGui.QLineEdit(str(scenario_node.meta[meta]))
             edit.setReadOnly(True)
             self.formLayout.addRow(label, edit)
 

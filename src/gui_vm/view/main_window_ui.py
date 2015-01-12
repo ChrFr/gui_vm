@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Mon Jan 12 12:03:25 2015
+# Created: Mon Jan 12 14:00:40 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -237,7 +237,7 @@ class Ui_MainWindow(object):
         self.reset_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))
         self.lock_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))
         self.copy_button.setToolTip(_translate("MainWindow", "Kopieren", None))
-        self.clean_button.setToolTip(_translate("MainWindow", "Kopieren", None))
+        self.clean_button.setToolTip(_translate("MainWindow", "Aufräumen", None))
         self.menuDatei.setTitle(_translate("MainWindow", "Datei", None))
         self.menuHilfe.setTitle(_translate("MainWindow", "Hilfe", None))
         self.menuProjekt.setTitle(_translate("MainWindow", "Projekt", None))

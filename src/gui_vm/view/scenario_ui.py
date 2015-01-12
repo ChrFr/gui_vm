@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Mon Dec 22 17:44:53 2014
+# Created: Mon Jan 12 14:57:09 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -46,6 +46,10 @@ class Ui_DetailsScenario(object):
         self.label = QtGui.QLabel(self.formLayoutWidget)
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
+        self.start_button = QtGui.QPushButton(self.formLayoutWidget)
+        self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.start_button.setObjectName(_fromUtf8("start_button"))
+        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.start_button)
 
         self.retranslateUi(DetailsScenario)
         QtCore.QMetaObject.connectSlotsByName(DetailsScenario)
@@ -54,4 +58,5 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setWindowTitle(_translate("DetailsScenario", "GroupBox", None))
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
         self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
+        self.start_button.setText(_translate("DetailsScenario", "Starten", None))
 

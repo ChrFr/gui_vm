@@ -157,7 +157,10 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         # Disable the button when process starts, and enable it when it finishes
         self.process.started.connect(self.running)
         self.process.finished.connect(self.finished)
+
         self.show()
+        #start process when window is opened
+        self.startButton.clicked.emit(True)
 
     def call_cmd(self):
         # run the process

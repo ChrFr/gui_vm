@@ -23,7 +23,7 @@ except AttributeError:
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     project_changed = QtCore.pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, project_file=None, run_scenario=None):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
 
@@ -46,8 +46,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionProjekt_ffnen.triggered.connect(self.load_project)
         self.open_button.clicked.connect(self.load_project)
 
-        for button in self.context_button_group.children():
-            button.setEnabled(False)
         self.start_button.setEnabled(False)
 
         # connect the menubar
@@ -61,10 +59,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_control.view_changed.connect(self.update_gui)
         self.project_control.project_changed.connect(self.project_changed_handler)
         self.project_changed.connect(self.project_changed_handler)
-        #open recent project
+
         h = config.settings['history']
-        if len(h) > 0:
+
+        # if project is passed, open it
+        if project_file:
+            if os.path.isfile(project_file):
+                self.project_control.read_project(project_file)
+            else:
+                QtGui.QMessageBox.about(
+                    self, 'Projektdatei {} nicht gefunden'.
+                    format(project_file))
+        elif len(h) > 0:
             for recent in h:
+                #build history menu and connect it to open the recent projects
                 action = QtGui.QAction(self)
                 action.setText(_fromUtf8(recent))
                 self.recently_used_actions.append(action)
@@ -72,12 +80,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
                 action.triggered.connect(partial((lambda filename: self.project_control.read_project(filename)), project_file))
 
+            #open recent project
             project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
             if os.path.isfile(project_file):
                 self.project_control.read_project(project_file)
         #welcome screen if there is none (assumed first start)
         else:
             welcome = WelcomeDialog(self)
+
+        if run_scenario:
+            self.project_control.run(run_scenario)
 
     def update_gui(self):
         '''
