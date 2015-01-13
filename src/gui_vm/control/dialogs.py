@@ -83,8 +83,14 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
         for filename in filenames:
             statinfo = os.stat(filename)
             size += statinfo.st_size
-        free = get_free_space(os.path.splitdrive(destinations[0])[0])
-        if size >= free:
+        drive = os.path.splitdrive(destinations[0])[0]
+        not_enough = False
+        # don't know how to get the root drive under linux, splitdrive returns ''
+        # ignored by now, only windows checked
+        if drive != '':            
+            free = get_free_space(drive)
+            not_enough = size >= free
+        if not_enough:
             status_txt = _fromUtf8("Nicht genug Platz auf {} vorhanden!\n".format(
                 destinations[0]) + "Es werden {} kB benötigt".format(
                 size/1024) + " aber nur {} kB sind frei".format(
