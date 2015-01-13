@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Tue Jan 13 16:52:52 2015
+# Created: Tue Jan 13 16:11:16 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -52,10 +52,10 @@ class Ui_DetailsScenario(object):
         self.start_button.setMinimumSize(QtCore.QSize(140, 0))
         self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
         self.start_button.setObjectName(_fromUtf8("start_button"))
-        self.special_button = QtGui.QPushButton(DetailsScenario)
-        self.special_button.setGeometry(QtCore.QRect(160, 30, 140, 31))
-        self.special_button.setMinimumSize(QtCore.QSize(140, 0))
-        self.special_button.setObjectName(_fromUtf8("special_button"))
+        self.specialRunButton = QtGui.QPushButton(DetailsScenario)
+        self.specialRunButton.setGeometry(QtCore.QRect(160, 30, 140, 31))
+        self.specialRunButton.setMinimumSize(QtCore.QSize(140, 0))
+        self.specialRunButton.setObjectName(_fromUtf8("specialRunButton"))
 
         self.retranslateUi(DetailsScenario)
         QtCore.QMetaObject.connectSlotsByName(DetailsScenario)
@@ -65,5 +65,5 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
         self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
         self.start_button.setText(_translate("DetailsScenario", "Gesamtlauf", None))
-        self.special_button.setText(_translate("DetailsScenario", "Sonderauswertung", None))
+        self.specialRunButton.setText(_translate("DetailsScenario", "Sonderauswertung", None))
 

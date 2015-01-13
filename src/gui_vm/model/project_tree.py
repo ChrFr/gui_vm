@@ -425,10 +425,12 @@ class Scenario(TreeNode):
         if not results_node:
             results_node = TreeNode(self.OUTPUT_NODES)
             self.add_child(results_node)
-        res = OutputNode(name='Gesamtlauf', parent=results_node)
-        results_node.add_child(res)
-        #res.full_source = filename
-        return res
+        complete_run = results_node.get_child('Gesamtlauf')
+        if not complete_run:
+            complete_run = OutputNode(name='Gesamtlauf', parent=results_node)
+            results_node.add_child(complete_run)
+        #complete_run.full_source = filename
+        return complete_run
 
     def validate(self):
         resource_nodes = self.get_inputs()

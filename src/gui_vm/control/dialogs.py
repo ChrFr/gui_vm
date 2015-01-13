@@ -2,6 +2,7 @@
 from gui_vm.view.progress_ui import Ui_ProgressDialog
 from gui_vm.view.new_project_ui import Ui_NewProject
 from gui_vm.view.new_scenario_ui import Ui_NewScenario
+from gui_vm.view.special_run_ui import Ui_SpecialRun
 from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy, get_free_space
 from PyQt4 import QtGui, QtCore
@@ -279,6 +280,38 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             else:
                 return (project_name, project_folder, False)
 
+class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
+    '''
+    open a dialog to define the parameters for a special run
+    '''
+
+    def __init__(self, scenario_node, parent=None):
+        super(SpecialRunDialog, self).__init__(parent=parent)
+        self.setupUi(self)
+        self.cancel_button.clicked.connect(self.close)
+        
+        def create_checkbox_layout(names):
+            widget = QtGui.QWidget()
+            layout = QtGui.QVBoxLayout()
+            checks = []
+            for name in names:
+                checkbox = QtGui.QCheckBox(name)
+                layout.addWidget(checkbox)
+                checks.append(checkbox)
+            layout.addSpacerItem(QtGui.QSpacerItem(20,40, 
+                    QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding))
+            widget.setLayout(layout)
+            return widget, checks
+        
+        activity_names = scenario_node.meta['Aktivitaeten']
+        activity_widget, activity_checks = create_checkbox_layout(activity_names)
+        self.scroll_activities.setWidget(activity_widget)
+        
+        persons_names = scenario_node.meta['Personengruppen']
+        persons_widget, persons_checks = create_checkbox_layout(persons_names)
+        self.scroll_persons.setWidget(persons_widget)
+        #self.scroll_activities.set
+        self.show()
 
 class NewScenarioDialog(QtGui.QDialog, Ui_NewScenario):
     '''

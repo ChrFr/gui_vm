@@ -2,7 +2,7 @@
 from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
-from gui_vm.control.dialogs import CopyFilesDialog
+from gui_vm.control.dialogs import CopyFilesDialog, SpecialRunDialog
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
 from functools import partial
@@ -44,7 +44,9 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
         self.start_button.clicked.connect(
-            lambda: project_control.run_scenario(scenario_node))
+            lambda: project_control.run_scenario(scenario_node))        
+        self.special_button.clicked.connect(
+            lambda: SpecialRunDialog(scenario_node, parent=self))
         label = QtGui.QLabel('\n\nKenngroessen:\n')
         self.formLayout.addRow(label)
         for meta in scenario_node.meta:
