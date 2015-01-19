@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import (QtCore, QtGui)
-from details import (ScenarioDetails, ProjectDetails, ResourceDetails)
+from details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetails)
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
-                                       InputNode, XMLParser)
+                                       InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
                                  NewScenarioDialog)
 from gui_vm.config.config import Config
@@ -231,7 +231,7 @@ class VMProjectControl(ProjectTreeControl):
                 InputNode: [self.edit_resource, 'Ressource editieren']
             },
             'execute': {
-                Scenario: [self.run_scenario, 'Szenario starten']
+                Scenario: [self.run_complete, 'Szenario starten']
             },
             'switch_lock': {
                 Scenario: [self._switch_lock, 'Szenario sperren'],
@@ -264,7 +264,9 @@ class VMProjectControl(ProjectTreeControl):
         elif isinstance(node, Scenario):
             self.details = ScenarioDetails(node, self)
         elif isinstance(node, InputNode):
-            self.details = ResourceDetails(node, self)
+            self.details = InputDetails(node, self)
+        elif isinstance(node, OutputNode):
+            self.details = OutputDetails(node)
         #track changes made in details
         if self.details:
             self.details.value_changed.connect(self.project_changed)
@@ -392,15 +394,15 @@ class VMProjectControl(ProjectTreeControl):
         resource_node.update()
         self.project_changed.emit()
 
-    def run_scenario(self, scenario_node=None):
+    def run_complete(self, scenario_node=None):
         if not scenario_node:
             scenario_node = self.selected_item
-        dialog = ExecDialog(scenario_node, parent=self.view)
+        dialog = ExecDialog(scenario_node, 'Gesamtlauf', parent=self.view)
 
     def run(self, scenario_name):
         scenario_node = self.project.get_child(scenario_name)
         if scenario_node:
-            self.run_scenario(scenario_node)
+            self.run_complete(scenario_node)
         else:
             QtGui.QMessageBox.about(
                 self, 'Szenario {} nicht gefunden!'.format(scenario_name))

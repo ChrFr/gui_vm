@@ -5,6 +5,7 @@ from collections import OrderedDict
 import subprocess
 import os
 import sys
+import numpy as np
 from gui_vm.config.config import Config
 
 config = Config()
@@ -25,10 +26,11 @@ class SpecificModel(TrafficModel):
     #names of the fields that can be displayed outside the model
     #can be adressed in the csv as fields of the table
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
+                             ('area_types', 'Gebietstypen'),
                              ('n_time_series', 'Anzahl Zeitscheiben'),
-                             ('n_activity_pairs', 'Aktivitaetenpaare'),
-                             ('activity_names', 'Aktivitaeten'),
-                             ('activity_codes', 'Aktivitaetencodes'),
+                             ('n_activity_pairs', 'Aktivitätenpaare'),
+                             ('activity_names', 'Aktivitäten'),
+                             ('activity_codes', 'Aktivitätencodes'),
                              ('group_dest_mode', 'Personengruppen')])
 
     def __init__(self, path=None):
@@ -50,6 +52,7 @@ class SpecificModel(TrafficModel):
         self.activity_codes = None
         self.activity_names = None
         self.group_dest_mode = None
+        self.area_types = None
 
         self.read_resource_config()
 
@@ -64,6 +67,14 @@ class SpecificModel(TrafficModel):
         name_column = activities.get_child('name')
         name_column.bind('content',
                          lambda value: self.set('activity_names', value))
+        #observe area_types
+        zones = self.resources['Zonen'].get_child('/zones/zones')
+        area_column = zones.get_child('area_type')
+        def area_unique(value):
+            if value:
+                self.set('area_types', np.unique(value)) 
+        area_column.bind('content',
+                         lambda value: area_unique(value))
 
         groups = self.resources['Params'].get_child(
             '/groups/groups_dest_mode')

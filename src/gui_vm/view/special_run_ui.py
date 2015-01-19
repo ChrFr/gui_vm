@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'special_run.ui'
 #
-# Created: Tue Jan 13 17:50:31 2015
+# Created: Mon Jan 19 13:50:34 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -42,6 +42,19 @@ class Ui_SpecialRun(object):
         self.gridLayout.addLayout(self.horizontalLayout, 1, 0, 1, 1)
         self.tabWidget = QtGui.QTabWidget(SpecialRun)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
+        self.area_types = QtGui.QWidget()
+        self.area_types.setObjectName(_fromUtf8("area_types"))
+        self.gridLayout_2 = QtGui.QGridLayout(self.area_types)
+        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        self.scroll_area_types = QtGui.QScrollArea(self.area_types)
+        self.scroll_area_types.setWidgetResizable(True)
+        self.scroll_area_types.setObjectName(_fromUtf8("scroll_area_types"))
+        self.scrollAreaWidgetContents_3 = QtGui.QWidget()
+        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 330, 256))
+        self.scrollAreaWidgetContents_3.setObjectName(_fromUtf8("scrollAreaWidgetContents_3"))
+        self.scroll_area_types.setWidget(self.scrollAreaWidgetContents_3)
+        self.gridLayout_2.addWidget(self.scroll_area_types, 0, 0, 1, 1)
+        self.tabWidget.addTab(self.area_types, _fromUtf8(""))
         self.activities = QtGui.QWidget()
         self.activities.setObjectName(_fromUtf8("activities"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.activities)
@@ -78,6 +91,7 @@ class Ui_SpecialRun(object):
         SpecialRun.setWindowTitle(_translate("SpecialRun", "Sonderauswertung", None))
         self.start_button.setText(_translate("SpecialRun", "Starten", None))
         self.cancel_button.setText(_translate("SpecialRun", "Abbrechen", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.area_types), _translate("SpecialRun", "Gebietstypen", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.activities), _translate("SpecialRun", "Aktivitäten", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.persons), _translate("SpecialRun", "Personengruppen", None))
 

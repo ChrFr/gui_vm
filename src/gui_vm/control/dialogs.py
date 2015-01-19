@@ -148,9 +148,10 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
 
 class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
-    def __init__(self, scenario, parent=None):
+    def __init__(self, scenario, run_name, parent=None):
         super(ExecDialog, self).__init__(parent=parent)
         self.parent = parent
+        self.run_name = run_name
         self.scenario = scenario
         self.setupUi(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -191,7 +192,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
         if doStart:
             # run the process
-            self.scenario.run(self.process,
+            self.scenario.run(self.process, self.run_name,
                               callback=self.show_status)
 
     def running(self):
@@ -282,7 +283,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
 
 class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
     '''
-    open a dialog to define the parameters for a special run
+    open a dialog to define the parameters for a special run (Maxem specific!!!!)
     '''
 
     def __init__(self, scenario_node, parent=None):
@@ -295,7 +296,7 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
             layout = QtGui.QVBoxLayout()
             checks = []
             for name in names:
-                checkbox = QtGui.QCheckBox(name)
+                checkbox = QtGui.QCheckBox(str(name))
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
             layout.addSpacerItem(QtGui.QSpacerItem(20,40, 
@@ -303,7 +304,11 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
             widget.setLayout(layout)
             return widget, checks
         
-        activity_names = scenario_node.meta['Aktivitaeten']
+        area_types = scenario_node.meta['Gebietstypen']
+        area_widget, area_checks = create_checkbox_layout(area_types)
+        self.scroll_area_types.setWidget(area_widget)        
+        
+        activity_names = scenario_node.meta['Aktivitäten']
         activity_widget, activity_checks = create_checkbox_layout(activity_names)
         self.scroll_activities.setWidget(activity_widget)
         

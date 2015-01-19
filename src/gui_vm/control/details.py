@@ -44,20 +44,20 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
         self.start_button.clicked.connect(
-            lambda: project_control.run_scenario(scenario_node))        
+            lambda: project_control.run_complete(scenario_node))        
         self.special_button.clicked.connect(
             lambda: SpecialRunDialog(scenario_node, parent=self))
-        label = QtGui.QLabel('\n\nKenngroessen:\n')
+        label = QtGui.QLabel(_fromUtf8('\n\nKenngrössen:\n'))
         self.formLayout.addRow(label)
         for meta in scenario_node.meta:
-            label = QtGui.QLabel(meta)
+            label = QtGui.QLabel(_fromUtf8(meta))
             txt = scenario_node.meta[meta]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
-                edit = QtGui.QTextEdit(txt)
+                edit = QtGui.QTextEdit(_fromUtf8(txt))
                 edit.setMinimumHeight(100)
             else:
-                edit = QtGui.QLineEdit(str(scenario_node.meta[meta]))
+                edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
             edit.setReadOnly(True)
             self.formLayout.addRow(label, edit)
 
@@ -132,7 +132,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
             self.folder_edit.setText(folder)
 
 
-class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
+class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''
     display the details of a resource node
     input to change the source of the resource
@@ -149,7 +149,7 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
     value_changed = QtCore.pyqtSignal()
 
     def __init__(self, resource_node, project_control):
-        super(ResourceDetails, self).__init__()
+        super(InputDetails, self).__init__()
         self.setupUi(self)
         self.project_control = project_control
         self.setTitle(resource_node.name)
@@ -230,8 +230,9 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.resource_tree.clear()
         header = QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
         self.resource_tree.setHeaderItem(header)
-        attr = self.resource_node.resource.status
-        build_tree(attr)
+        attr = self.resource_node.status
+        if attr:
+            build_tree(attr)
         self.resource_tree.resizeColumnToContents(0)
 
     def browse_files(self):
@@ -275,5 +276,54 @@ class ResourceDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.resource_node.validate()
         self.show_attributes()
 
-    def __del__(self):
-        pass
+
+class OutputDetails(QtGui.QGroupBox):
+    '''
+    display the details of a resource node
+    input to change the source of the resource
+
+    Parameters
+    ----------
+    node: ResourceNode,
+          node, that wraps a resource and contains the file path of the
+          resource
+    layout: QVBoxLayout,
+            the elements showing the details are added as children of this
+            layout
+    '''
+    value_changed = QtCore.pyqtSignal()
+
+    def __init__(self, output_node):  
+        super(OutputDetails, self).__init__()
+        self.setObjectName(_fromUtf8("DetailsScenario"))
+        self.resize(450, 309)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        self.setSizePolicy(sizePolicy)
+        self.setMinimumSize(QtCore.QSize(450, 0))
+        self.formLayoutWidget = QtGui.QWidget(self)
+        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 80, 391, 221))
+        self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
+        self.formLayout = QtGui.QFormLayout(self.formLayoutWidget)
+        self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
+        self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout.setMargin(0)
+        self.formLayout.setObjectName(_fromUtf8("formLayout"))    
+        label = QtGui.QLabel('test')
+        edit = QtGui.QLineEdit('bla')
+        edit.setMinimumHeight(100)
+        edit.setReadOnly(True)
+        self.formLayout.addRow(label, edit)
+        #for meta in scenario_node.meta:
+            #label = QtGui.QLabel(_fromUtf8(meta))
+            #txt = scenario_node.meta[meta]
+            #if isinstance(txt, list):
+                #txt = '<br>'.join(txt)
+                #edit = QtGui.QTextEdit(_fromUtf8(txt))
+                #edit.setMinimumHeight(100)
+            #else:
+                #edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
+            #edit.setReadOnly(True)
+            #self.formLayout.addRow(label, edit)

@@ -50,6 +50,30 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
+     <widget class="QWidget" name="area_types">
+      <attribute name="title">
+       <string>Gebietstypen</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QScrollArea" name="scroll_area_types">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents_3">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>330</width>
+            <height>256</height>
+           </rect>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="activities">
       <attribute name="title">
        <string>Aktivitäten</string>
