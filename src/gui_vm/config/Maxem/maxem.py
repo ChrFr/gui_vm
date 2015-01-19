@@ -117,6 +117,12 @@ class SpecificModel(TrafficModel):
 
     def update(self, path):
         super(SpecificModel, self).update(path)
+            
+    def evaluate (self, output_node):
+        #a = output_node.get('modes/bicycle')
+        meta = OrderedDict()
+        #meta['Gesamtsumme der Wege'] = 'Hallo'
+        return meta
 
     def run(self, scenario_name, process, resources, output_path=None,
             callback=None, modal_split=False, correction=False):

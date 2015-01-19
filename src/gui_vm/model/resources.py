@@ -46,6 +46,8 @@ class Resource(Observable):
         self.status_flags = {k: (NOT_CHECKED, DEFAULT_MESSAGES[NOT_CHECKED])
                              for k, v in self.monitored.items()}
 
+    def get(self, path, content_path):
+        return None
 
     def add_child(self, child):
         '''
@@ -157,6 +159,9 @@ class Resource(Observable):
             return True
         else:
             return False
+        
+    def read(self, path):
+        return None, False
 
     def validate(self, path):
         '''
@@ -285,6 +290,18 @@ class H5Resource(ResourceFile):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
             filename=filename)
+        
+    def read(self, path):
+        h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
+        successful = h5.read()
+        return h5, successful    
+    
+    def get(self, path, content_path):
+        h5, success = self.read(path)
+        if not success:
+            return None    
+        for child in self.children:
+            child.update(path, h5_in=h5_in)        
 
     def update(self, path):
         '''
@@ -296,24 +313,23 @@ class H5Resource(ResourceFile):
                       where the file is in (without subfolder)
         '''
         super(H5Resource, self).update(path)
-        h5 = None
+        h5_in = None
         #reset contents
         self._content = {}
         if self.status_flags['filename'] == FOUND:
-            h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
-            successful = h5.read()
-            if not successful:
+            h5_in, success = self.read(path)
+            if not success:
                 #set a flag for file not found
                 self.status_flags['filename'] = (NOT_FOUND,
                                                  'keine gueltige HDF5 Datei')
-        for child in self.children:
-            child.update(h5)
+            for child in self.children:
+                child.update(path, h5_in=h5_in)
         #close file
-        del(h5)
+        del(h5_in)
         self.set_overall_status()
 
 
-class H5Node(Resource):
+class H5Node(H5Resource):
     '''
     Resource holding information about a node inside HDF5 resource file
 
@@ -334,8 +350,18 @@ class H5Node(Resource):
 
     def __repr__(self):
         return "H5Node {} - {}".format(self.name, self.table_path)
+        
+    def read(self, path, h5_in=None):
+        if not h5_in:
+            h5_in, success = super(H5Node, self).read(path)
+            if not success:
+                return None
+        table = h5_in.get_table(self.table_path)
+        if not table:
+            return None       
+        return table    
 
-    def update(self, h5_in):
+    def update(self, path, h5_in = None):
         '''
         read and set the attributes of this node
 
@@ -345,9 +371,7 @@ class H5Node(Resource):
                       where the file is in (without subfolder)
         '''
         self.reset()
-        table = None
-        if h5_in is not None:
-            table = h5_in.get_table(self.table_path)
+        table = self.read(path, h5_in=h5_in)
         if not table:
             self.status_flags['table_path'] = NOT_FOUND
             self.shape = None
@@ -397,7 +421,7 @@ class H5Table(H5Node):
     def __repr__(self):
         return "H5Table {} - {}".format(self.name, self.table_path)
 
-    def update(self, h5_in):
+    def update(self, path, h5_in = None):
         '''
         set the table to the given h5
 
@@ -415,7 +439,7 @@ class H5Table(H5Node):
                 child.reset()
                 tmp.append(child)
         self.children = tmp
-        table = super(H5Table, self).update(h5_in)
+        table = super(H5Table, self).update(path, h5_in=h5_in)
         if table is None:
             return
         #add extra columns inside the given h5 (not required ones)
@@ -439,7 +463,7 @@ class H5Table(H5Node):
         return column_names
 
 
-class H5TableColumn(Resource):
+class H5TableColumn(H5Resource):
     '''
     Resource holding information about a table inside a HDF5 resource file
 
@@ -563,11 +587,11 @@ class H5Array(H5Node):
     def __repr__(self):
         return "H5Array {} - {}".format(self.name, self.table_path)
 
-    def update(self, h5_in):
+    def update(self, path, h5_in=None):
         '''
         add the minima/maxima
         '''
-        table = super(H5Array, self).update(h5_in)
+        table = super(H5Array, self).update(path, h5_in=h5_in)
         if table is not None:
             self.max_value = table.max()
             self.min_value = table.min()

@@ -266,7 +266,8 @@ class VMProjectControl(ProjectTreeControl):
         elif isinstance(node, InputNode):
             self.details = InputDetails(node, self)
         elif isinstance(node, OutputNode):
-            self.details = OutputDetails(node)
+            model = node.get_parent_by_class(Scenario).model
+            self.details = OutputDetails(node, model.evaluate)
         #track changes made in details
         if self.details:
             self.details.value_changed.connect(self.project_changed)

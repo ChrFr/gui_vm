@@ -5,7 +5,7 @@ import imp
 from lxml import etree
 from shutil import copytree
 from gui_vm.config.config import Config
-from gui_vm.model.resources import ResourceFile
+from gui_vm.model.resources import ResourceFile, H5Resource
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.observable import Observable
 from gui_vm.model.backend import hard_copy
@@ -677,6 +677,9 @@ class ResourceNode(TreeNode):
     @property
     def status(self):
         return self.resource.status
+    
+    def get(self, content_path):
+        self.resource.get(self.full_source, content_path)
 
     def add_to_xml(self, parent):
         '''
@@ -864,8 +867,8 @@ class OutputNode(ResourceNode):
     def __init__(self, name=None, filename=None, parent=None, subfolder=None):
         super(OutputNode, self).__init__(name, parent=parent)
         self.subfolder = Scenario.OUTPUT_NODES
-        self.resource = ResourceFile(name, filename=filename, 
-                                     subfolder=name)
+        self.resource = H5Resource(name, filename=filename, 
+                                   subfolder=name)
         
     @property
     def scenario_path(self):

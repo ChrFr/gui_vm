@@ -293,7 +293,7 @@ class OutputDetails(QtGui.QGroupBox):
     '''
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, output_node):  
+    def __init__(self, output_node, func_evaluate):  
         super(OutputDetails, self).__init__()
         self.setObjectName(_fromUtf8("DetailsScenario"))
         self.resize(450, 309)
@@ -313,17 +313,17 @@ class OutputDetails(QtGui.QGroupBox):
         self.formLayout.setObjectName(_fromUtf8("formLayout"))    
         label = QtGui.QLabel('test')
         edit = QtGui.QLineEdit('bla')
-        edit.setMinimumHeight(100)
         edit.setReadOnly(True)
         self.formLayout.addRow(label, edit)
-        #for meta in scenario_node.meta:
-            #label = QtGui.QLabel(_fromUtf8(meta))
-            #txt = scenario_node.meta[meta]
-            #if isinstance(txt, list):
-                #txt = '<br>'.join(txt)
-                #edit = QtGui.QTextEdit(_fromUtf8(txt))
-                #edit.setMinimumHeight(100)
-            #else:
-                #edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
-            #edit.setReadOnly(True)
-            #self.formLayout.addRow(label, edit)
+        metas = func_evaluate(output_node)
+        for meta in metas:
+            label = QtGui.QLabel(_fromUtf8(meta))
+            txt = metas[meta]
+            if isinstance(txt, list):
+                txt = '<br>'.join(txt)
+                edit = QtGui.QTextEdit(_fromUtf8(txt))
+                edit.setMinimumHeight(100)
+            else:
+                edit = QtGui.QLineEdit(_fromUtf8(str(metas[meta])))
+            edit.setReadOnly(True)
+            self.formLayout.addRow(label, edit)
