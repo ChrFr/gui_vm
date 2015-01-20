@@ -379,8 +379,8 @@ class VMProjectControl(ProjectTreeControl):
                 _fromUtf8("Die Ressource ist gesperrt und kann nicht " +
                           "gelöscht werden."))
             return
-        full_source = resource_node.full_source
-        if full_source and os.path.exists(full_source):
+        file_absolute = resource_node.file_absolute
+        if file_absolute and os.path.exists(file_absolute):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"),
                 _fromUtf8("Soll die Datei {} \nin {}\n".format(
@@ -390,8 +390,8 @@ class VMProjectControl(ProjectTreeControl):
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             do_delete = reply == QtGui.QMessageBox.Yes
             if do_delete:
-                os.remove(resource_node.full_source)
-        resource_node.set_source(None)
+                os.remove(resource_node.file_absolute)
+        resource_node.file_path = None
         resource_node.update()
         self.project_changed.emit()
 
@@ -453,7 +453,7 @@ class VMProjectControl(ProjectTreeControl):
             for res_node in scenario_node.get_inputs():
                 new_res_node = new_scenario_node.get_input(res_node.name)
                 if new_res_node:
-                    filenames.append(res_node.full_source)
+                    filenames.append(res_node.file_absolute)
                     destinations.append(new_res_node.full_path)
 
             #bad workaround (as it has to know the parents qtreeview)
@@ -472,7 +472,7 @@ class VMProjectControl(ProjectTreeControl):
         hdf5_viewer = config.settings['environment']['hdf5_viewer']
         if hdf5_viewer:
             subprocess.Popen('"{0}" "{1}"'.format(hdf5_viewer,
-                                                  node.full_source))
+                                                  node.file_absolute))
 
     def add_scenario(self):
         project = self.project
@@ -520,7 +520,7 @@ class VMProjectControl(ProjectTreeControl):
             destinations = []
             for res_node in scenario_node.get_inputs():
                 filenames.append(res_node.original_source)
-                destinations.append(res_node.full_path)
+                destinations.append(os.path.split(res_node.file_absolute)[0])
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal

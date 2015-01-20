@@ -72,7 +72,7 @@ class SpecificModel(TrafficModel):
         area_column = zones.get_child('area_type')
         def area_unique(value):
             if value:
-                self.set('area_types', np.unique(value)) 
+                self.set('area_types', np.unique(value))
         area_column.bind('content',
                          lambda value: area_unique(value))
 
@@ -117,9 +117,9 @@ class SpecificModel(TrafficModel):
 
     def update(self, path):
         super(SpecificModel, self).update(path)
-            
+
     def evaluate (self, output_node):
-        #a = output_node.get('modes/bicycle')
+        a = output_node.get('/modes/bicycle')
         meta = OrderedDict()
         #meta['Gesamtsumme der Wege'] = 'Hallo'
         return meta
@@ -155,10 +155,10 @@ class SpecificModel(TrafficModel):
 
         param_cmd = ''
         for res in resources:
-            src = res.full_source
+            src = res.file_absolute
             if len(src) > 0 and res.name in params:
                 param_cmd += ' {0} "{1}"'.format(params[res.name],
-                                                 res.full_source)
+                                                 res.file_absolute)
 
         if modal_split:
             cmd_cal = '-c'

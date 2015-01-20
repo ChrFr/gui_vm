@@ -44,7 +44,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
         self.start_button.clicked.connect(
-            lambda: project_control.run_complete(scenario_node))        
+            lambda: project_control.run_complete(scenario_node))
         self.special_button.clicked.connect(
             lambda: SpecialRunDialog(scenario_node, parent=self))
         label = QtGui.QLabel(_fromUtf8('\n\nKenngrössen:\n'))
@@ -164,7 +164,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.update()
 
     def update(self):
-        self.project_copy.setText(str(self.resource_node.full_source))
+        self.project_copy.setText(str(self.resource_node.file_absolute))
         self.file_edit.setText(str(self.resource_node.original_source))
         self.show_attributes()
 
@@ -239,7 +239,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         open a file browser to change the source of the resource file
         '''
-        current = self.resource_node.full_source
+        current = self.resource_node.file_absolute
         if not current:
             current = config.settings['trafficmodels'][
                 self.resource_node.model.name]['default_folder'] + '/*.h5'
@@ -257,8 +257,8 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         change the resource, copy the file
         '''
         src_filename = str(self.file_edit.text())
-        self.resource_node.set_source(src_filename)
-        dest_filename = self.resource_node.full_source
+        self.resource_node.file_relative = src_filename
+        dest_filename = self.resource_node.file_absolute
         self.project_copy.setText(dest_filename)
         #only try to copy file, if not the same file as before is selected
         if os.path.normpath(src_filename) != os.path.normpath(dest_filename):
@@ -293,7 +293,7 @@ class OutputDetails(QtGui.QGroupBox):
     '''
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, output_node, func_evaluate):  
+    def __init__(self, output_node, func_evaluate):
         super(OutputDetails, self).__init__()
         self.setObjectName(_fromUtf8("DetailsScenario"))
         self.resize(450, 309)
@@ -310,7 +310,7 @@ class OutputDetails(QtGui.QGroupBox):
         self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setMargin(0)
-        self.formLayout.setObjectName(_fromUtf8("formLayout"))    
+        self.formLayout.setObjectName(_fromUtf8("formLayout"))
         label = QtGui.QLabel('test')
         edit = QtGui.QLineEdit('bla')
         edit.setReadOnly(True)

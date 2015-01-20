@@ -159,7 +159,7 @@ class Resource(Observable):
             return True
         else:
             return False
-        
+
     def read(self, path):
         return None, False
 
@@ -290,18 +290,17 @@ class H5Resource(ResourceFile):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
             filename=filename)
-        
+
     def read(self, path):
         h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
         successful = h5.read()
-        return h5, successful    
-    
+        return h5, successful
+
     def get(self, path, content_path):
         h5, success = self.read(path)
         if not success:
-            return None    
-        for child in self.children:
-            child.update(path, h5_in=h5_in)        
+            return None
+        return h5.get_table(content_path)
 
     def update(self, path):
         '''
@@ -350,7 +349,7 @@ class H5Node(H5Resource):
 
     def __repr__(self):
         return "H5Node {} - {}".format(self.name, self.table_path)
-        
+
     def read(self, path, h5_in=None):
         if not h5_in:
             h5_in, success = super(H5Node, self).read(path)
@@ -358,8 +357,8 @@ class H5Node(H5Resource):
                 return None
         table = h5_in.get_table(self.table_path)
         if not table:
-            return None       
-        return table    
+            return None
+        return table
 
     def update(self, path, h5_in = None):
         '''

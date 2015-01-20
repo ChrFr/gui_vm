@@ -431,7 +431,7 @@ class Scenario(TreeNode):
         if not results_run:
             results_run = OutputNode(name=run_name, parent=results_node)
             results_node.add_child(results_run)
-        results_run.set_source(os.path.join(run_name, filename))
+        results_run.file_relative = os.path.join(run_name, filename)
         return results_run
 
     def validate(self):
@@ -472,8 +472,8 @@ class Scenario(TreeNode):
         for res_node in default_model.get_inputs():
             res_node.original_source = os.path.join(self.default_folder,
                                                     default_model.name,
-                                                    self.INPUT_NODES,
-                                                    res_node.source)
+                                                    res_node.subfolder,
+                                                    res_node.file_relative)
         #swap this node with the default one
         parent = self.parent
         parent.replace_child(self, default_model)
@@ -671,15 +671,15 @@ class ResourceNode(TreeNode):
                  parent=None):
         self.resource_name = name
         super(ResourceNode, self).__init__(name, parent=parent)
-        self.original_source = self.full_source
+        self.original_source = self.file_absolute
         self.subfolder = ''
 
     @property
     def status(self):
         return self.resource.status
-    
+
     def get(self, content_path):
-        self.resource.get(self.full_source, content_path)
+        return self.resource.get(self.path, content_path)
 
     def add_to_xml(self, parent):
         '''
@@ -694,9 +694,9 @@ class ResourceNode(TreeNode):
         xml_element = super(ResourceNode, self).add_to_xml(parent)
         etree.SubElement(
             xml_element, 'Quelle').text = self.original_source
-        source = self.source
+        file_relative = self.file_relative
         etree.SubElement(
-            xml_element, 'Projektdatei').text = self.source
+            xml_element, 'Projektdatei').text = self.file_relative
 
     def from_xml(self, element):
         '''
@@ -714,15 +714,12 @@ class ResourceNode(TreeNode):
         self.resource_name = self.name
         self.original_source = element.find('Quelle').text
         source = element.find('Projektdatei').text
-        self.source = source
+        self.file_relative = source
 
     @property
     def model(self):
         return self.get_parent_by_class(Scenario).model
 
-    @property
-    def scenario_path(self):
-        return self.get_parent_by_class(Scenario).path
 
     @property
     def note(self):
@@ -740,79 +737,59 @@ class ResourceNode(TreeNode):
         return note
 
     @property
-    def source(self):
+    def file_relative(self):
         '''
-        Return
-        ------
-        path of the resource file within the ressources folder
+        returns relative path to resource
         '''
         if (not hasattr(self, 'resource') or
             self.resource is None or
             self.resource.filename is None or
             self.resource.filename == ''):
             return None
-        source = os.path.join(self.resource.subfolder,
-                              self.resource.filename)
-        return source
+        file_path = os.path.join(self.resource.subfolder,
+                                 self.resource.filename)
+        return file_path
 
-    @property
-    def full_path(self):
-        return os.path.join(self.resources_path, self.resource.subfolder)
-
-    @source.setter
-    def source(self, subpath):
-        if subpath is not None:
-            subfolder, filename = os.path.split(subpath.replace('\\','/'))
+    @file_relative.setter
+    def file_relative(self, file_path):
+        '''
+        sets the relative path of the resource to file_path
+        '''
+        if file_path is not None:
+            subfolder, filename = os.path.split(file_path.replace('\\','/'))
         else:
             filename = None
             subfolder = None
-        #only set filename, because subfolder will be determined
-        #by the category
         self.resource.subfolder = subfolder
         self.resource.set_source(filename)
 
     @property
-    def full_source(self):
+    def file_absolute(self):
         '''
         Return
         ------
         full path of the resource file
         '''
-        #join path with simrun path to get full source
-        source = self.source
-        if self.resources_path is None:
+        if self.path is None or self.file_relative is None:
             return None
-        if self.source is not None:
-            source = os.path.join(
-                self.resources_path, self.source)
-        return source
+        file_absolute = os.path.join(self.path, self.file_relative)
+        return file_absolute
 
     @property
-    def resources_path(self):
+    def path(self):
         '''
         path to the resources folder
         '''
-        scen_path = self.scenario_path
+        scen_path = self.get_parent_by_class(Scenario).path
         if not scen_path:
             return None
         return os.path.join(scen_path, self.subfolder)
 
-    def set_source(self, filename):
-        '''
-        set the path and filename of the resource
-
-        Parameters
-        ----------
-        filename: String, path + name of file
-        '''
-        self.original_source = filename
-        self.source = filename
-
     def update(self):
-        self.resource.update(self.resources_path)
+        self.resource.update(self.path)
 
     def validate(self):
-        self.resource.validate(self.resources_path)
+        self.resource.validate(self.path)
         self.is_checked = self.resource.is_checked
         self.is_valid = self.resource.is_valid
 
@@ -833,7 +810,7 @@ class ResourceNode(TreeNode):
         self.original_source = os.path.join(scenario.default_folder,
                                             default_model.name,
                                             Scenario.INPUT_NODES,
-                                            self.source)
+                                            self.file_relative)
 
 
 class InputNode(ResourceNode):
@@ -867,16 +844,16 @@ class OutputNode(ResourceNode):
     def __init__(self, name=None, filename=None, parent=None, subfolder=None):
         super(OutputNode, self).__init__(name, parent=parent)
         self.subfolder = Scenario.OUTPUT_NODES
-        self.resource = H5Resource(name, filename=filename, 
+        self.resource = H5Resource(name, filename=filename,
                                    subfolder=name)
-        
+
     @property
     def scenario_path(self):
         return self.get_parent_by_class(Scenario).path
-    
+
     @property
     def status(self):
-        return None    
+        return None
 
 class XMLParser(object):
     '''
