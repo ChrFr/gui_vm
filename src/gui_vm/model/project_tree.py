@@ -361,6 +361,7 @@ class Scenario(TreeNode):
     '''
     INPUT_NODES = 'Eingaben'
     OUTPUT_NODES = 'Ausgaben'
+    PRIMARY_RUN = 'Gesamtlauf'
 
     def __init__(self, model=None, name=None, parent=None):
         super(Scenario, self).__init__(name, parent=parent)
@@ -387,17 +388,6 @@ class Scenario(TreeNode):
             self.name)
 
     @property
-    def output_path(self):
-        return os.path.join(
-            self.path, self.OUTPUT_NODES)
-
-    @property
-    def complete_demand_file(self):
-        full_out_path = os.path.join(self.output_path, 'Gesamtlauf')
-        demand_file = os.path.join(full_out_path, self.name + '.h5')
-        return demand_file
-
-    @property
     def note(self):
         '''
         short textual info to display in ui tree
@@ -409,20 +399,39 @@ class Scenario(TreeNode):
         note = self.model.name
         return note
 
-    def run(self, process, run_name, callback=None):
-        full_out_path = os.path.join(self.output_path, run_name)
-        demand_file = os.path.join(self.name + '.h5')
-        #full_out_path = os.path.split(self.complete_demand_file)[0]
-        #self.model.run(self.name,
-                       #process,
-                       #self.get_inputs(),
-                       #output_path=full_out_path,
-                       #callback=callback)
-        result = self.add_results(run_name, demand_file)
+    @property
+    def primary_run(self):
+        pr = self.find_all(self.PRIMARY_RUN)
+        if not pr:
+            return None
+        return pr[0]
+
+    def run(self, process, run_name, options=None, callback=None):
+        #search for existing results or create new one
+        results_run = self.add_results(run_name)
+
+        demand_file = results_run.file_absolute
+        # special runs use the demand file of the complete run
+        # so if it is not existing in special folder, you have to copy it first
+        if results_run != self.primary_run and not os.path.exists(demand_file):
+            prime_demand = self.primary_run.file_absolute
+            if not os.path.exists(prime_demand):
+                #ToDo: raise error or check in dialog
+                return
+            hard_copy(prime_demand, demand_file)
+        self.model.run(self.name,
+                       process,
+                       self.get_input_files(),
+                       output_file=demand_file,
+                       options=options,
+                       #on_success=lambda:self.add_results(run_name),
+                       callback=callback)
+
         #hard_copy(results_file, result.full_path)
         #self.get_parent_by_class(Project).emit()
 
-    def add_results(self, run_name, filename):
+    def add_results(self, run_name):
+        filename = '{} - {}{}'.format(self.name, run_name, '.h5')
         results_node = self.get_child(self.OUTPUT_NODES)
         if not results_node:
             results_node = TreeNode(self.OUTPUT_NODES)
@@ -432,10 +441,11 @@ class Scenario(TreeNode):
             results_run = OutputNode(name=run_name, parent=results_node)
             results_node.add_child(results_run)
         results_run.file_relative = os.path.join(run_name, filename)
+        self.get_parent_by_class(Project).emit()
         return results_run
 
     def validate(self):
-        resource_nodes = self.get_inputs()
+        resource_nodes = self.get_input_files()
         self.is_valid = True
         for node in resource_nodes:
             node.validate()
@@ -492,15 +502,36 @@ class Scenario(TreeNode):
         found = self.find_all(name)
         res_nodes = []
         for node in found:
-            if isinstance(node, ResourceNode):
+            if isinstance(node, InputNode):
                 res_nodes.append(node)
         if len(res_nodes) > 2:
             raise Exception('Multiple Definition of resource {}'
                             .format(self.name))
         return res_nodes[0]
 
-    def get_inputs(self):
+    def get_output(self, name):
+        '''
+        get a resource node by name
+
+        Parameters
+        ----------
+        name: String, name of the resource
+        '''
+        found = self.find_all(name)
+        res_nodes = []
+        for node in found:
+            if isinstance(node, OutputNode):
+                res_nodes.append(node)
+        if len(res_nodes) > 2:
+            raise Exception('Multiple Definition of resource {}'
+                            .format(self.name))
+        return res_nodes[0]
+
+    def get_input_files(self):
         return self.find_all_by_class(InputNode)
+
+    def get_output_files(self):
+        return self.find_all_by_class(OutputNode)
 
     def set_model(self, name):
         '''
@@ -671,7 +702,7 @@ class ResourceNode(TreeNode):
                  parent=None):
         self.resource_name = name
         super(ResourceNode, self).__init__(name, parent=parent)
-        self.original_source = self.file_absolute
+        self.original_source = ''
         self.subfolder = ''
 
     @property

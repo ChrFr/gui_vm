@@ -384,17 +384,22 @@ class VMProjectControl(ProjectTreeControl):
         if file_absolute and os.path.exists(file_absolute):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"),
-                _fromUtf8("Soll die Datei {} \nin {}\n".format(file_absolute) +
+                _fromUtf8("Soll die Datei {} \n".format(file_absolute) +
                           "ebenfalls entfernt werden?"),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             do_delete = reply == QtGui.QMessageBox.Yes
             if do_delete:
                 os.remove(resource_node.file_absolute)
         resource_node.file_path = None
-        resource_node.update()
+        if remove_node:
+            self._remove_node(resource_node)
+        else:
+            resource_node.update()
         self.project_changed.emit()
 
     def _remove_output(self, resource_node=None):
+        if not resource_node:
+            resource_node = self.selected_item
         self.remove_resource(remove_node=True)
 
     def run_complete(self, scenario_node=None):
@@ -545,7 +550,7 @@ class VMProjectControl(ProjectTreeControl):
         res_node = self.selected_item
         res_node.reset_to_default()
         filename = res_node.original_source
-        destination = res_node.full_path
+        destination = os.path.split(res_node.file_absolute)[0]
         dialog = CopyFilesDialog(filename, destination,
                                  parent=self.view)
         res_node.update()

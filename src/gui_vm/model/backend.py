@@ -41,7 +41,8 @@ def hard_copy(src_filename, dest_filename,
         return (False,
                 'Nicht genug Speicherplatz in {} vorhanden!'.format(dest_dir))
     dest = open(dest_filename, "wb")
-    callback(0)
+    if callback:
+        callback(0)
     cur_block_pos = 0
 
     while True:
@@ -49,7 +50,8 @@ def hard_copy(src_filename, dest_filename,
         cur_block_pos += block_size
         #track progress (in percentage of 100)
         progress = (float(cur_block_pos) / float(src_size) * 100)
-        callback(progress)
+        if callback:
+            callback(progress)
 
         #end of file
         if not cur_block:

@@ -88,7 +88,7 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
         not_enough = False
         # don't know how to get the root drive under linux, splitdrive returns ''
         # ignored by now, only windows checked
-        if drive != '':            
+        if drive != '':
             free = get_free_space(drive)
             not_enough = size >= free
         if not_enough:
@@ -148,11 +148,12 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
 
 class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
-    def __init__(self, scenario, run_name, parent=None):
+    def __init__(self, scenario, run_name, options=None, parent=None):
         super(ExecDialog, self).__init__(parent=parent)
         self.parent = parent
         self.run_name = run_name
         self.scenario = scenario
+        self.options = options
         self.setupUi(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.cancelButton.clicked.connect(self.close)
@@ -172,27 +173,23 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
     def call_cmd(self):
         doStart = True
-        demand_file = self.scenario.complete_demand_file
-        full_out_path = os.path.split(demand_file)[0]
-        if not os.path.exists(full_out_path):
-            os.makedirs(full_out_path)
-
-        # after a successful the demand.h5 is created and is not deleted
+        primary = self.scenario.primary_run
+        # there are already results after a successful run
         # a new run might be unnessecary, if file is present
-        if os.path.exists(os.path.join(demand_file)):
+        if primary and self.run_name == primary.name:
             dialog = QtGui.QMessageBox()
+            msg = 'Das Szenario {} '.format(self.scenario.name) + \
+                'wurde scheinbar bereits einmal komplett berechnet.\n' + \
+                'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?'
             reply = dialog.question(
-                self, _fromUtf8("erneuter Gesamtlauf"),
-                _fromUtf8('Das Szenario {} '.format(self.scenario.name) +
-                          'wurde scheinbar bereits einmal komplett berechnet.\n' +
-                          'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?'),
+                self, _fromUtf8("erneuter Gesamtlauf"), _fromUtf8(msg),
                 QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
             if reply == QtGui.QMessageBox.Cancel:
                 doStart = False
 
         if doStart:
             # run the process
-            self.scenario.run(self.process, self.run_name,
+            self.scenario.run(self.process, self.run_name, options=self.options,
                               callback=self.show_status)
 
     def running(self):
@@ -218,7 +215,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
     def kill(self):
         self.progress_bar.setStyleSheet(ABORTED_STYLE)
         self.process.kill()
-        demand_file = self.scenario.complete_demand_file
+        demand_file = self.scenario.get_output(self.run_name).file_absolute
         # tdmks writes during calculations, when aborted file is useless
         if os.path.exists(demand_file):
             os.remove(demand_file)
@@ -290,7 +287,11 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
         super(SpecialRunDialog, self).__init__(parent=parent)
         self.setupUi(self)
         self.cancel_button.clicked.connect(self.close)
-        
+        self.start_button.clicked.connect(self.name)
+        self.scenario = scenario_node
+        self.options = {}
+        self.parent = parent
+
         def create_checkbox_layout(names):
             widget = QtGui.QWidget()
             layout = QtGui.QVBoxLayout()
@@ -299,24 +300,82 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
                 checkbox = QtGui.QCheckBox(str(name))
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
-            layout.addSpacerItem(QtGui.QSpacerItem(20,40, 
+            layout.addSpacerItem(QtGui.QSpacerItem(20,40,
                     QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding))
             widget.setLayout(layout)
             return widget, checks
-        
-        area_types = scenario_node.meta['Gebietstypen']
+
+        area_types = self.scenario.meta['Gebietstypen']
         area_widget, area_checks = create_checkbox_layout(area_types)
-        self.scroll_area_types.setWidget(area_widget)        
-        
-        activity_names = scenario_node.meta['Aktivitäten']
+        self.options['area_types'] = dict(zip(area_types, area_checks))
+        self.scroll_area_types.setWidget(area_widget)
+
+        activity_names = self.scenario.meta['Aktivitäten']
         activity_widget, activity_checks = create_checkbox_layout(activity_names)
+        self.options['activities'] = dict(zip(activity_names, activity_checks))
         self.scroll_activities.setWidget(activity_widget)
-        
-        persons_names = scenario_node.meta['Personengruppen']
+
+        persons_names = self.scenario.meta['Personengruppen']
         persons_widget, persons_checks = create_checkbox_layout(persons_names)
+        self.options['persons'] = dict(zip(persons_names, persons_checks))
         self.scroll_persons.setWidget(persons_widget)
         #self.scroll_activities.set
         self.show()
+
+    def run(self, run_name):
+        for opt_name, opt in self.options.items():
+            for k, v in opt.items():
+                self.options[opt_name][k] = v.isChecked()
+        self.close()
+        dialog = ExecDialog(self.scenario, run_name,
+                            options=self.options, parent=self.parent)
+
+    def name(self):
+        default = 'Sonderauswertung {}'.format(
+            len(self.scenario.get_output_files()) - 1)
+        run_name, ok = InputDialog.getValues('Name für die Sonderauswertung',
+                                             default)
+        if ok:
+            self.run(run_name)
+
+class InputDialog(QtGui.QDialog):
+    '''
+    open a dialog to set the project name and folder and afterwards create
+    a new project
+    '''
+
+    def __init__(self, title, default):
+        super(InputDialog, self).__init__()
+        self.setWindowTitle(title)
+        self.resize(409, 159)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        self.setSizePolicy(sizePolicy)
+        self.setMinimumSize(QtCore.QSize(409, 159))
+        self.setMaximumSize(QtCore.QSize(409, 159))
+        self.setSizeGripEnabled(False)
+        self.setModal(True)
+        gridLayout = QtGui.QVBoxLayout(self)
+        buttonBox = QtGui.QDialogButtonBox(self)
+        self.edit = QtGui.QLineEdit(self)
+        self.edit.setText(_fromUtf8(default))
+        gridLayout.addWidget(self.edit)
+        buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        gridLayout.addWidget(buttonBox)
+
+        QtCore.QObject.connect(buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
+        QtCore.QObject.connect(buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
+
+    @staticmethod
+    def getValues(title, default):
+        dialog = InputDialog(title, default)
+        ok = dialog.exec_()
+        accepted = ok == QtGui.QDialog.Accepted
+        text = str(dialog.edit.text())
+        return text, accepted
 
 class NewScenarioDialog(QtGui.QDialog, Ui_NewScenario):
     '''

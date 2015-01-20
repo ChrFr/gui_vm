@@ -129,6 +129,9 @@ class SpecificModel(TrafficModel):
         })
         meta = OrderedDict()
         modes_sum = 0
+        if not os.path.exists(output_node.file_absolute):
+            meta['Datei nicht vorhanden!'] = output_node.file_absolute
+            return meta
         for name, mode_table in modes.items():
             table = output_node.get_content(mode_path + '/' + mode_table)
             mode_sum = table.sum()
@@ -140,8 +143,9 @@ class SpecificModel(TrafficModel):
             meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
         return meta
 
-    def run(self, scenario_name, process, resources, output_path=None,
-            callback=None, modal_split=False, correction=False):
+    def run(self, scenario_name, process, resources, output_file=None,
+            options=None, callback=None, modal_split=False, correction=False,
+            pre_process=False, on_success=None, on_error=None):
         '''
         run the traffic model
 
@@ -163,6 +167,10 @@ class SpecificModel(TrafficModel):
             'Fuss und Rad': '--pp_nmt --nmt',
             'Betas': '--par',
         }
+
+        output_path = os.path.split(output_file)[0]
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
 
         python_path = config.settings['environment']['python_path']
         executable = config.settings['trafficmodels'][self.name]['executable']
@@ -186,11 +194,26 @@ class SpecificModel(TrafficModel):
         else:
             cmd_kor=''
 
+        if pre_process:
+            cmd_pre = '--pp_all'
+        else:
+            cmd_pre=''
+
         # create full command
-        full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor])
+        full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor, cmd_pre])
         if output_path:
-            cmd_demand = '-dp "{}"'.format(output_path)
+            cmd_demand = '-demand "{}"'.format(output_file)
             full_cmd = ' '.join([full_cmd, cmd_demand])
+
+        #options
+        area_types = options['area_types']
+        proc_area = []
+        for k, v in area_types.items():
+            if v:
+                proc_area.append(k)
+        if len(proc_area) > 0:
+            area_cmd = '--areatype {}'.format(proc_area[0])
+            full_cmd = ' '.join([full_cmd, area_cmd])
 
         self.already_done = 0.
         self.group = None
@@ -199,24 +222,27 @@ class SpecificModel(TrafficModel):
         self.group_share = 100. / groups_count
         self.group_counter = 0
 
-        def show_progress():
+        def progress():
+            message = str(process.readAllStandardError())
+            l = message.split("INFO->['")
+            if len(l)>1:
+                l2 = l[1].split("'")
+                new_group = l2[0]
+                l3 = l[1].split(',')
+                self.to_do = max(self.to_do, int(l3[1].strip()))
+                self.already_done += self.group_share / self.to_do
+                if self.group != new_group:
+                    self.group = new_group
+                    self.group_counter += self.group_share
+                    self.to_do = 0
             if callback:
-                message = str(process.readAllStandardError())
-                l = message.split("INFO->['")
-                if len(l)>1:
-                    l2 = l[1].split("'")
-                    new_group = l2[0]
-                    l3 = l[1].split(',')
-                    self.to_do = max(self.to_do, int(l3[1].strip()))
-                    self.already_done += self.group_share / self.to_do
-                    if self.group != new_group:
-                        self.group = new_group
-                        self.group_counter += self.group_share
-                        self.to_do = 0
                 callback(message, self.already_done)
+            if on_success and 'completed' in message:
+                on_success()
+        #ToDo: how to check if error occured (tdmks doesn't return exit codes)
 
         # QProcess emits `readyRead` when there is data to be read
-        process.readyReadStandardOutput.connect(show_progress)
-        process.readyReadStandardError.connect(show_progress)
+        process.readyReadStandardOutput.connect(progress)
+        process.readyReadStandardError.connect(progress)
         #process.finished.connect(self.finished)
         process.start(full_cmd)
