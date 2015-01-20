@@ -1,4 +1,8 @@
 /struktur.graphml
 /__init__.pyc
 /*.pyc
+<<<<<<< 49d5370e811e4012dcec347a333f6b6845db3ca6
 /config.xml
+=======
+*.pyc
+>>>>>>> b3fcd6014a9bf86feb1a6eba212161385d67a08e
