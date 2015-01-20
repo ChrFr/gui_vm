@@ -525,7 +525,7 @@ class VMProjectControl(ProjectTreeControl):
         else:
             filenames = []
             destinations = []
-            for res_node in scenario_node.get_inputs():
+            for res_node in scenario_node.get_input_files():
                 filenames.append(res_node.original_source)
                 destinations.append(os.path.split(res_node.file_absolute)[0])
 

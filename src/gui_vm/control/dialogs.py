@@ -7,6 +7,7 @@ from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy, get_free_space
 from PyQt4 import QtGui, QtCore
 import sys, os
+import re
 from gui_vm.config.config import Config
 
 config = Config()
@@ -46,6 +47,11 @@ QProgressBar::chunk {
 }
 """
 
+def remove_special_chars(text):
+    '''
+    removes Umlaute etc., keeps middle spaces, removes leading and trailing spaces
+    '''
+    return re.sub('[^A-Za-z0-9 ]+', '', text).strip()
 
 class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
     '''
@@ -265,7 +271,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
         # true loop will only be exited, if (ok and valid) or canceled
         while True:
             ret = dialog.exec_()
-            project_name = str(dialog.project_edit.text())
+            project_name = str(remove_special_chars(str(dialog.project_edit.text().toAscii())))
             project_folder = str(dialog.folder_edit.text())
             if ret == QtGui.QDialog.Accepted:
                 if os.path.exists(project_folder):
@@ -335,7 +341,7 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
         run_name, ok = InputDialog.getValues('Name für die Sonderauswertung',
                                              default)
         if ok:
-            self.run(run_name)
+            self.run(remove_special_chars(run_name))
 
 class InputDialog(QtGui.QDialog):
     '''
@@ -373,7 +379,7 @@ class InputDialog(QtGui.QDialog):
         dialog = InputDialog(title, default)
         ok = dialog.exec_()
         accepted = ok == QtGui.QDialog.Accepted
-        text = str(dialog.edit.text())
+        text = str(remove_special_chars(str(dialog.edit.text().toAscii())))
         return text, accepted
 
 class NewScenarioDialog(QtGui.QDialog, Ui_NewScenario):
@@ -392,7 +398,7 @@ class NewScenarioDialog(QtGui.QDialog, Ui_NewScenario):
     def getValues(default_name=''):
         dialog = NewScenarioDialog(default_name)
         ok = dialog.exec_()
-        simrun_name = str(dialog.name_edit.text())
+        simrun_name = str(remove_special_chars(str(dialog.name_edit.text().toAscii())))
         model_name = str(dialog.combo_model.currentText())
         accepted = ok == QtGui.QDialog.Accepted
         return (simrun_name, model_name, accepted)

@@ -479,7 +479,7 @@ class Scenario(TreeNode):
         if not default_model:
             return None
         #set the original sources to the files in the default folder
-        for res_node in default_model.get_inputs():
+        for res_node in default_model.get_input_files():
             res_node.original_source = os.path.join(self.default_folder,
                                                     default_model.name,
                                                     res_node.subfolder,
