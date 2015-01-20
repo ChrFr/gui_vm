@@ -311,10 +311,6 @@ class OutputDetails(QtGui.QGroupBox):
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
-        label = QtGui.QLabel('test')
-        edit = QtGui.QLineEdit('bla')
-        edit.setReadOnly(True)
-        self.formLayout.addRow(label, edit)
         metas = func_evaluate(output_node)
         for meta in metas:
             label = QtGui.QLabel(_fromUtf8(meta))

@@ -296,11 +296,11 @@ class H5Resource(ResourceFile):
         successful = h5.read()
         return h5, successful
 
-    def get(self, path, content_path):
+    def get_content(self, path, content_path):
         h5, success = self.read(path)
         if not success:
             return None
-        return h5.get_table(content_path)
+        return h5.get_table(content_path).read()
 
     def update(self, path):
         '''

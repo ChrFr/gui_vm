@@ -119,9 +119,25 @@ class SpecificModel(TrafficModel):
         super(SpecificModel, self).update(path)
 
     def evaluate (self, output_node):
-        a = output_node.get('/modes/bicycle')
+        mode_path = '/modes'
+        modes = OrderedDict({
+            'Fahrrad': 'bicycle',
+            'Auto': 'car',
+            'zu Fuß': 'foot',
+            'Passagier?': 'passenger',
+            'Put?': 'put'
+        })
         meta = OrderedDict()
-        #meta['Gesamtsumme der Wege'] = 'Hallo'
+        modes_sum = 0
+        for name, mode_table in modes.items():
+            table = output_node.get_content(mode_path + '/' + mode_table)
+            mode_sum = table.sum()
+            meta['Wegesumme ' + name] = int(round(mode_sum))
+            modes[name] = mode_sum
+            modes_sum += mode_sum
+        meta['Summe aller Wege'] = int(round(modes_sum))
+        for name, mode_sum in modes.items():
+            meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
         return meta
 
     def run(self, scenario_name, process, resources, output_path=None,

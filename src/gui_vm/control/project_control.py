@@ -220,6 +220,7 @@ class VMProjectControl(ProjectTreeControl):
             'remove': {
                 Scenario: [self._remove_scenario, 'Szenario entfernen'],
                 InputNode: [self.remove_resource, 'Ressource entfernen'],
+                OutputNode: [self._remove_output, 'Ressource entfernen']
             },
             'reset': {
                 Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
@@ -366,7 +367,7 @@ class VMProjectControl(ProjectTreeControl):
         self._remove_node(scenario_node)
 
 
-    def remove_resource(self, resource_node=None):
+    def remove_resource(self, resource_node=None, remove_node = False):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
@@ -383,9 +384,7 @@ class VMProjectControl(ProjectTreeControl):
         if file_absolute and os.path.exists(file_absolute):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"),
-                _fromUtf8("Soll die Datei {} \nin {}\n".format(
-                    resource_node.resource.filename,
-                    resource_node.full_path) +
+                _fromUtf8("Soll die Datei {} \nin {}\n".format(file_absolute) +
                           "ebenfalls entfernt werden?"),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             do_delete = reply == QtGui.QMessageBox.Yes
@@ -394,6 +393,9 @@ class VMProjectControl(ProjectTreeControl):
         resource_node.file_path = None
         resource_node.update()
         self.project_changed.emit()
+
+    def _remove_output(self, resource_node=None):
+        self.remove_resource(remove_node=True)
 
     def run_complete(self, scenario_node=None):
         if not scenario_node:

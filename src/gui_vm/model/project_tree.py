@@ -678,8 +678,8 @@ class ResourceNode(TreeNode):
     def status(self):
         return self.resource.status
 
-    def get(self, content_path):
-        return self.resource.get(self.path, content_path)
+    def get_content(self, content_path):
+        return self.resource.get_content(self.path, content_path)
 
     def add_to_xml(self, parent):
         '''
