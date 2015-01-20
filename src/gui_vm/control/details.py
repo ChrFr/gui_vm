@@ -64,13 +64,13 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         prime_run = self.scenario.primary_run
         if not prime_run:
             msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!')
-        elif os.path.exists(prime_run.file_absolute):
+        elif not os.path.exists(prime_run.file_absolute):
             msg = _fromUtf8('Datei des Gesamtlaufs nicht gefunden! ' +
                             'Bitte erneut ausführen.')
         # only call dialog, if scenario is already calculated once and demand
         # file still exists
         else:
-            SpecialRunDialog(scenario_node, parent=self)
+            SpecialRunDialog(self.scenario, parent=self)
             return
         msgBox = QtGui.QMessageBox()
         msgBox.setText(msg)
