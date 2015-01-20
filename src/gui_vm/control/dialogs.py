@@ -319,7 +319,6 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
         persons_widget, persons_checks = create_checkbox_layout(persons_names)
         self.options['persons'] = dict(zip(persons_names, persons_checks))
         self.scroll_persons.setWidget(persons_widget)
-        #self.scroll_activities.set
         self.show()
 
     def run(self, run_name):

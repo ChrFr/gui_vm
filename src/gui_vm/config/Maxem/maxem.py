@@ -206,14 +206,15 @@ class SpecificModel(TrafficModel):
             full_cmd = ' '.join([full_cmd, cmd_demand])
 
         #options
-        area_types = options['area_types']
-        proc_area = []
-        for k, v in area_types.items():
-            if v:
-                proc_area.append(k)
-        if len(proc_area) > 0:
-            area_cmd = '--areatype {}'.format(proc_area[0])
-            full_cmd = ' '.join([full_cmd, area_cmd])
+        if options:
+            area_types = options['area_types']
+            proc_area = []
+            for k, v in area_types.items():
+                if v:
+                    proc_area.append(k)
+            if len(proc_area) > 0:
+                area_cmd = '--areatype {}'.format(proc_area[0])
+                full_cmd = ' '.join([full_cmd, area_cmd])
 
         self.already_done = 0.
         self.group = None
