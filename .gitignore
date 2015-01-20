@@ -5,3 +5,5 @@ gui_vm/
 /gui.wpr
 /gui.wpu
 /org.eclipse.core.resources.prefs
+/dist/*
+/build/*
