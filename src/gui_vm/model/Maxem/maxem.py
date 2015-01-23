@@ -124,8 +124,8 @@ class SpecificModel(TrafficModel):
             'Fahrrad': 'bicycle',
             'Auto': 'car',
             'zu Fuß': 'foot',
-            'Passagier?': 'passenger',
-            'Put?': 'put'
+            'Pkw-Mitfahrer': 'passenger',
+            'ÖPNV': 'put'
         })
         meta = OrderedDict()
         modes_sum = 0
@@ -194,13 +194,13 @@ class SpecificModel(TrafficModel):
         else:
             cmd_kor=''
 
-        if pre_process:
-            cmd_pre = '--pp_all'
-        else:
-            cmd_pre=''
+        #if pre_process:
+            #cmd_pre = '--pp_all'
+        #else:
+            #cmd_pre=''
 
         # create full command
-        full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor, cmd_pre])
+        full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor])
         if output_path:
             cmd_demand = '-demand "{}"'.format(output_file)
             full_cmd = ' '.join([full_cmd, cmd_demand])
