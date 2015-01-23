@@ -293,7 +293,8 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
         super(SpecialRunDialog, self).__init__(parent=parent)
         self.setupUi(self)
         self.cancel_button.clicked.connect(self.close)
-        self.start_button.clicked.connect(self.name)
+        self.start_button.clicked.connect(self.run)
+        self.store_button.clicked.connect(self.save)
         self.scenario = scenario_node
         self.options = {}
         self.parent = parent
@@ -327,21 +328,33 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
         self.scroll_persons.setWidget(persons_widget)
         self.show()
 
-    def run(self, run_name):
-        for opt_name, opt in self.options.items():
-            for k, v in opt.items():
-                self.options[opt_name][k] = v.isChecked()
-        self.close()
-        dialog = ExecDialog(self.scenario, run_name,
-                            options=self.options, parent=self.parent)
+    def run(self):
+        ok = self.store()
+        if ok:
+            dialog = ExecDialog(self.scenario, run_name,
+                                options=self.options, parent=self.parent)
 
     def name(self):
         default = 'Sonderauswertung {}'.format(
             len(self.scenario.get_output_files()) - 1)
         run_name, ok = InputDialog.getValues('Name für die Sonderauswertung',
                                              default)
+        return ok, run_name
+
+    def save(self):
+        ok, run_name = self.name()
         if ok:
-            self.run(remove_special_chars(run_name))
+            for opt_name, opt in self.options.items():
+                opt_arr = []
+                for k, v in opt.items():
+                    #self.options[opt_name][k] = v.isChecked()
+                    if v.isChecked():
+                        opt_arr.append(str(k))
+                self.options[opt_name] = opt_arr
+            self.scenario.add_run(run_name, self.options)
+            self.close()
+        return ok
+
 
 class InputDialog(QtGui.QDialog):
     '''

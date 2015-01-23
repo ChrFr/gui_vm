@@ -408,7 +408,7 @@ class Scenario(TreeNode):
 
     def run(self, process, run_name, options=None, callback=None):
         #search for existing results or create new one
-        results_run = self.add_results(run_name)
+        results_run = self.add_run(run_name)
 
         demand_file = results_run.file_absolute
         # special runs use the demand file of the complete run
@@ -430,7 +430,7 @@ class Scenario(TreeNode):
         #hard_copy(results_file, result.full_path)
         #self.get_parent_by_class(Project).emit()
 
-    def add_results(self, run_name):
+    def add_run(self, run_name, options):
         filename = '{} - {}{}'.format(self.name, run_name, '.h5')
         results_node = self.get_child(self.OUTPUT_NODES)
         if not results_node:
@@ -441,6 +441,7 @@ class Scenario(TreeNode):
             results_run = OutputNode(name=run_name, parent=results_node)
             results_node.add_child(results_run)
         results_run.file_relative = os.path.join(run_name, filename)
+        results_run.options = options
         self.get_parent_by_class(Project).emit()
         return results_run
 
@@ -726,8 +727,11 @@ class ResourceNode(TreeNode):
         etree.SubElement(
             xml_element, 'Quelle').text = self.original_source
         file_relative = self.file_relative
-        etree.SubElement(
-            xml_element, 'Projektdatei').text = self.file_relative
+        link = etree.SubElement(
+            xml_element, 'Projektdatei')
+        link.text = self.file_relative
+        link.attrib['relative'] = 'true'
+        return xml_element
 
     def from_xml(self, element):
         '''
@@ -877,6 +881,16 @@ class OutputNode(ResourceNode):
         self.subfolder = Scenario.OUTPUT_NODES
         self.resource = H5Resource(name, filename=filename,
                                    subfolder=name)
+        self.options = {}
+
+    def add_to_xml(self, parent):
+        xml_element = super(OutputNode, self).add_to_xml(parent)
+        for opt_name, opt_arr in self.options.items():
+            if len(opt_arr) > 0:
+                opt = etree.SubElement(
+                    xml_element, 'Option')
+                opt.text = ','.join(opt_arr)
+                opt.attrib['name'] = opt_name
 
     @property
     def scenario_path(self):
