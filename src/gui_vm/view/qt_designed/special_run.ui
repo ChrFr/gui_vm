@@ -30,6 +30,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="store_button">
+       <property name="text">
+        <string>Speichern</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="start_button">
        <property name="text">
         <string>Starten</string>
@@ -65,8 +72,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>330</width>
-            <height>256</height>
+            <width>328</width>
+            <height>267</height>
            </rect>
           </property>
          </widget>
@@ -89,8 +96,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>330</width>
-            <height>256</height>
+            <width>328</width>
+            <height>267</height>
            </rect>
           </property>
          </widget>
@@ -113,8 +120,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>330</width>
-            <height>256</height>
+            <width>328</width>
+            <height>267</height>
            </rect>
           </property>
          </widget>

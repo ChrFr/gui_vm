@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'special_run.ui'
 #
-# Created: Mon Jan 19 13:50:34 2015
-#      by: PyQt4 UI code generator 4.10.4
+# Created: Fri Jan 23 10:13:11 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -33,6 +33,9 @@ class Ui_SpecialRun(object):
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
+        self.store_button = QtGui.QPushButton(SpecialRun)
+        self.store_button.setObjectName(_fromUtf8("store_button"))
+        self.horizontalLayout.addWidget(self.store_button)
         self.start_button = QtGui.QPushButton(SpecialRun)
         self.start_button.setObjectName(_fromUtf8("start_button"))
         self.horizontalLayout.addWidget(self.start_button)
@@ -50,7 +53,7 @@ class Ui_SpecialRun(object):
         self.scroll_area_types.setWidgetResizable(True)
         self.scroll_area_types.setObjectName(_fromUtf8("scroll_area_types"))
         self.scrollAreaWidgetContents_3 = QtGui.QWidget()
-        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 330, 256))
+        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 328, 267))
         self.scrollAreaWidgetContents_3.setObjectName(_fromUtf8("scrollAreaWidgetContents_3"))
         self.scroll_area_types.setWidget(self.scrollAreaWidgetContents_3)
         self.gridLayout_2.addWidget(self.scroll_area_types, 0, 0, 1, 1)
@@ -63,7 +66,7 @@ class Ui_SpecialRun(object):
         self.scroll_activities.setWidgetResizable(True)
         self.scroll_activities.setObjectName(_fromUtf8("scroll_activities"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 330, 256))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 328, 267))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.scroll_activities.setWidget(self.scrollAreaWidgetContents)
         self.horizontalLayout_2.addWidget(self.scroll_activities)
@@ -76,7 +79,7 @@ class Ui_SpecialRun(object):
         self.scroll_persons.setWidgetResizable(True)
         self.scroll_persons.setObjectName(_fromUtf8("scroll_persons"))
         self.scrollAreaWidgetContents_2 = QtGui.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 330, 256))
+        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 328, 267))
         self.scrollAreaWidgetContents_2.setObjectName(_fromUtf8("scrollAreaWidgetContents_2"))
         self.scroll_persons.setWidget(self.scrollAreaWidgetContents_2)
         self.horizontalLayout_3.addWidget(self.scroll_persons)
@@ -89,6 +92,7 @@ class Ui_SpecialRun(object):
 
     def retranslateUi(self, SpecialRun):
         SpecialRun.setWindowTitle(_translate("SpecialRun", "Sonderauswertung", None))
+        self.store_button.setText(_translate("SpecialRun", "Speichern", None))
         self.start_button.setText(_translate("SpecialRun", "Starten", None))
         self.cancel_button.setText(_translate("SpecialRun", "Abbrechen", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.area_types), _translate("SpecialRun", "Gebietstypen", None))

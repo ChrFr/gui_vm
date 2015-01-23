@@ -4,7 +4,7 @@ from details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetail
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
-                                 NewScenarioDialog)
+                                    NewScenarioDialog, SpecialRunDialog)
 from gui_vm.config.config import Config
 import os, subprocess
 from shutil import rmtree
@@ -216,20 +216,22 @@ class VMProjectControl(ProjectTreeControl):
             'add': {
                 Project: [self.add_scenario, 'Szenario hinzufügen'],
                 Scenario: [self.add_scenario, 'Szenario hinzufügen'],
+                OutputNode: [self.add_special_run, 'Sonderauswertung hinzufügen']
             },
             'remove': {
                 Scenario: [self._remove_scenario, 'Szenario entfernen'],
-                InputNode: [self.remove_resource, 'Ressource entfernen'],
-                OutputNode: [self._remove_output, 'Ressource entfernen']
+                InputNode: [self.remove_resource, 'Eingabedaten entfernen'],
+                OutputNode: [self._remove_output, 'Ausgabedaten entfernen']
             },
             'reset': {
                 Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
-                InputNode: [self._reset_resource, 'Ressource zurücksetzen']
+                InputNode: [self._reset_resource, 'Eingabedaten zurücksetzen']
             },
             'edit': {
                 Scenario: [self._rename, 'Szenario umbenennen'],
                 Project: [self._rename, 'Projekt umbenennen'],
-                InputNode: [self.edit_resource, 'Ressource editieren']
+                InputNode: [self.edit_resource, 'Eingabedaten editieren'],
+                OutputNode: [self.edit_resource, 'Ausgabedaten editieren']
             },
             'execute': {
                 Scenario: [self.run_complete, 'Szenario starten']
@@ -239,6 +241,7 @@ class VMProjectControl(ProjectTreeControl):
             },
             'copy': {
                 Scenario: [self._clone_scenario, 'Szenario klonen'],
+                OutputNode: [self._copy_special_run, 'Sonderauswertung kopieren']
             },
             'clean': {
 
@@ -430,6 +433,9 @@ class VMProjectControl(ProjectTreeControl):
             node.name = str(text)
             self.project_changed.emit()
 
+    def _copy_special_run(self, output_node=None):
+        pass
+
     def _clone_scenario(self, scenario_node=None):
         if not scenario_node:
             scenario_node = self.selected_item
@@ -505,6 +511,13 @@ class VMProjectControl(ProjectTreeControl):
                     self._reset_scenario(
                         scenario_node=project.get_child(scenario_name))
                 self.project_changed.emit()
+
+    def add_special_run(self, node=None):
+        if not node:
+            node = self.selected_item
+        scenario = node.get_parent_by_class(Scenario)
+        SpecialRunDialog(scenario, parent=self.view)
+
 
     def _reset_scenario(self, scenario_node=None):
         '''
