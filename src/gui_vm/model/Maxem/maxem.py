@@ -3,8 +3,9 @@ from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.resources import Rule
 from collections import OrderedDict
 import subprocess
-import os
+import os, imp
 import sys
+import csv
 import numpy as np
 from gui_vm.config.config import Config
 
@@ -118,8 +119,32 @@ class SpecificModel(TrafficModel):
     def update(self, path):
         super(SpecificModel, self).update(path)
 
-    def evaluate (self, output_node):
-        pass
+    def evaluate (self, file_path):
+        '''
+        evaluate the demand file at the given path and run the evluation script
+        (creates csv file)
+        '''
+        eval_script = os.path.join(os.path.dirname(__file__),
+                                   'evaluate_maxem.py')
+        Evaluation = (imp.load_source('evaluate', eval_script))
+        csv_out = file_path.replace('.h5', '.csv')
+        if not os.path.exists(file_path):
+            return None
+        if not os.path.exists(csv_out):
+            Evaluation.evaluate(file_path, csv_out)  
+        with open(csv_out, mode='r') as csv_in:
+            reader = csv.reader(csv_in)  
+            table_dict = OrderedDict()
+            for i, rows in enumerate(reader):
+                for k, h in enumerate(rows):
+                    #header
+                    if i == 0:
+                        table_dict[h] = []
+                    #column
+                    else:
+                        table_dict[table_dict.keys()[k]].append(h)
+                    
+        return table_dict
 
     def run(self, scenario_name, process, resources=None, output_file=None,
             options=None, callback=None, modal_split=False, correction=False,
@@ -177,12 +202,7 @@ class SpecificModel(TrafficModel):
             if callback:
                 callback(message, self.already_done)
             if 'completed' in message:
-                if csv_out:
-                    #complete relative paths                       
-                    eval_script = os.path.join(os.path.dirname(__file__),
-                                               'evaluate_maxem')
-                    evaluate = (imp.load_source('evaluate', eval_script))
-                    evaluate(output_file, csv_out)
+                self.evaluate(output_file)
                 if on_success:
                     on_success()
         #ToDo: how to check if error occured (tdmks doesn't return exit codes)

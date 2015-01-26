@@ -327,15 +327,17 @@ class OutputDetails(QtGui.QGroupBox):
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
-        #metas = func_evaluate(output_node)
-        #for meta in metas:
-            #label = QtGui.QLabel(_fromUtf8(meta))
-            #txt = metas[meta]
-            #if isinstance(txt, list):
-                #txt = '<br>'.join(txt)
-                #edit = QtGui.QTextEdit(_fromUtf8(txt))
-                #edit.setMinimumHeight(100)
-            #else:
-                #edit = QtGui.QLineEdit(_fromUtf8(str(metas[meta])))
-            #edit.setReadOnly(True)
-            #self.formLayout.addRow(label, edit)
+        results = output_node.get_results()
+        if results is None:
+            self.formLayout.addRow(QtGui.QLabel('Keine Ergebnisse gefunden.'))
+        else:
+            for res in results:
+                label = QtGui.QLabel(_fromUtf8(res))
+                txt = results[res]
+                if isinstance(txt, list):
+                    txt = '<br>'.join(txt)
+                    edit = QtGui.QLineEdit(_fromUtf8(txt))
+                else:
+                    edit = QtGui.QLineEdit(_fromUtf8(str(results[res])))
+                edit.setReadOnly(True)
+                self.formLayout.addRow(label, edit)

@@ -892,6 +892,10 @@ class OutputNode(ResourceNode):
     @property
     def scenario_path(self):
         return self.get_parent_by_class(Scenario).path
+    
+    def get_results(self):
+        model = self.get_parent_by_class(Scenario).model
+        return model.evaluate(self.file_absolute)
 
     @property
     def status(self):
