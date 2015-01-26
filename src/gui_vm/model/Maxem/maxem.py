@@ -7,7 +7,6 @@ import os
 import sys
 import numpy as np
 from gui_vm.config.config import Config
-from evaluate_maxem import evaluate
 
 config = Config()
 config.read()
@@ -122,9 +121,9 @@ class SpecificModel(TrafficModel):
     def evaluate (self, output_node):
         pass
 
-    def run(self, scenario_name, process, resources, output_file=None, csv_out=None,
+    def run(self, scenario_name, process, resources=None, output_file=None,
             options=None, callback=None, modal_split=False, correction=False,
-            on_success=None, on_error=None):
+            on_success=None, on_error=None, xml_file=None, run_name=None):
         '''
         run the traffic model
 
@@ -138,57 +137,22 @@ class SpecificModel(TrafficModel):
         callback: function,
                   function to track the progress
         '''
-        #dictionary to map the resource names to parameters of the executable
-        params = {
-            'Zonen': '--zd',
-            'OV': '--pp_put --put',
-            'MIV': '--pp_prt --prt',
-            'Fuss und Rad': '--pp_nmt --nmt',
-            'Betas': '--par',
-        }
-
-        output_path = os.path.split(output_file)[0]
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-
         python_path = config.settings['environment']['python_path']
         executable = config.settings['trafficmodels'][self.name]['executable']
         cmd = python_path + ' ' + executable
-        cmd_name = '-n "{}"'.format(scenario_name)
-
-        param_cmd = ''
-        for res in resources:
-            src = res.file_absolute
-            if len(src) > 0 and res.name in params:
-                param_cmd += ' {0} "{1}"'.format(params[res.name],
-                                                 res.file_absolute)
-
-        if modal_split:
-            cmd_cal = '-c'
+        cmd_scen_name = '-n "{}"'.format(scenario_name)
+        
+        if run_name is not None:
+            cmd_run_name = '-r "{}"'.format(run_name)
         else:
-            cmd_cal=''
-
-        if correction:
-            cmd_kor = '--update_kf'
+            cmd_run_name=''        
+            
+        if xml_file is not None:
+            cmd_xml_file = '-xml "{}"'.format(xml_file)
         else:
-            cmd_kor=''
-
-        # create full command
-        full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor])
-        if output_path:
-            cmd_demand = '-demand "{}"'.format(output_file)
-            full_cmd = ' '.join([full_cmd, cmd_demand])
-
-        #options
-        if options:
-            area_types = options['area_types']
-            proc_area = []
-            for k, v in area_types.items():
-                if v:
-                    proc_area.append(k)
-            if len(proc_area) > 0:
-                area_cmd = '--areatype {}'.format(proc_area[0])
-                full_cmd = ' '.join([full_cmd, area_cmd])
+            cmd_xml_file=''   
+            
+        full_cmd = ' '.join([cmd, cmd_scen_name, cmd_run_name, cmd_xml_file])
 
         self.already_done = 0.
         self.group = None
@@ -214,6 +178,10 @@ class SpecificModel(TrafficModel):
                 callback(message, self.already_done)
             if 'completed' in message:
                 if csv_out:
+                    #complete relative paths                       
+                    eval_script = os.path.join(os.path.dirname(__file__),
+                                               'evaluate_maxem')
+                    evaluate = (imp.load_source('evaluate', eval_script))
                     evaluate(output_file, csv_out)
                 if on_success:
                     on_success()

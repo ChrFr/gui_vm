@@ -49,14 +49,18 @@ def startmain():
 
     parser.add_argument("-o", action="store",
                         help="csv output file",
-                        dest="csv_out_path", default='maxem_out.csv')
+                        dest="csv_out_path")
 
     arguments = parser.parse_args()
 
-    if arguments.h5_in_path is None:
+    h5_in_path = arguments.h5_in_path
+    csv_out_path = arguments.csv_out_path
+    if h5_in_path is None:
         print('Input-Datei muss angegeben werden.')
     else:
-        evaluate(arguments.h5_in_path, arguments.csv_out_path)
+        if csv_out_path is None:
+            csv_out_path = h5_in_path.replace('.h5', '.csv')        
+        evaluate(h5_in_path, csv_out_path)
     
 if __name__ == "__main__":
     startmain()

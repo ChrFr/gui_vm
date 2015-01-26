@@ -407,30 +407,20 @@ class Scenario(TreeNode):
         return pr[0]
 
     def run(self, process, run_name, options=None, callback=None):
-        #search for existing results or create new one
-        results_run = self.add_run(run_name)
-
-        demand_file = results_run.file_absolute
-        # special runs use the demand file of the complete run
-        # so if it is not existing in special folder, you have to copy it first
-        if results_run != self.primary_run and not os.path.exists(demand_file):
-            prime_demand = self.primary_run.file_absolute
-            if not os.path.exists(prime_demand):
-                #ToDo: raise error or check in dialog
-                return
-            hard_copy(prime_demand, demand_file)
-        csv_out = os.path.join(os.path.split(prime_demand)[0], run_name + '.csv')
+        #path to project.xml
+        project_xml = self.get_parent_by_class(Project).filename
+        #model defines run command etc.
         self.model.run(self.name,
                        process,
-                       self.get_input_files(),
-                       output_file=demand_file,
-                       csv_out=csv_out,
                        options=options,
-                       #on_success=lambda:self.add_results(run_name),
+                       xml_file=project_xml,
+                       on_success=lambda:self.add_results(run_name),
                        callback=callback)
-
-        #hard_copy(results_file, result.full_path)
-        #self.get_parent_by_class(Project).emit()
+        
+        #temporary add manually, on success adding doesn't work by now (tdmks doesn't complete
+        #successful)
+        results_run = self.add_run(run_name)
+        
 
     def add_run(self, run_name, options=None):
         filename = '{} - {}{}'.format(self.name, run_name, '.h5')
