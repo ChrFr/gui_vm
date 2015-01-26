@@ -5,7 +5,7 @@
   </environment>
   <trafficmodels>
     <Maxem>
-      <config_file>config/Maxem/maxem.py</config_file>
+      <config_file>model/Maxem/maxem.py</config_file>
       <executable></executable>
       <default_folder></default_folder>
     </Maxem>

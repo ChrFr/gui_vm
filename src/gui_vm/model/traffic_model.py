@@ -275,12 +275,13 @@ class TrafficModel(Observable):
         config.read()
         traffic_models = config.settings['trafficmodels']
         if name in traffic_models:
+            main_path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), os.path.pardir))
             config_filename = traffic_models[name]['config_file']
             #complete relative paths
-            print config_filename
-            print os.path.dirname(__file__)
             if not os.path.isabs(config_filename):
-                config_filename = os.path.join(os.path.dirname(__file__),
+                
+                config_filename = os.path.join(main_path,
                                                config_filename)
             return (imp.load_source('SpecificModel', config_filename)
                     .SpecificModel())
