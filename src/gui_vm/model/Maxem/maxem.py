@@ -7,6 +7,7 @@ import os
 import sys
 import numpy as np
 from gui_vm.config.config import Config
+from evaluate_maxem import evaluate
 
 config = Config()
 config.read()
@@ -119,34 +120,11 @@ class SpecificModel(TrafficModel):
         super(SpecificModel, self).update(path)
 
     def evaluate (self, output_node):
-        mode_path = '/modes'
-        modes = OrderedDict({
-            'Fahrrad': 'bicycle',
-            'Auto': 'car',
-            'zu Fuß': 'foot',
-            'Pkw-Mitfahrer': 'passenger',
-            'ÖPNV': 'put'
-        })
-        meta = OrderedDict()
-        modes_sum = 0
-        file_abs = output_node.file_absolute
-        if file_abs is None or not os.path.exists(file_abs):
-            meta['Datei nicht vorhanden!'] = file_abs
-            return meta
-        for name, mode_table in modes.items():
-            table = output_node.get_content(mode_path + '/' + mode_table)
-            mode_sum = table.sum()
-            meta['Wegesumme ' + name] = int(round(mode_sum))
-            modes[name] = mode_sum
-            modes_sum += mode_sum
-        meta['Summe aller Wege'] = int(round(modes_sum))
-        for name, mode_sum in modes.items():
-            meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
-        return meta
+        pass
 
-    def run(self, scenario_name, process, resources, output_file=None,
+    def run(self, scenario_name, process, resources, output_file=None, csv_out=None,
             options=None, callback=None, modal_split=False, correction=False,
-            pre_process=False, on_success=None, on_error=None):
+            on_success=None, on_error=None):
         '''
         run the traffic model
 
@@ -195,11 +173,6 @@ class SpecificModel(TrafficModel):
         else:
             cmd_kor=''
 
-        #if pre_process:
-            #cmd_pre = '--pp_all'
-        #else:
-            #cmd_pre=''
-
         # create full command
         full_cmd = ' '.join([cmd, cmd_name, param_cmd, cmd_cal, cmd_kor])
         if output_path:
@@ -239,8 +212,11 @@ class SpecificModel(TrafficModel):
                     self.to_do = 0
             if callback:
                 callback(message, self.already_done)
-            if on_success and 'completed' in message:
-                on_success()
+            if 'completed' in message:
+                if csv_out:
+                    evaluate(output_file, csv_out)
+                if on_success:
+                    on_success()
         #ToDo: how to check if error occured (tdmks doesn't return exit codes)
 
         # QProcess emits `readyRead` when there is data to be read

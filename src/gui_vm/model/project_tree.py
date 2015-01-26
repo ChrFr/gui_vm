@@ -419,10 +419,12 @@ class Scenario(TreeNode):
                 #ToDo: raise error or check in dialog
                 return
             hard_copy(prime_demand, demand_file)
+        csv_out = os.path.join(os.path.split(prime_demand)[0], run_name + '.csv')
         self.model.run(self.name,
                        process,
                        self.get_input_files(),
                        output_file=demand_file,
+                       csv_out=csv_out,
                        options=options,
                        #on_success=lambda:self.add_results(run_name),
                        callback=callback)
