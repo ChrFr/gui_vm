@@ -430,7 +430,7 @@ class Scenario(TreeNode):
         #hard_copy(results_file, result.full_path)
         #self.get_parent_by_class(Project).emit()
 
-    def add_run(self, run_name, options):
+    def add_run(self, run_name, options=None):
         filename = '{} - {}{}'.format(self.name, run_name, '.h5')
         results_node = self.get_child(self.OUTPUT_NODES)
         if not results_node:
@@ -441,7 +441,8 @@ class Scenario(TreeNode):
             results_run = OutputNode(name=run_name, parent=results_node)
             results_node.add_child(results_run)
         results_run.file_relative = os.path.join(run_name, filename)
-        results_run.options = options
+        if options:
+            results_run.options = options
         self.get_parent_by_class(Project).emit()
         return results_run
 
@@ -890,8 +891,12 @@ class OutputNode(ResourceNode):
                 opt = etree.SubElement(
                     xml_element, 'Option')
                 opt.text = ','.join(opt_arr)
-                opt.attrib['name'] = opt_name
-
+                opt.attrib['name'] = opt_name                
+                
+    #def from_xml(self, element):
+        #self.options = {}
+        #super(ResourceNode, self).from_xml(element)
+        
     @property
     def scenario_path(self):
         return self.get_parent_by_class(Scenario).path

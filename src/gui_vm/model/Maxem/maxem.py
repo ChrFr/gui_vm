@@ -129,8 +129,9 @@ class SpecificModel(TrafficModel):
         })
         meta = OrderedDict()
         modes_sum = 0
-        if not os.path.exists(output_node.file_absolute):
-            meta['Datei nicht vorhanden!'] = output_node.file_absolute
+        file_abs = output_node.file_absolute
+        if file_abs is None or not os.path.exists(file_abs):
+            meta['Datei nicht vorhanden!'] = file_abs
             return meta
         for name, mode_table in modes.items():
             table = output_node.get_content(mode_path + '/' + mode_table)
