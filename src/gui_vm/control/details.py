@@ -64,7 +64,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         prime_run = self.scenario.primary_run
         if not prime_run:
             msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!')
-        elif not os.path.exists(prime_run.file_absolute):
+        elif prime_run.file_absolute is None or not os.path.exists(prime_run.file_absolute):
             msg = _fromUtf8('Datei des Gesamtlaufs nicht gefunden! ' +
                             'Bitte erneut ausführen.')
         # only call dialog, if scenario is already calculated once and demand
@@ -311,7 +311,7 @@ class OutputDetails(QtGui.QGroupBox):
 
     def __init__(self, output_node, func_evaluate):
         super(OutputDetails, self).__init__()
-        self.setObjectName(_fromUtf8("DetailsScenario"))
+        self.output = output_node
         self.resize(450, 309)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -327,6 +327,14 @@ class OutputDetails(QtGui.QGroupBox):
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
+        self.start_button = QtGui.QPushButton(self)
+        self.start_button.setGeometry(QtCore.QRect(10, 30, 140, 31))
+        self.start_button.setMinimumSize(QtCore.QSize(140, 0))
+        self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.start_button.setObjectName(_fromUtf8("start_button"))   
+        self.formLayout.addRow(self.start_button)
+        self.start_button.clicked.connect(self.run)
+        
         results = output_node.get_results()
         if results is None:
             self.formLayout.addRow(QtGui.QLabel('Keine Ergebnisse gefunden.'))
@@ -341,3 +349,7 @@ class OutputDetails(QtGui.QGroupBox):
                     edit = QtGui.QLineEdit(_fromUtf8(str(results[res])))
                 edit.setReadOnly(True)
                 self.formLayout.addRow(label, edit)
+                
+    def run(self):
+        options = self.output.options
+        SpecialRunDialog(self.scenario, options=options, parent=self)

@@ -17,7 +17,15 @@ try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     def _fromUtf8(s):
-        return s
+        return s    
+    
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
 
 DEFAULT_STYLE = """
 QProgressBar{
@@ -284,55 +292,86 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             else:
                 return (project_name, project_folder, False)
 
-class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
+class SpecialRunDialog(QtGui.QDialog):
     '''
     open a dialog to define the parameters for a special run (Maxem specific!!!!)
     '''
-
-    def __init__(self, scenario_node, parent=None):
+    
+    def __init__(self, scenario_node, options=None, parent=None):
         super(SpecialRunDialog, self).__init__(parent=parent)
-        self.setupUi(self)
+        self.setupUi()
         self.cancel_button.clicked.connect(self.close)
         self.start_button.clicked.connect(self.run)
         self.store_button.clicked.connect(self.save)
         self.scenario = scenario_node
-        self.options = {}
+        self.option_checks = {}
         self.parent = parent
 
-        def create_checkbox_layout(names):
+        def create_tab(tab_name, check_names):            
+            tab = QtGui.QWidget()
+            tab.setObjectName(_fromUtf8("area_types"))
+            grid_layout = QtGui.QGridLayout(tab)
+            scroll_area = QtGui.QScrollArea(tab)
+            scroll_area.setWidgetResizable(True)
+            grid_layout.addWidget(scroll_area, 0, 0, 1, 1)
+            self.tabWidget.addTab(tab, _fromUtf8(tab_name)) 
+            
             widget = QtGui.QWidget()
             layout = QtGui.QVBoxLayout()
             checks = []
-            for name in names:
+            for name in check_names[0]:
                 checkbox = QtGui.QCheckBox(str(name))
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
             layout.addSpacerItem(QtGui.QSpacerItem(20,40,
                     QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding))
             widget.setLayout(layout)
-            return widget, checks
+            scroll_area.setWidget(widget)
+            return dict(zip(check_names[1], checks))
 
-        area_types = self.scenario.meta['Gebietstypen']
-        area_widget, area_checks = create_checkbox_layout(area_types)
-        self.options['area_types'] = dict(zip(area_types, area_checks))
-        self.scroll_area_types.setWidget(area_widget)
-
-        activity_names = self.scenario.meta['Aktivitäten']
-        activity_widget, activity_checks = create_checkbox_layout(activity_names)
-        self.options['activities'] = dict(zip(activity_names, activity_checks))
-        self.scroll_activities.setWidget(activity_widget)
-
-        persons_names = self.scenario.meta['Personengruppen']
-        persons_widget, persons_checks = create_checkbox_layout(persons_names)
-        self.options['persons'] = dict(zip(persons_names, persons_checks))
-        self.scroll_persons.setWidget(persons_widget)
+        model_options = self.scenario.model.options
+        for opt, names in model_options.items():
+            self.option_checks[opt] = create_tab(opt, names)
         self.show()
+
+    def setupUi(self):
+        self.setObjectName(_fromUtf8("SpecialRun"))
+        self.resize(372, 362)
+        self.gridLayout = QtGui.QGridLayout(self)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
+        self.store_button = QtGui.QPushButton(self)
+        self.store_button.setObjectName(_fromUtf8("store_button"))
+        self.horizontalLayout.addWidget(self.store_button)
+        self.start_button = QtGui.QPushButton(self)
+        self.start_button.setObjectName(_fromUtf8("start_button"))
+        self.horizontalLayout.addWidget(self.start_button)
+        self.cancel_button = QtGui.QPushButton(self)
+        self.cancel_button.setObjectName(_fromUtf8("cancel_button"))
+        self.horizontalLayout.addWidget(self.cancel_button)
+        self.gridLayout.addLayout(self.horizontalLayout, 1, 0, 1, 1)
+        self.tabWidget = QtGui.QTabWidget(self)
+        self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
+        self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
+
+        self.retranslateUi(self)
+        self.tabWidget.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(self)
+
+    def retranslateUi(self, SpecialRun):
+        SpecialRun.setWindowTitle(_translate("SpecialRun", "Sonderauswertung", None))
+        self.store_button.setText(_translate("SpecialRun", "Speichern", None))
+        self.start_button.setText(_translate("SpecialRun", "Starten", None))
+        self.cancel_button.setText(_translate("SpecialRun", "Abbrechen", None))
 
     def run(self):
         ok = self.store()
         if ok:
             dialog = ExecDialog(self.scenario, run_name,
-                                options=self.options, parent=self.parent)
+                                options=self.option_checks, parent=self.parent)
 
     def name(self):
         default = 'Sonderauswertung {}'.format(
@@ -344,14 +383,14 @@ class SpecialRunDialog(QtGui.QDialog, Ui_SpecialRun):
     def save(self):
         ok, run_name = self.name()
         if ok:
-            for opt_name, opt in self.options.items():
+            for opt_name, opt in self.option_checks.items():
                 opt_arr = []
                 for k, v in opt.items():
                     #self.options[opt_name][k] = v.isChecked()
                     if v.isChecked():
                         opt_arr.append(str(k))
-                self.options[opt_name] = opt_arr
-            self.scenario.add_run(run_name, self.options)
+                self.option_checks[opt_name] = opt_arr
+            self.scenario.add_run(run_name, self.option_checks)
             self.close()
         return ok
 

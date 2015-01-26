@@ -372,7 +372,7 @@ class Scenario(TreeNode):
 
     @property
     def meta(self):
-        return self.model.characteristics
+        return self.model.meta
 
     @property
     def default_folder(self):
@@ -885,9 +885,12 @@ class OutputNode(ResourceNode):
                 opt.text = ','.join(opt_arr)
                 opt.attrib['name'] = opt_name                
                 
-    #def from_xml(self, element):
-        #self.options = {}
-        #super(ResourceNode, self).from_xml(element)
+    def from_xml(self, element):
+        super(OutputNode, self).from_xml(element)
+        options = element.findall('Option')
+        for opt in options:
+            self.options[opt.attrib['name']] = opt.text.split(',')
+        
         
     @property
     def scenario_path(self):

@@ -253,22 +253,26 @@ class TrafficModel(Observable):
 
 
     @property
-    def characteristics(self):
+    def meta(self):
         '''
         create a dictionary out of the monitored attributes
 
         Return
         ------
-        characteristics: OrderedDict, contains information about the monitored
-                         attributes
+        meta: OrderedDict, contains information about the monitored
+        attributes
         '''
-        characteristics = OrderedDict()
+        meta = OrderedDict()
         for i, attr in enumerate(self.monitored):
             value = getattr(self, attr)
             pretty_name = self.monitored[attr]
-            characteristics[pretty_name] = value
-        return characteristics
-
+            meta[pretty_name] = value
+        return meta
+    
+    @property
+    def options(self):        
+        return None
+    
     @staticmethod
     def new_specific_model(name):
         config = Config()

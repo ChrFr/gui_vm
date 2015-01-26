@@ -33,7 +33,7 @@ class SpecificModel(TrafficModel):
                              ('activity_names', 'Aktivitäten'),
                              ('activity_codes', 'Aktivitätencodes'),
                              ('group_dest_mode', 'Personengruppen')])
-
+        
     def __init__(self, path=None):
         input_config_file = os.path.join(os.path.dirname(__file__),
                                          self.INPUT_CONFIG_FILE)
@@ -87,7 +87,15 @@ class SpecificModel(TrafficModel):
 
         if path is not None:
             self.update()
-
+            
+    @property
+    def options(self):
+        options = OrderedDict()     
+        options['areatype'] = (self.area_types, self.area_types)
+        options['groups'] = (self.activity_names, self.activity_codes)
+        options['activities'] = (self.group_dest_mode, self.group_dest_mode)
+        return options
+        
     @property
     def n_zones(self):
         #number of zones is determined by the number of rows in
@@ -127,6 +135,8 @@ class SpecificModel(TrafficModel):
         eval_script = os.path.join(os.path.dirname(__file__),
                                    'evaluate_maxem.py')
         Evaluation = (imp.load_source('evaluate', eval_script))
+        if file_path is None:
+            return None
         csv_out = file_path.replace('.h5', '.csv')
         if not os.path.exists(file_path):
             return None
