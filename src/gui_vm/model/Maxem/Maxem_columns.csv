@@ -183,3 +183,5 @@ Zonen;/zones/zones;parking;;int8;;;0
 Zonen;/zones/zuordnung_alt_neu;alt;;int32;;;0
 Zonen;/zones/zuordnung_alt_neu;neu;;int32;;;0
 Zonen;/zones/zuordnung_alt_neu;Name;;|S55;;;0
+Zonen;/zones/area_types;areatype_name;;|S255;;;0
+Zonen;/zones/area_types;definition;;|S255;;;0

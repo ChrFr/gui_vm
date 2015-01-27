@@ -55,3 +55,4 @@ Zonen;/zones/access_egress;Zonen;H5Array
 Zonen;/zones/binnenreisezeiten;Zonen;H5Table
 Zonen;/zones/zones;Zonen;H5Table
 Zonen;/zones/zuordnung_alt_neu;Zonen;H5Table
+Zonen;/zones/area_types;Zonen;H5Table

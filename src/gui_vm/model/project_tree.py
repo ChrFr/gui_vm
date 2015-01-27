@@ -414,7 +414,7 @@ class Scenario(TreeNode):
                        process,
                        options=options,
                        xml_file=project_xml,
-                       on_success=lambda:self.add_results(run_name),
+                       on_success=lambda:self.add_run(run_name),
                        callback=callback)
 
         #temporary add manually, on success adding doesn't work by now (tdmks doesn't complete

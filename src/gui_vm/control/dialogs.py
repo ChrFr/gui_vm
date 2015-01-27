@@ -17,8 +17,8 @@ try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
     def _fromUtf8(s):
-        return s    
-    
+        return s
+
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
@@ -296,8 +296,8 @@ class SpecialRunDialog(QtGui.QDialog):
     '''
     open a dialog to define the parameters for a special run (Maxem specific!!!!)
     '''
-    
-    def __init__(self, scenario_node, options=None, parent=None):
+
+    def __init__(self, scenario_node, stored_options=None, parent=None):
         super(SpecialRunDialog, self).__init__(parent=parent)
         self.setupUi()
         self.cancel_button.clicked.connect(self.close)
@@ -307,20 +307,24 @@ class SpecialRunDialog(QtGui.QDialog):
         self.option_checks = {}
         self.parent = parent
 
-        def create_tab(tab_name, check_names):            
+        def create_tab(opt_name, check_names, stored_options):
             tab = QtGui.QWidget()
             tab.setObjectName(_fromUtf8("area_types"))
             grid_layout = QtGui.QGridLayout(tab)
             scroll_area = QtGui.QScrollArea(tab)
             scroll_area.setWidgetResizable(True)
             grid_layout.addWidget(scroll_area, 0, 0, 1, 1)
-            self.tabWidget.addTab(tab, _fromUtf8(tab_name)) 
-            
+            self.tabWidget.addTab(tab, _fromUtf8(opt_name))
+
             widget = QtGui.QWidget()
             layout = QtGui.QVBoxLayout()
             checks = []
             for name in check_names[0]:
                 checkbox = QtGui.QCheckBox(str(name))
+
+                #check the boxes which are stored in options
+                if stored_options.has_key(opt_name) and name in stored_options[opt_name]:
+                    checkbox.setChecked(True)
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
             layout.addSpacerItem(QtGui.QSpacerItem(20,40,
@@ -331,7 +335,7 @@ class SpecialRunDialog(QtGui.QDialog):
 
         model_options = self.scenario.model.options
         for opt, names in model_options.items():
-            self.option_checks[opt] = create_tab(opt, names)
+            self.option_checks[opt] = create_tab(opt, names, stored_options)
         self.show()
 
     def setupUi(self):
@@ -362,7 +366,7 @@ class SpecialRunDialog(QtGui.QDialog):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def retranslateUi(self, SpecialRun):
-        SpecialRun.setWindowTitle(_translate("SpecialRun", "Sonderauswertung", None))
+        SpecialRun.setWindowTitle(_translate("SpecialRun", "spezifischer Lauf", None))
         self.store_button.setText(_translate("SpecialRun", "Speichern", None))
         self.start_button.setText(_translate("SpecialRun", "Starten", None))
         self.cancel_button.setText(_translate("SpecialRun", "Abbrechen", None))
@@ -374,10 +378,10 @@ class SpecialRunDialog(QtGui.QDialog):
                                 options=self.option_checks, parent=self.parent)
 
     def name(self):
-        default = 'Sonderauswertung {}'.format(
+        default = 'spezifischer Lauf {}'.format(
             len(self.scenario.get_output_files()) - 1)
-        run_name, ok = InputDialog.getValues('Name für die Sonderauswertung',
-                                             default)
+        run_name, ok = InputDialog.getValues(_fromUtf8(
+            'Name für den spezifischen Lauf'), default)
         return ok, run_name
 
     def save(self):

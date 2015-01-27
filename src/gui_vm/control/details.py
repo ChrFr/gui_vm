@@ -334,10 +334,9 @@ class OutputDetails(QtGui.QGroupBox):
         self.start_button.setObjectName(_fromUtf8("start_button"))
         self.special_button = QtGui.QPushButton(self)
         self.special_button.setGeometry(QtCore.QRect(160, 30, 140, 31))
-        self.special_button.setMinimumSize(QtCore.QSize(140, 0))
+        self.special_button.setMinimumSize(QtCore.QSize(140, 16777215))
         self.special_button.setObjectName(_fromUtf8("special_button"))
-        self.formLayout.addRow(self.start_button)
-        self.formLayout.addRow(self.special_button)
+        self.formLayout.addRow(self.start_button, self.special_button)
         self.start_button.setText('Start')
         self.special_button.setText('Optionen')
 
@@ -362,7 +361,7 @@ class OutputDetails(QtGui.QGroupBox):
     def run(self):
         options = self.output.options
         scenario = self.output.scenario
-        SpecialRunDialog(scenario, options=options, parent=self)
+        SpecialRunDialog(scenario, stored_options=options, parent=self)
 
     def show_options(self):
         pass

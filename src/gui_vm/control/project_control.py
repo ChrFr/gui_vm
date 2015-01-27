@@ -216,7 +216,7 @@ class VMProjectControl(ProjectTreeControl):
             'add': {
                 Project: [self.add_scenario, 'Szenario hinzufügen'],
                 Scenario: [self.add_scenario, 'Szenario hinzufügen'],
-                OutputNode: [self.add_special_run, 'Sonderauswertung hinzufügen']
+                OutputNode: [self.add_special_run, 'spezifischer Lauf hinzufügen']
             },
             'remove': {
                 Scenario: [self._remove_scenario, 'Szenario entfernen'],
@@ -241,7 +241,7 @@ class VMProjectControl(ProjectTreeControl):
             },
             'copy': {
                 Scenario: [self._clone_scenario, 'Szenario klonen'],
-                OutputNode: [self._copy_special_run, 'Sonderauswertung kopieren']
+                OutputNode: [self._copy_special_run, 'spezifischer Lauf kopieren']
             },
             'clean': {
 

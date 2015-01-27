@@ -65,5 +65,5 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
         self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
         self.start_button.setText(_translate("DetailsScenario", "Gesamtlauf", None))
-        self.special_button.setText(_translate("DetailsScenario", "Sonderauswertung", None))
+        self.special_button.setText(_translate("DetailsScenario", "spezifischer Lauf", None))
 

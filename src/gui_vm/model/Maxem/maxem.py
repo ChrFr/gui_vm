@@ -69,13 +69,10 @@ class SpecificModel(TrafficModel):
         name_column.bind('content',
                          lambda value: self.set('activity_names', value))
         #observe area_types
-        zones = self.resources['Zonen'].get_child('/zones/zones')
-        area_column = zones.get_child('area_type')
-        def area_unique(value):
-            if value:
-                self.set('area_types', np.unique(value))
+        zones = self.resources['Zonen'].get_child('/zones/area_types')
+        area_column = zones.get_child('areatype_name')
         area_column.bind('content',
-                         lambda value: area_unique(value))
+                         lambda value: self.set('area_types', value))
 
         groups = self.resources['Params'].get_child(
             '/groups/groups_dest_mode')
