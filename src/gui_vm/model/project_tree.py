@@ -416,11 +416,11 @@ class Scenario(TreeNode):
                        xml_file=project_xml,
                        on_success=lambda:self.add_results(run_name),
                        callback=callback)
-        
+
         #temporary add manually, on success adding doesn't work by now (tdmks doesn't complete
         #successful)
         results_run = self.add_run(run_name)
-        
+
 
     def add_run(self, run_name, options=None):
         filename = '{} - {}{}'.format(self.name, run_name, '.h5')
@@ -703,6 +703,10 @@ class ResourceNode(TreeNode):
     def status(self):
         return self.resource.status
 
+    @property
+    def scenario(self):
+        return self.get_parent_by_class(Scenario)
+
     def get_content(self, content_path):
         return self.resource.get_content(self.path, content_path)
 
@@ -746,7 +750,7 @@ class ResourceNode(TreeNode):
 
     @property
     def model(self):
-        return self.get_parent_by_class(Scenario).model
+        return self.scenario.model
 
 
     @property
@@ -808,7 +812,7 @@ class ResourceNode(TreeNode):
         '''
         path to the resources folder
         '''
-        scen_path = self.get_parent_by_class(Scenario).path
+        scen_path = self.scenario.path
         if not scen_path:
             return None
         return os.path.join(scen_path, self.subfolder)
@@ -828,7 +832,7 @@ class ResourceNode(TreeNode):
         set to the old model (incl. references of rules and resource list
         of model) at the moment
         '''
-        scenario = self.get_parent_by_class(Scenario)
+        scenario = self.scenario
         default_model = scenario.get_default_scenario()
         #find corresponding default resource node
         res_default = default_model.get_input(self.name)
@@ -883,22 +887,18 @@ class OutputNode(ResourceNode):
                 opt = etree.SubElement(
                     xml_element, 'Option')
                 opt.text = ','.join(opt_arr)
-                opt.attrib['name'] = opt_name                
-                
+                opt.attrib['name'] = opt_name
+
     def from_xml(self, element):
         super(OutputNode, self).from_xml(element)
         options = element.findall('Option')
         for opt in options:
-            self.options[opt.attrib['name']] = opt.text.split(',')
-        
-        
-    @property
-    def scenario_path(self):
-        return self.get_parent_by_class(Scenario).path
-    
+            text = opt.text
+            if text:
+                self.options[opt.attrib['name']] = text.split(',')
+
     def get_results(self):
-        model = self.get_parent_by_class(Scenario).model
-        return model.evaluate(self.file_absolute)
+        return self.model.evaluate(self.file_absolute)
 
     @property
     def status(self):

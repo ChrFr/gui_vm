@@ -33,7 +33,7 @@ class SpecificModel(TrafficModel):
                              ('activity_names', 'Aktivitäten'),
                              ('activity_codes', 'Aktivitätencodes'),
                              ('group_dest_mode', 'Personengruppen')])
-        
+
     def __init__(self, path=None):
         input_config_file = os.path.join(os.path.dirname(__file__),
                                          self.INPUT_CONFIG_FILE)
@@ -87,15 +87,17 @@ class SpecificModel(TrafficModel):
 
         if path is not None:
             self.update()
-            
+
     @property
     def options(self):
-        options = OrderedDict()     
+        options = OrderedDict()
         options['areatype'] = (self.area_types, self.area_types)
         options['groups'] = (self.activity_names, self.activity_codes)
         options['activities'] = (self.group_dest_mode, self.group_dest_mode)
+        options['calibrate'] = (['An', 'Aus'], [True, False])
+        options['balance'] = (['An', 'Aus'], [True, False])
         return options
-        
+
     @property
     def n_zones(self):
         #number of zones is determined by the number of rows in
@@ -141,9 +143,9 @@ class SpecificModel(TrafficModel):
         if not os.path.exists(file_path):
             return None
         if not os.path.exists(csv_out):
-            Evaluation.evaluate(file_path, csv_out)  
+            Evaluation.evaluate(file_path, csv_out)
         with open(csv_out, mode='r') as csv_in:
-            reader = csv.reader(csv_in)  
+            reader = csv.reader(csv_in)
             table_dict = OrderedDict()
             for i, rows in enumerate(reader):
                 for k, h in enumerate(rows):
@@ -153,7 +155,7 @@ class SpecificModel(TrafficModel):
                     #column
                     else:
                         table_dict[table_dict.keys()[k]].append(h)
-                    
+
         return table_dict
 
     def run(self, scenario_name, process, resources=None, output_file=None,
@@ -176,17 +178,17 @@ class SpecificModel(TrafficModel):
         executable = config.settings['trafficmodels'][self.name]['executable']
         cmd = python_path + ' ' + executable
         cmd_scen_name = '-n "{}"'.format(scenario_name)
-        
+
         if run_name is not None:
             cmd_run_name = '-r "{}"'.format(run_name)
         else:
-            cmd_run_name=''        
-            
+            cmd_run_name=''
+
         if xml_file is not None:
             cmd_xml_file = '-xml "{}"'.format(xml_file)
         else:
-            cmd_xml_file=''   
-            
+            cmd_xml_file=''
+
         full_cmd = ' '.join([cmd, cmd_scen_name, cmd_run_name, cmd_xml_file])
 
         self.already_done = 0.

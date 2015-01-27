@@ -6,7 +6,7 @@ import os
 import csv
 
 def evaluate(h5_in_path, csv_out):
-    
+
     mode_path = '/modes'
     modes = OrderedDict({
         'Fahrrad': 'bicycle',
@@ -17,24 +17,32 @@ def evaluate(h5_in_path, csv_out):
     })
     meta = OrderedDict()
     modes_sum = 0
-    
+
     if h5_in_path is None or not os.path.exists(h5_in_path):
         print 'Datei {} nicht vorhanden!'.format(h5_in_path)
         return
     h5_in = tables.openFile(h5_in_path)
-    
-    for name, mode_table in modes.items():
-        table = h5_in.getNode(mode_path + '/' + mode_table).read()
-        mode_sum = table.sum()
-        meta['Wegesumme ' + name] = int(round(mode_sum))
-        modes[name] = mode_sum
-        modes_sum += mode_sum
-    meta['Summe aller Wege'] = int(round(modes_sum))
-    for name, mode_sum in modes.items():
-        meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
-        
-    h5_in.close()   
-    
+
+    try:
+        for name, mode_table in modes.items():
+            path = mode_path + '/' + mode_table
+            table = h5_in.getNode(path).read()
+            mode_sum = table.sum()
+            meta['Wegesumme ' + name] = int(round(mode_sum))
+            modes[name] = mode_sum
+            modes_sum += mode_sum
+    except tables.NoSuchNodeError as e:
+        print e.message
+        meta = {'Fehler': 'Benötigte Tabelle fehlt: "{}"'.format(
+            e.message
+        )}
+    else:
+        meta['Summe aller Wege'] = int(round(modes_sum))
+        for name, mode_sum in modes.items():
+            meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
+
+    h5_in.close()
+
     with open(csv_out, 'wb') as csv_file:
         w = csv.DictWriter(csv_file, meta.keys())
         w.writeheader()
@@ -59,8 +67,8 @@ def startmain():
         print('Input-Datei muss angegeben werden.')
     else:
         if csv_out_path is None:
-            csv_out_path = h5_in_path.replace('.h5', '.csv')        
+            csv_out_path = h5_in_path.replace('.h5', '.csv')
         evaluate(h5_in_path, csv_out_path)
-    
+
 if __name__ == "__main__":
     startmain()

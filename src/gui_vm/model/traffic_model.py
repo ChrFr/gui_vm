@@ -268,11 +268,11 @@ class TrafficModel(Observable):
             pretty_name = self.monitored[attr]
             meta[pretty_name] = value
         return meta
-    
+
     @property
-    def options(self):        
+    def options(self):
         return None
-    
+
     @staticmethod
     def new_specific_model(name):
         config = Config()
@@ -284,7 +284,6 @@ class TrafficModel(Observable):
             config_filename = traffic_models[name]['config_file']
             #complete relative paths
             if not os.path.isabs(config_filename):
-                
                 config_filename = os.path.join(main_path,
                                                config_filename)
             return (imp.load_source('SpecificModel', config_filename)

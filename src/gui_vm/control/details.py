@@ -331,10 +331,19 @@ class OutputDetails(QtGui.QGroupBox):
         self.start_button.setGeometry(QtCore.QRect(10, 30, 140, 31))
         self.start_button.setMinimumSize(QtCore.QSize(140, 0))
         self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.start_button.setObjectName(_fromUtf8("start_button"))   
+        self.start_button.setObjectName(_fromUtf8("start_button"))
+        self.special_button = QtGui.QPushButton(self)
+        self.special_button.setGeometry(QtCore.QRect(160, 30, 140, 31))
+        self.special_button.setMinimumSize(QtCore.QSize(140, 0))
+        self.special_button.setObjectName(_fromUtf8("special_button"))
         self.formLayout.addRow(self.start_button)
+        self.formLayout.addRow(self.special_button)
+        self.start_button.setText('Start')
+        self.special_button.setText('Optionen')
+
         self.start_button.clicked.connect(self.run)
-        
+        self.special_button.clicked.connect(self.show_options)
+
         results = output_node.get_results()
         if results is None:
             self.formLayout.addRow(QtGui.QLabel('Keine Ergebnisse gefunden.'))
@@ -349,7 +358,11 @@ class OutputDetails(QtGui.QGroupBox):
                     edit = QtGui.QLineEdit(_fromUtf8(str(results[res])))
                 edit.setReadOnly(True)
                 self.formLayout.addRow(label, edit)
-                
+
     def run(self):
         options = self.output.options
-        SpecialRunDialog(self.scenario, options=options, parent=self)
+        scenario = self.output.scenario
+        SpecialRunDialog(scenario, options=options, parent=self)
+
+    def show_options(self):
+        pass
