@@ -32,7 +32,7 @@ class SpecificModel(TrafficModel):
                              ('n_activity_pairs', 'Aktivitätenpaare'),
                              ('activity_names', 'Aktivitäten'),
                              ('activity_codes', 'Aktivitätencodes'),
-                             ('group_dest_mode', 'Personengruppen')])
+                             ('groups_generation', 'Personengruppen')])
 
     def __init__(self, path=None):
         input_config_file = os.path.join(os.path.dirname(__file__),
@@ -52,7 +52,7 @@ class SpecificModel(TrafficModel):
 
         self.activity_codes = None
         self.activity_names = None
-        self.group_dest_mode = None
+        self.groups_generation = None
         self.area_types = None
 
         self.read_resource_config()
@@ -75,11 +75,11 @@ class SpecificModel(TrafficModel):
                          lambda value: self.set('area_types', value))
 
         groups = self.resources['Params'].get_child(
-            '/groups/groups_dest_mode')
+            '/groups/groups_generation')
         #observe group destination modes
         grp_column = groups.get_child('code')
         grp_column.bind('content',
-                         lambda value: self.set('group_dest_mode',
+                         lambda value: self.set('groups_generation',
                                                 value))
 
         if path is not None:
@@ -89,10 +89,12 @@ class SpecificModel(TrafficModel):
     def options(self):
         options = OrderedDict()
         options['areatype'] = (self.area_types, self.area_types)
-        options['groups'] = (self.activity_names, self.activity_codes)
-        options['activities'] = (self.group_dest_mode, self.group_dest_mode)
+        options['activities'] = (self.activity_names, self.activity_codes)
+        options['groups'] = (self.groups_generation, self.groups_generation)
         options['calibrate'] = (['An', 'Aus'], [True, False])
         options['balance'] = (['An', 'Aus'], [True, False])
+        options['detailed'] = (['Gruppendetails', 'Akitivitätendetails'],
+                               ['groups', 'activities'])
         return options
 
     @property
@@ -126,7 +128,7 @@ class SpecificModel(TrafficModel):
     def update(self, path):
         super(SpecificModel, self).update(path)
 
-    def evaluate (self, file_path):
+    def evaluate (self, file_path, overwrite=False):
         '''
         evaluate the demand file at the given path and run the evluation script
         (creates csv file)
@@ -139,7 +141,7 @@ class SpecificModel(TrafficModel):
         csv_out = file_path.replace('.h5', '.csv')
         if not os.path.exists(file_path):
             return None
-        if not os.path.exists(csv_out):
+        if overwrite or not os.path.exists(csv_out):
             Evaluation.evaluate(file_path, csv_out)
         with open(csv_out, mode='r') as csv_in:
             reader = csv.reader(csv_in)
@@ -190,7 +192,7 @@ class SpecificModel(TrafficModel):
 
         self.already_done = 0.
         self.group = None
-        groups_count = len(self.get('group_dest_mode'))
+        groups_count = len(self.get('groups_generation'))
         self.to_do = 0
         self.group_share = 100. / groups_count
         self.group_counter = 0
@@ -211,7 +213,7 @@ class SpecificModel(TrafficModel):
             if callback:
                 callback(message, self.already_done)
             if 'completed' in message:
-                self.evaluate(output_file)
+                self.evaluate(output_file, overwrite=True)
                 if on_success:
                     on_success()
         #ToDo: how to check if error occured (tdmks doesn't return exit codes)

@@ -2,7 +2,8 @@
 from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
-from gui_vm.control.dialogs import CopyFilesDialog, SpecialRunDialog
+from gui_vm.control.dialogs import (CopyFilesDialog, SpecialRunDialog,
+                                    InputDialog, ExecDialog)
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
 from functools import partial
@@ -70,7 +71,15 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         # only call dialog, if scenario is already calculated once and demand
         # file still exists
         else:
-            SpecialRunDialog(self.scenario, parent=self)
+            options, ok = SpecialRunDialog.getValues(self.scenario)
+            if ok:
+                default = 'spezifischer Lauf {}'.format(
+                    len(self.scenario.get_output_files()) - 1)
+                run_name, ok = InputDialog.getValues(_fromUtf8(
+                    'Name für den spezifischen Lauf'), default)
+                if ok:
+                    dialog = ExecDialog(self.scenario, run_name,
+                                        options=options)
             return
         msgBox = QtGui.QMessageBox()
         msgBox.setText(msg)

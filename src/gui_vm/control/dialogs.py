@@ -275,7 +275,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
     def getValues():
         dialog = NewProjectDialog()
         ret = None
-        # dialog shall be opened again, if no valid
+        # dialog shall be opened again, if input is not valid
         # true loop will only be exited, if (ok and valid) or canceled
         while True:
             ret = dialog.exec_()
@@ -294,15 +294,12 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
 
 class SpecialRunDialog(QtGui.QDialog):
     '''
-    open a dialog to define the parameters for a special run (Maxem specific!!!!)
+    open a dialog to define the parameters for a special run
     '''
 
     def __init__(self, scenario_node, stored_options=None, parent=None):
         super(SpecialRunDialog, self).__init__(parent=parent)
         self.setupUi()
-        self.cancel_button.clicked.connect(self.close)
-        self.start_button.clicked.connect(self.run)
-        self.store_button.clicked.connect(self.save)
         self.scenario = scenario_node
         self.option_checks = {}
         self.parent = parent
@@ -323,7 +320,8 @@ class SpecialRunDialog(QtGui.QDialog):
                 checkbox = QtGui.QCheckBox(str(name))
 
                 #check the boxes which are stored in options
-                if stored_options.has_key(opt_name) and name in stored_options[opt_name]:
+                if stored_options and stored_options.has_key(opt_name)\
+                   and name in stored_options[opt_name]:
                     checkbox.setChecked(True)
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
@@ -347,15 +345,13 @@ class SpecialRunDialog(QtGui.QDialog):
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
-        self.store_button = QtGui.QPushButton(self)
-        self.store_button.setObjectName(_fromUtf8("store_button"))
-        self.horizontalLayout.addWidget(self.store_button)
-        self.start_button = QtGui.QPushButton(self)
-        self.start_button.setObjectName(_fromUtf8("start_button"))
-        self.horizontalLayout.addWidget(self.start_button)
-        self.cancel_button = QtGui.QPushButton(self)
-        self.cancel_button.setObjectName(_fromUtf8("cancel_button"))
-        self.horizontalLayout.addWidget(self.cancel_button)
+        buttonBox = QtGui.QDialogButtonBox(self)
+        buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.horizontalLayout.addWidget(buttonBox)
+        QtCore.QObject.connect(buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
+        QtCore.QObject.connect(buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
+
         self.gridLayout.addLayout(self.horizontalLayout, 1, 0, 1, 1)
         self.tabWidget = QtGui.QTabWidget(self)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
@@ -367,36 +363,25 @@ class SpecialRunDialog(QtGui.QDialog):
 
     def retranslateUi(self, SpecialRun):
         SpecialRun.setWindowTitle(_translate("SpecialRun", "spezifischer Lauf", None))
-        self.store_button.setText(_translate("SpecialRun", "Speichern", None))
-        self.start_button.setText(_translate("SpecialRun", "Starten", None))
-        self.cancel_button.setText(_translate("SpecialRun", "Abbrechen", None))
 
-    def run(self):
-        ok = self.store()
+    @staticmethod
+    def getValues(scenario_node, stored_options=None):
+        dialog = SpecialRunDialog(
+            scenario_node, stored_options=stored_options)
+        ok = dialog.exec_()
+        accepted = ok == QtGui.QDialog.Accepted
+        checks = dialog.option_checks
         if ok:
-            dialog = ExecDialog(self.scenario, run_name,
-                                options=self.option_checks, parent=self.parent)
-
-    def name(self):
-        default = 'spezifischer Lauf {}'.format(
-            len(self.scenario.get_output_files()) - 1)
-        run_name, ok = InputDialog.getValues(_fromUtf8(
-            'Name für den spezifischen Lauf'), default)
-        return ok, run_name
-
-    def save(self):
-        ok, run_name = self.name()
-        if ok:
-            for opt_name, opt in self.option_checks.items():
+            for opt_name, opt in checks.items():
                 opt_arr = []
                 for k, v in opt.items():
-                    #self.options[opt_name][k] = v.isChecked()
                     if v.isChecked():
                         opt_arr.append(str(k))
-                self.option_checks[opt_name] = opt_arr
-            self.scenario.add_run(run_name, self.option_checks)
-            self.close()
-        return ok
+                if len(opt_arr) > 0:
+                    checks[opt_name] = opt_arr
+                else:
+                    checks.pop(opt_name)
+        return checks, ok
 
 
 class InputDialog(QtGui.QDialog):

@@ -451,6 +451,7 @@ class VMProjectControl(ProjectTreeControl):
                               .format(new_scen_name)))
                 return
             new_scenario_node = scenario_node.clone(new_scen_name)
+            scenario_node.parent.add_child(new_scenario_node)
             path = new_scenario_node.path
             if os.path.exists(new_scenario_node.path):
                 reply = QtGui.QMessageBox.question(
@@ -460,14 +461,13 @@ class VMProjectControl(ProjectTreeControl):
                     QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
                 if reply == QtGui.QMessageBox.No:
                     return
-            scenario_node.parent.add_child(new_scenario_node)
             filenames = []
             destinations = []
-            for res_node in scenario_node.get_inputs():
+            for res_node in scenario_node.get_input_files():
                 new_res_node = new_scenario_node.get_input(res_node.name)
                 if new_res_node:
                     filenames.append(res_node.file_absolute)
-                    destinations.append(new_res_node.full_path)
+                    destinations.append(os.path.split(new_res_node.file_absolute)[0])
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal

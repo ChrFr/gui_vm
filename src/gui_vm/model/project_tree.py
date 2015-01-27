@@ -380,11 +380,16 @@ class Scenario(TreeNode):
         return config.settings['trafficmodels'][name]['default_folder']
 
     @property
+    def project(self):
+        return self.get_parent_by_class(Project)
+
+    @property
     def path(self):
-        if self.get_parent_by_class(Project).project_folder is None:
+        project = self.project
+        if project.project_folder is None:
             return None
         return os.path.join(
-            self.get_parent_by_class(Project).project_folder,
+            self.project.project_folder,
             self.name)
 
     @property
@@ -408,18 +413,20 @@ class Scenario(TreeNode):
 
     def run(self, process, run_name, options=None, callback=None):
         #path to project.xml
-        project_xml = self.get_parent_by_class(Project).filename
+        results_run = self.add_run(run_name, options=options)
+        project_xml = self.project.filename
         #model defines run command etc.
         self.model.run(self.name,
                        process,
                        options=options,
                        xml_file=project_xml,
+                       run_name=run_name,
                        on_success=lambda:self.add_run(run_name),
                        callback=callback)
 
         #temporary add manually, on success adding doesn't work by now (tdmks doesn't complete
         #successful)
-        results_run = self.add_run(run_name)
+        #results_run = self.add_run(run_name)
 
 
     def add_run(self, run_name, options=None):
@@ -435,7 +442,7 @@ class Scenario(TreeNode):
         results_run.file_relative = os.path.join(run_name, filename)
         if options:
             results_run.options = options
-        self.get_parent_by_class(Project).emit()
+        self.project.emit()
         return results_run
 
     def validate(self):
@@ -901,8 +908,18 @@ class OutputNode(ResourceNode):
         return self.model.evaluate(self.file_absolute)
 
     @property
+    def is_primary(self):
+        primary_run = self.scenario.primary_run
+        if primary_run is None:
+            return False
+        if self == primary_run:
+            return True
+        return False
+
+    @property
     def status(self):
         return None
+
 
 class XMLParser(object):
     '''
