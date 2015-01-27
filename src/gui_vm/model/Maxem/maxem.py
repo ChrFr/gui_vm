@@ -212,8 +212,8 @@ class SpecificModel(TrafficModel):
                     self.to_do = 0
             if callback:
                 callback(message, self.already_done)
+            # ' ... completed' is final success message of tdmks run
             if 'completed' in message:
-                self.evaluate(output_file, overwrite=True)
                 if on_success:
                     on_success()
         #ToDo: how to check if error occured (tdmks doesn't return exit codes)

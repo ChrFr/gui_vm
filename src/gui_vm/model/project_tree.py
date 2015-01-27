@@ -412,16 +412,22 @@ class Scenario(TreeNode):
         return pr[0]
 
     def run(self, process, run_name, options=None, callback=None):
-        #path to project.xml
-        results_run = self.add_run(run_name, options=options)
+        results_run = self.get_output(run_name)
+        #results with given name do not exist yet -> create them
+        if results_run is None:
+            results_run = self.add_run(run_name, options=options)
         project_xml = self.project.filename
+        def on_success():
+            output_file = results_run.file_absolute
+            self.model.evaluate(output_file, overwrite=True)
+            self.project.emit()
         #model defines run command etc.
         self.model.run(self.name,
                        process,
                        options=options,
                        xml_file=project_xml,
                        run_name=run_name,
-                       on_success=lambda:self.add_run(run_name),
+                       on_success=on_success,
                        callback=callback)
 
         #temporary add manually, on success adding doesn't work by now (tdmks doesn't complete

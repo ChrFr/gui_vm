@@ -54,7 +54,8 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             txt = scenario_node.meta[meta]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
-                edit = QtGui.QTextEdit(_fromUtf8(txt))
+                txt = unicode(txt, "ISO-8859-1").encode('ascii', 'xmlcharrefreplace')
+                edit = QtGui.QTextEdit(txt)
                 edit.setMinimumHeight(100)
             else:
                 edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
@@ -350,7 +351,7 @@ class OutputDetails(QtGui.QGroupBox):
         self.special_button.setText('Optionen')
 
         self.start_button.clicked.connect(self.run)
-        self.special_button.clicked.connect(self.show_options)
+        self.special_button.clicked.connect(self.change_options)
 
         results = output_node.get_results()
         if results is None:
@@ -367,10 +368,15 @@ class OutputDetails(QtGui.QGroupBox):
                 edit.setReadOnly(True)
                 self.formLayout.addRow(label, edit)
 
-    def run(self):
-        options = self.output.options
+    def change_options(self):
+        stored_options = self.output.options
         scenario = self.output.scenario
-        SpecialRunDialog(scenario, stored_options=options, parent=self)
+        new_options, ok = SpecialRunDialog.getValues(
+            scenario, stored_options=stored_options)
+        if ok:
+            self.output.options = new_options
 
-    def show_options(self):
-        pass
+    def run(self):
+        scenario = self.output.scenario
+        dialog = ExecDialog(scenario, self.output.name,
+                            options=self.output.options)

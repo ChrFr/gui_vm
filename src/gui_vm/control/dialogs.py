@@ -171,7 +171,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.setupUi(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.cancelButton.clicked.connect(self.close)
-        self.startButton.clicked.connect(self.call_cmd)
+        self.startButton.clicked.connect(self.run)
 
         # QProcess object for external app
         self.process = QtCore.QProcess(self)
@@ -185,7 +185,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         #start process when window is opened
         self.startButton.clicked.emit(True)
 
-    def call_cmd(self):
+    def run(self):
         doStart = True
         primary = self.scenario.primary_run
         # there are already results after a successful run
@@ -316,12 +316,12 @@ class SpecialRunDialog(QtGui.QDialog):
             widget = QtGui.QWidget()
             layout = QtGui.QVBoxLayout()
             checks = []
-            for name in check_names[0]:
-                checkbox = QtGui.QCheckBox(str(name))
+            for i, name in enumerate(check_names[0]):
+                checkbox = QtGui.QCheckBox(_fromUtf8(str(name)))
 
                 #check the boxes which are stored in options
                 if stored_options and stored_options.has_key(opt_name)\
-                   and name in stored_options[opt_name]:
+                   and check_names[1][i] in stored_options[opt_name]:
                     checkbox.setChecked(True)
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
@@ -381,7 +381,8 @@ class SpecialRunDialog(QtGui.QDialog):
                     checks[opt_name] = opt_arr
                 else:
                     checks.pop(opt_name)
-        return checks, ok
+            return checks, ok
+        return None, False
 
 
 class InputDialog(QtGui.QDialog):

@@ -4,7 +4,8 @@ from details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetail
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
-                                    NewScenarioDialog, SpecialRunDialog)
+                                    NewScenarioDialog, SpecialRunDialog,
+                                    InputDialog)
 from gui_vm.config.config import Config
 import os, subprocess
 from shutil import rmtree
@@ -515,9 +516,15 @@ class VMProjectControl(ProjectTreeControl):
     def add_special_run(self, node=None):
         if not node:
             node = self.selected_item
-        scenario = node.get_parent_by_class(Scenario)
-        SpecialRunDialog(scenario, parent=self.view)
-
+        scenario = node.scenario
+        options, ok = SpecialRunDialog.getValues(scenario)
+        if ok:
+            default = 'spezifischer Lauf {}'.format(
+                len(scenario.get_output_files()) - 1)
+            run_name, ok = InputDialog.getValues(_fromUtf8(
+                'Name für den spezifischen Lauf'), default)
+            if ok:
+                scenario.add_run(run_name, options=options)
 
     def _reset_scenario(self, scenario_node=None):
         '''
