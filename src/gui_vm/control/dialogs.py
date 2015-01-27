@@ -317,7 +317,7 @@ class SpecialRunDialog(QtGui.QDialog):
             layout = QtGui.QVBoxLayout()
             checks = []
             for i, name in enumerate(check_names[0]):
-                checkbox = QtGui.QCheckBox(_fromUtf8(str(name)))
+                checkbox = QtGui.QCheckBox(_fromUtf8(name))
 
                 #check the boxes which are stored in options
                 if stored_options and stored_options.has_key(opt_name)\

@@ -242,7 +242,7 @@ class VMProjectControl(ProjectTreeControl):
             },
             'copy': {
                 Scenario: [self._clone_scenario, 'Szenario klonen'],
-                OutputNode: [self._copy_special_run, 'spezifischer Lauf kopieren']
+                OutputNode: [self._copy_special_run, 'spezifischen Lauf kopieren']
             },
             'clean': {
 
@@ -435,6 +435,8 @@ class VMProjectControl(ProjectTreeControl):
             self.project_changed.emit()
 
     def _copy_special_run(self, output_node=None):
+        #ToDo: Dropdown with every scenario with same model
+        #if exists with name -> rename '<name>-2' '<name>-3' etc. (loop)
         pass
 
     def _clone_scenario(self, scenario_node=None):
@@ -464,11 +466,17 @@ class VMProjectControl(ProjectTreeControl):
                     return
             filenames = []
             destinations = []
-            for res_node in scenario_node.get_input_files():
-                new_res_node = new_scenario_node.get_input(res_node.name)
-                if new_res_node:
-                    filenames.append(res_node.file_absolute)
-                    destinations.append(os.path.split(new_res_node.file_absolute)[0])
+            for i, nodes in enumerate([scenario_node.get_input_files(),
+                                       scenario_node.get_output_files()]):
+                is_input = i == 0
+                for res_node in nodes:
+                    if is_input:
+                        new_res_node = new_scenario_node.get_input(res_node.name)
+                    else:
+                        new_res_node = new_scenario_node.get_output(res_node.name)
+                    if new_res_node and os.path.exists(res_node.file_absolute):
+                        filenames.append(res_node.file_absolute)
+                        destinations.append(os.path.split(new_res_node.file_absolute)[0])
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal

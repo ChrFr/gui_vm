@@ -514,6 +514,8 @@ class Scenario(TreeNode):
         if len(res_nodes) > 2:
             raise Exception('Multiple Definition of resource {}'
                             .format(self.name))
+        if len(res_nodes) == 0:
+            return None
         return res_nodes[0]
 
     def get_output(self, name):

@@ -87,6 +87,8 @@ class SpecificModel(TrafficModel):
 
     @property
     def options(self):
+        #ToDo: is_unique, is_primary, is_admin missing
+        #class rather than dict
         options = OrderedDict()
         options['areatype'] = (self.area_types, self.area_types)
         options['activities'] = (self.activity_names, self.activity_codes)
