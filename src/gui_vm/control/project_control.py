@@ -4,7 +4,7 @@ from details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetail
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
-                                    NewScenarioDialog, SpecialRunDialog,
+                                    NewScenarioDialog, RunOptionsDialog,
                                     InputDialog)
 from gui_vm.config.config import Config
 import os, subprocess
@@ -36,15 +36,16 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
     def __init__(self, view=None):
         super(ProjectTreeControl, self).__init__()
-        self.view = view
+        self.tree_view = view
         self.model = None
         self.header = ('Projekt', 'Details')
         self.count = 0
-        self.details = None
         self.current_index = None
 
     @property
     def selected_item(self):
+        if self.current_index is None:
+            return None
         return self.nodeFromIndex(self.current_index)
 
     @property
@@ -181,9 +182,10 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
 
 class VMProjectControl(ProjectTreeControl):
-    def __init__(self, view=None, button_group=None):
+    def __init__(self, view=None, details_view=None, button_group=None):
         super(VMProjectControl, self).__init__(view)
         self.model = TreeNode('root')
+        self.details_view = details_view
         self.button_group = button_group
         self.plus_button = self.button_group.findChild(
             QtGui.QAbstractButton, 'plus_button')
@@ -200,6 +202,9 @@ class VMProjectControl(ProjectTreeControl):
         self.clean_button = self.button_group.findChild(
             QtGui.QAbstractButton, 'clean_button')
 
+        self.view_changed.connect(self.update_view)
+        self.dataChanged.connect(self.update_view)
+
         # connect the context buttons with the defined actions
         self.plus_button.clicked.connect(lambda: self.start_function('add'))
         self.minus_button.clicked.connect(lambda: self.start_function('remove'))
@@ -210,6 +215,8 @@ class VMProjectControl(ProjectTreeControl):
                                          self.start_function('switch_lock'))
         self.copy_button.clicked.connect(lambda: self.start_function('copy'))
 
+        self.project_changed.connect(self.item_clicked)
+
         for button in self.button_group.children():
             button.setEnabled(False)
 
@@ -217,7 +224,7 @@ class VMProjectControl(ProjectTreeControl):
             'add': {
                 Project: [self.add_scenario, 'Szenario hinzufügen'],
                 Scenario: [self.add_scenario, 'Szenario hinzufügen'],
-                OutputNode: [self.add_special_run, 'spezifischer Lauf hinzufügen']
+                OutputNode: [self.add_special_run, 'spezifischen Lauf hinzufügen']
             },
             'remove': {
                 Scenario: [self._remove_scenario, 'Szenario entfernen'],
@@ -254,32 +261,9 @@ class VMProjectControl(ProjectTreeControl):
         show details when row of project tree is clicked
         details shown depend on type of node that is behind the clicked row
         '''
-        self.current_index = index
-        node = self.selected_item
-
-        #clear the old details
-        if self.details:
-            self.details.close()
-            self.details = None
-
-        #get new details depending on type of node
-
-        if isinstance(node, Project):
-            self.details = ProjectDetails(node)
-        elif isinstance(node, Scenario):
-            self.details = ScenarioDetails(node, self)
-        elif isinstance(node, InputNode):
-            self.details = InputDetails(node, self)
-        elif isinstance(node, OutputNode):
-            model = node.get_parent_by_class(Scenario).model
-            self.details = OutputDetails(node, model.evaluate)
-        #track changes made in details
-        if self.details:
-            self.details.value_changed.connect(self.project_changed)
-
-        self._map_buttons(node)
-
-        self.dataChanged.emit(index, index)
+        if index is not None:
+            self.current_index = index
+        self.dataChanged.emit(self.current_index, self.current_index)
 
     def start_function(self, function_name):
         node = self.selected_item
@@ -329,28 +313,57 @@ class VMProjectControl(ProjectTreeControl):
             if cls in value:
                 action_map[context_menu.addAction(_fromUtf8(value[cls][1]))] = \
                     value[cls][0]
-        action = context_menu.exec_(self.view.mapToGlobal(pos))
+        action = context_menu.exec_(self.tree_view.mapToGlobal(pos))
         context_menu.close()
         if action:
             action_map[action]()
 
-    def update_details(self, window):
+    def update_view(self):
+        self.tree_view.expandAll()
+        for column in range(self.tree_view.model()
+                            .columnCount(QtCore.QModelIndex())):
+            self.tree_view.resizeColumnToContents(column)
+
+        #clear the old details
+        for i in reversed(range(self.details_view.count())):
+            widget = self.details_view.itemAt(i).widget()
+            if widget:
+                widget.deleteLater()
+
+        #get new details depending on type of node
         node = self.selected_item
-        if self.details:
-            #self.details.close()
-            #self.details = self.details.__class__(node, self)
-            self.details.value_changed.connect(self.project_changed)
-            window.addWidget(self.details)
-            self.details.update()
+        if node is None:
+            return
+
+        details = None
+
+        if isinstance(node, Project):
+            details = ProjectDetails(node)
+        elif isinstance(node, Scenario):
+            details = ScenarioDetails(node, self)
+        elif isinstance(node, InputNode):
+            details = InputDetails(node, self)
+        elif isinstance(node, OutputNode):
+            model = node.get_parent_by_class(Scenario).model
+            details = OutputDetails(node, model.evaluate)
+
+        #track changes made in details
+        if details:
+            details.value_changed.connect(self.view_changed)
+            self.details_view.addWidget(details)
+            details.update()
+
+        self._map_buttons(node)
 
     def _remove_node(self, node):
         if not node:
             node = self.selected_item
         parent_idx = self.parent(self.current_index)
-        self.remove_row(self.current_index.row(),
+        cur_tmp = self.current_index
+        self.item_clicked(parent_idx)
+        self.remove_row(cur_tmp.row(),
                         parent_idx)
         node.remove_all_children()
-        self.item_clicked(parent_idx)
 
     def _remove_scenario(self, scenario_node=None):
         if not scenario_node:
@@ -372,7 +385,7 @@ class VMProjectControl(ProjectTreeControl):
 
 
     def remove_resource(self, resource_node=None, remove_node=False,
-                        confirmation=True):
+                        confirmation=True, remove_outputs=True):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
@@ -402,18 +415,32 @@ class VMProjectControl(ProjectTreeControl):
             self._remove_node(resource_node)
         else:
             resource_node.update()
+
+        if remove_outputs:
+            scenario = resource_node.scenario
+            self.remove_outputs(scenario)
         self.project_changed.emit()
 
     def _remove_output(self, resource_node=None):
         if not resource_node:
             resource_node = self.selected_item
-        self.remove_resource(remove_node=True)
+        if resource_node.is_primary:
+            scenario = resource_node.scenario
+            cur_tmp = self.current_index
+            parent_idx = self.current_index.parent()
+            self.item_clicked(parent_idx.parent())
+            self.remove_row(parent_idx.row(), parent_idx.parent())
+            self.remove_outputs(scenario)
+        else:
+            self.remove_resource(remove_node=True, remove_outputs=False)
 
     def run_complete(self, scenario_node=None):
         if not scenario_node:
             scenario_node = self.selected_item
-        dialog = ExecDialog(scenario_node, 'Gesamtlauf', parent=self.view,
-                            control=self)
+
+        options, ok = RunOptionsDialog.getValues(scenario, is_primary=True)
+        dialog = ExecDialog(scenario_node, 'Gesamtlauf',
+                            parent=self.tree_view, options=options)
 
     def run(self, scenario_name):
         scenario_node = self.project.get_child(scenario_name)
@@ -484,10 +511,10 @@ class VMProjectControl(ProjectTreeControl):
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal
-            self.view.setUpdatesEnabled(False)
+            self.tree_view.setUpdatesEnabled(False)
             dialog = CopyFilesDialog(filenames, destinations,
-                                     parent=self.view)
-            self.view.setUpdatesEnabled(True)
+                                     parent=self.tree_view)
+            self.tree_view.setUpdatesEnabled(True)
             scenario_node.update()
             self.project_changed.emit()
 
@@ -499,6 +526,10 @@ class VMProjectControl(ProjectTreeControl):
         if hdf5_viewer:
             subprocess.Popen('"{0}" "{1}"'.format(hdf5_viewer,
                                                   node.file_absolute))
+        else:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("In den Einstellungen ist kein HDF5-Editor angegeben."))
 
     def add_scenario(self):
         project = self.project
@@ -530,7 +561,7 @@ class VMProjectControl(ProjectTreeControl):
         if not node:
             node = self.selected_item
         scenario = node.scenario
-        options, ok = SpecialRunDialog.getValues(scenario)
+        options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
         if ok:
             default = 'spezifischer Lauf {}'.format(
                 len(scenario.get_output_files()) - 1)
@@ -564,12 +595,13 @@ class VMProjectControl(ProjectTreeControl):
 
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal
-            self.view.setUpdatesEnabled(False)
+            self.tree_view.setUpdatesEnabled(False)
             dialog = CopyFilesDialog(filenames, destinations,
-                                     parent=self.view)
-            self.view.setUpdatesEnabled(True)
+                                     parent=self.tree_view)
+            self.tree_view.setUpdatesEnabled(True)
             #dialog.deleteLater()
             scenario_node.update()
+            self.remove_outputs(scenario_node)
 
         self.project_changed.emit()
 
@@ -585,8 +617,10 @@ class VMProjectControl(ProjectTreeControl):
         filename = res_node.original_source
         destination = os.path.split(res_node.file_absolute)[0]
         dialog = CopyFilesDialog(filename, destination,
-                                 parent=self.view)
+                                 parent=self.tree_view)
         res_node.update()
+        scenario = res_node.scenario
+        self.remove_outputs(scenario)
         self.project_changed.emit()
 
     def write_project(self, filename):
@@ -615,3 +649,13 @@ class VMProjectControl(ProjectTreeControl):
         self.project.update()
         self.project_changed.emit()
         self.view_changed.emit()
+
+    def remove_outputs(self, scenario):
+        for output in scenario.get_output_files():
+            try:
+                rmtree(os.path.split(output.file_absolute)[0])
+            except:
+                pass
+        output = scenario.get_child(scenario.OUTPUT_NODES)
+        if output:
+            output.remove_all_children()

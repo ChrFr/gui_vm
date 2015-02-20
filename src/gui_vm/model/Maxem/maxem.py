@@ -90,13 +90,35 @@ class SpecificModel(TrafficModel):
         #ToDo: is_unique, is_primary, is_admin missing
         #class rather than dict
         options = OrderedDict()
-        options['areatype'] = (self.area_types, self.area_types)
-        options['activities'] = (self.activity_names, self.activity_codes)
-        options['groups'] = (self.groups_generation, self.groups_generation)
-        options['calibrate'] = (['An', 'Aus'], [True, False])
-        options['balance'] = (['An', 'Aus'], [True, False])
-        options['detailed'] = (['Gruppendetails', 'Akitivitätendetails'],
-                               ['groups', 'activities'])
+        options['areatype'] = { "names": self.area_types,
+                                "values": self.area_types,
+                                "is_primary_only": False,
+                                "is_special_only": True }
+
+        options['activities'] = { "names": self.activity_names,
+                                  "values": self.activity_codes,
+                                  "is_primary_only": False,
+                                  "is_special_only": True }
+
+        options['groups'] = { "names": self.groups_generation,
+                              "values": self.groups_generation,
+                              "is_primary_only": False,
+                              "is_special_only": True }
+
+        options['calibrate'] = { "names": ['An', 'Aus'],
+                                 "values": [True, False],
+                                 "is_primary_only": True,
+                                 "is_special_only": False }
+
+        options['balance'] = { "names": ['An', 'Aus'],
+                               "values": [True, False],
+                               "is_primary_only": True,
+                               "is_special_only": False }
+
+        options['detailed'] = { "names": ['Gruppendetails', 'Akitivitätendetails'],
+                                "values": ['groups', 'activities'],
+                                "is_primary_only": False,
+                                "is_special_only": True }
         return options
 
     @property

@@ -301,19 +301,20 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             else:
                 return (project_name, project_folder, False)
 
-class SpecialRunDialog(QtGui.QDialog):
+class RunOptionsDialog(QtGui.QDialog):
     '''
     open a dialog to define the parameters for a special run
     '''
 
-    def __init__(self, scenario_node, stored_options=None, parent=None):
-        super(SpecialRunDialog, self).__init__(parent=parent)
+    def __init__(self, scenario_node, stored_options=None,
+                 parent=None, is_primary = False):
+        super(RunOptionsDialog, self).__init__(parent=parent)
         self.setupUi()
         self.scenario = scenario_node
         self.option_checks = {}
         self.parent = parent
 
-        def create_tab(opt_name, check_names, stored_options):
+        def create_tab(opt_name, check_names, check_values, stored_options):
             tab = QtGui.QWidget()
             tab.setObjectName(_fromUtf8("area_types"))
             grid_layout = QtGui.QGridLayout(tab)
@@ -325,12 +326,12 @@ class SpecialRunDialog(QtGui.QDialog):
             widget = QtGui.QWidget()
             layout = QtGui.QVBoxLayout()
             checks = []
-            for i, name in enumerate(check_names[0]):
+            for i, name in enumerate(check_names):
                 checkbox = QtGui.QCheckBox(_fromUtf8(name))
 
                 #check the boxes which are stored in options
                 if stored_options and stored_options.has_key(opt_name)\
-                   and check_names[1][i] in stored_options[opt_name]:
+                   and check_values[i] in stored_options[opt_name]:
                     checkbox.setChecked(True)
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
@@ -338,11 +339,14 @@ class SpecialRunDialog(QtGui.QDialog):
                     QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding))
             widget.setLayout(layout)
             scroll_area.setWidget(widget)
-            return dict(zip(check_names[1], checks))
+            return dict(zip(check_values, checks))
 
         model_options = self.scenario.model.options
-        for opt, names in model_options.items():
-            self.option_checks[opt] = create_tab(opt, names, stored_options)
+        for option, attr in model_options.items():
+            if ((not is_primary and not attr['is_primary_only']) or
+                (is_primary and not attr['is_special_only'])):
+                self.option_checks[option] = create_tab(
+                    option, attr['names'], attr['values'], stored_options)
         self.show()
 
     def setupUi(self):
@@ -374,9 +378,10 @@ class SpecialRunDialog(QtGui.QDialog):
         SpecialRun.setWindowTitle(_translate("SpecialRun", "spezifischer Lauf", None))
 
     @staticmethod
-    def getValues(scenario_node, stored_options=None):
-        dialog = SpecialRunDialog(
-            scenario_node, stored_options=stored_options)
+    def getValues(scenario_node, stored_options=None, is_primary = False):
+        dialog = RunOptionsDialog(
+            scenario_node, stored_options=stored_options,
+            is_primary=is_primary)
         ok = dialog.exec_()
         accepted = ok == QtGui.QDialog.Accepted
         checks = dialog.option_checks

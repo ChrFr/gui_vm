@@ -31,7 +31,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         # the main window
         self.project_tree = TreeNode('root')
         self.project_control = VMProjectControl(
-            view=self.qtreeview, button_group=self.context_button_group)
+            view=self.qtreeview, button_group=self.context_button_group,
+            details_view=self.details_layout)
         self.qtreeview.setModel(self.project_control)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
             self.project_control.item_clicked)
@@ -53,8 +54,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionEinstellungen.triggered.connect(self.edit_settings)
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
-        self.project_control.dataChanged.connect(self.update_gui)
-        self.project_control.view_changed.connect(self.update_gui)
         self.project_control.project_changed.connect(self.project_changed_handler)
         self.project_changed.connect(self.project_changed_handler)
 
@@ -90,16 +89,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         if run_scenario:
             self.project_control.run(run_scenario)
-
-    def update_gui(self):
-        '''
-        refresh the view on the project tree
-        '''
-        self.qtreeview.expandAll()
-        for column in range(self.qtreeview.model()
-                            .columnCount(QtCore.QModelIndex())):
-            self.qtreeview.resizeColumnToContents(column)
-        self.project_control.update_details(self.details_layout)
 
     def create_project(self):
         '''
@@ -188,7 +177,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_has_changed = True
         self.save_project(os.path.join(self.project_control.project.filename))
         self.project_control.validate_project()
-        self.update_gui()
 
     def project_changed_message(self):
         '''

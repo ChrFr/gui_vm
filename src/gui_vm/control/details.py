@@ -2,7 +2,7 @@
 from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
-from gui_vm.control.dialogs import (CopyFilesDialog, SpecialRunDialog,
+from gui_vm.control.dialogs import (CopyFilesDialog, RunOptionsDialog,
                                     InputDialog, ExecDialog)
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
@@ -72,7 +72,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         # only call dialog, if scenario is already calculated once and demand
         # file still exists
         else:
-            options, ok = SpecialRunDialog.getValues(self.scenario)
+            options, ok = RunOptionsDialog.getValues(self.scenario)
             if ok:
                 default = 'spezifischer Lauf {}'.format(
                     len(self.scenario.get_output_files()) - 1)
@@ -372,8 +372,9 @@ class OutputDetails(QtGui.QGroupBox):
     def change_options(self):
         stored_options = self.output.options
         scenario = self.output.scenario
-        new_options, ok = SpecialRunDialog.getValues(
-            scenario, stored_options=stored_options)
+        new_options, ok = RunOptionsDialog.getValues(
+            scenario, stored_options=stored_options,
+            is_primary=self.output.is_primary)
         if ok:
             self.output.options = new_options
 
