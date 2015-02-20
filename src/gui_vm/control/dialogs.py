@@ -464,10 +464,12 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
             lambda: self.set_folder(self.maxem_default_edit))
         self.maxem_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.maxem_exec_edit, '*.py'))
-        self.verkmod_default_browse_button.clicked.connect(
-            lambda: self.set_folder(self.verkmod_default_edit))
-        self.verkmod_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
+        self.verkmod_default_browse_button.setDisabled(True)
+        self.verkmod_exec_browse_button.setDisabled(True)
+        #self.verkmod_default_browse_button.clicked.connect(
+            #lambda: self.set_folder(self.verkmod_default_edit))
+        #self.verkmod_exec_browse_button.clicked.connect(
+            #lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
 
         self.OK_button.clicked.connect(self.write_config)
         self.reset_button.clicked.connect(self.reset)
@@ -487,9 +489,9 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.maxem_default_edit.setText(maxem['default_folder'])
         self.maxem_exec_edit.setText(maxem['executable'])
 
-        verkmod = mod['VerkMod']
-        self.verkmod_default_edit.setText(verkmod['default_folder'])
-        self.verkmod_exec_edit.setText(verkmod['executable'])
+        #verkmod = mod['VerkMod']
+        #self.verkmod_default_edit.setText(verkmod['default_folder'])
+        #self.verkmod_exec_edit.setText(verkmod['executable'])
 
 
     def set_file(self, line_edit, extension):
@@ -530,9 +532,9 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         maxem['default_folder'] = str(self.maxem_default_edit.text())
         maxem['executable'] = str(self.maxem_exec_edit.text())
 
-        verkmod = mod['VerkMod']
-        verkmod['default_folder'] = str(self.verkmod_default_edit.text())
-        verkmod['executable'] = str(self.verkmod_exec_edit.text())
+        #verkmod = mod['VerkMod']
+        #verkmod['default_folder'] = str(self.verkmod_default_edit.text())
+        #verkmod['executable'] = str(self.verkmod_exec_edit.text())
 
         config.write()
         self.close()

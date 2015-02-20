@@ -9,11 +9,6 @@
       <executable></executable>
       <default_folder></default_folder>
     </Maxem>
-    <VerkMod>
-      <config_file></config_file>
-      <executable></executable>
-      <default_folder></default_folder>
-    </VerkMod>
   </trafficmodels>
   <history>
   </history>
