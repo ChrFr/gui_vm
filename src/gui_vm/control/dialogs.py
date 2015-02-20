@@ -9,6 +9,7 @@ from PyQt4 import QtGui, QtCore
 import sys, os
 import re
 from gui_vm.config.config import Config
+from shutil import rmtree
 
 config = Config()
 config.read()
@@ -194,12 +195,20 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
             dialog = QtGui.QMessageBox()
             msg = 'Das Szenario {} '.format(self.scenario.name) + \
                 'wurde scheinbar bereits einmal komplett berechnet.\n' + \
-                'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?'
+                'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?\n\n' + \
+                'Achtung! Alle vorhandenen spezifischen Läufe des Szenarios werden gelöscht!'
             reply = dialog.question(
                 self, _fromUtf8("erneuter Gesamtlauf"), _fromUtf8(msg),
                 QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
             if reply == QtGui.QMessageBox.Cancel:
                 doStart = False
+            else:
+                for output in self.scenario.get_output_files():
+                    try:
+                        rmtree(os.path.split(output.file_absolute)[0])
+                    except:
+                        pass
+                self.scenario.get_child(self.scenario.OUTPUT_NODES).remove_all_children()
 
         if doStart:
             # run the process

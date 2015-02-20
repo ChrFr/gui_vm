@@ -187,6 +187,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             lambda: self.project_control.remove_resource(self.resource_node))
         #self.file_edit.textChanged.connect(self.update)
         self.status_button.clicked.connect(self.get_status)
+        self.setMinimumSize(500, 0)
         self.update()
 
     def update(self):

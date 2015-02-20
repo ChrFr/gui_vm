@@ -233,7 +233,7 @@ class TreeNode(Observable):
         child = self.children.pop(row)
         child.remove()
 
-    def remove_all_children(self):
+    def remove_all_children(self, class_name=None):
         if len(self.children) > 0:
             for i in xrange(len(self.children)):
                 self.children.pop(0).remove()
@@ -417,10 +417,12 @@ class Scenario(TreeNode):
         if results_run is None:
             results_run = self.add_run(run_name, options=options)
         project_xml = self.project.filename
+
         def on_success():
             output_file = results_run.file_absolute
             self.model.evaluate(output_file, overwrite=True)
             self.project.emit()
+
         #model defines run command etc.
         self.model.run(self.name,
                        process,
@@ -534,6 +536,8 @@ class Scenario(TreeNode):
         if len(res_nodes) > 2:
             raise Exception('Multiple Definition of resource {}'
                             .format(self.name))
+        if len(res_nodes) == 0:
+            return None
         return res_nodes[0]
 
     def get_input_files(self):

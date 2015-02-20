@@ -371,7 +371,8 @@ class VMProjectControl(ProjectTreeControl):
         self._remove_node(scenario_node)
 
 
-    def remove_resource(self, resource_node=None, remove_node = False):
+    def remove_resource(self, resource_node=None, remove_node=False,
+                        confirmation=True):
         '''
         remove the source of the resource node and optionally remove it from
         the disk
@@ -386,15 +387,17 @@ class VMProjectControl(ProjectTreeControl):
             return
         file_absolute = resource_node.file_absolute
         if file_absolute and os.path.exists(file_absolute):
-            reply = QtGui.QMessageBox.question(
-                None, _fromUtf8("Löschen"),
-                _fromUtf8("Soll die Datei {} \n".format(file_absolute) +
-                          "ebenfalls entfernt werden?"),
-                QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-            do_delete = reply == QtGui.QMessageBox.Yes
+            do_delete = True
+            if confirmation:
+                reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8("Löschen"),
+                    _fromUtf8("Soll die Datei {} \n".format(file_absolute) +
+                              "ebenfalls entfernt werden?"),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                do_delete = reply == QtGui.QMessageBox.Yes
             if do_delete:
                 os.remove(resource_node.file_absolute)
-        resource_node.file_path = None
+        resource_node.file_relative = None
         if remove_node:
             self._remove_node(resource_node)
         else:
@@ -409,7 +412,8 @@ class VMProjectControl(ProjectTreeControl):
     def run_complete(self, scenario_node=None):
         if not scenario_node:
             scenario_node = self.selected_item
-        dialog = ExecDialog(scenario_node, 'Gesamtlauf', parent=self.view)
+        dialog = ExecDialog(scenario_node, 'Gesamtlauf', parent=self.view,
+                            control=self)
 
     def run(self, scenario_name):
         scenario_node = self.project.get_child(scenario_name)
@@ -510,16 +514,17 @@ class VMProjectControl(ProjectTreeControl):
                               .format(scenario_name)))
             else:
                 project.add_scenario(model=model_name, name=scenario_name)
-                reply = QtGui.QMessageBox.question(
-                    None, _fromUtf8("Neues Szenario erstellen"),
-                    _fromUtf8("Möchten Sie die Standarddateien " +
-                              "für das neue Szenario verwenden?"),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-                do_copy = reply == QtGui.QMessageBox.Yes
-                if do_copy:
-                    self._reset_scenario(
-                        scenario_node=project.get_child(scenario_name))
-                self.project_changed.emit()
+                if(len(config.settings['trafficmodels'][model_name]['default_folder']) > 0):
+                    reply = QtGui.QMessageBox.question(
+                        None, _fromUtf8("Neues Szenario erstellen"),
+                        _fromUtf8("Möchten Sie die Standarddateien " +
+                                  "für das neue Szenario verwenden?"),
+                        QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                    do_copy = reply == QtGui.QMessageBox.Yes
+                    if do_copy:
+                        self._reset_scenario(
+                            scenario_node=project.get_child(scenario_name))
+                    self.project_changed.emit()
 
     def add_special_run(self, node=None):
         if not node:
