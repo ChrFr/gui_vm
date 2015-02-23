@@ -919,6 +919,12 @@ class OutputNode(ResourceNode):
     def get_results(self):
         return self.model.evaluate(self.file_absolute)
 
+    def validate(self):
+        self.resource.validate(self.path)
+        self.is_checked = True
+        #resource found is enough, no further validations needed here
+        self.is_valid = self.resource.overall_status[0] == 1
+
     @property
     def is_primary(self):
         primary_run = self.scenario.primary_run

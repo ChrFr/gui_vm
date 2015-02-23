@@ -241,6 +241,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         # strange: process returns 1 even if successful
         #if not self.process.Crashed:
         self.progress_bar.setValue(100)
+        self.scenario.project.emit()
         self.stopped()
 
     def kill(self):
