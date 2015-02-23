@@ -109,13 +109,15 @@ class SpecificModel(TrafficModel):
                                  "values": [True, False],
                                  "is_primary_only": True,
                                  "is_special_only": False,
-                                 "default": True}
+                                 "default": True,
+                                 "is_unique": True}
 
         options['balance'] = { "names": ['An', 'Aus'],
                                "values": [True, False],
                                "is_primary_only": True,
                                "is_special_only": False,
-                               "default": True}
+                               "default": True,
+                               "is_unique": True}
 
         options['detailed'] = { "names": ['Gruppendetails', 'Akitivitätendetails'],
                                 "values": ['groups', 'activities'],

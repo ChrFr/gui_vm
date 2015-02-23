@@ -385,6 +385,7 @@ class OutputDetails(QtGui.QGroupBox):
             is_primary=self.output.is_primary)
         if ok:
             self.output.options = new_options
+            scenario.project.emit()
 
     def run(self):
         scenario = self.output.scenario

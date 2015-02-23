@@ -322,7 +322,8 @@ class RunOptionsDialog(QtGui.QDialog):
         self.option_checks = {}
         self.parent = parent
 
-        def create_tab(opt_name, check_names, check_values, stored_options):
+        def create_tab(opt_name, check_names, check_values,
+                       stored_options, unique=False):
             tab = QtGui.QWidget()
             tab.setObjectName(_fromUtf8("area_types"))
             grid_layout = QtGui.QGridLayout(tab)
@@ -334,6 +335,13 @@ class RunOptionsDialog(QtGui.QDialog):
             widget = QtGui.QWidget()
             layout = QtGui.QVBoxLayout()
             checks = []
+            grouped = QtGui.QButtonGroup(widget)
+
+            if not unique:
+                grouped.setExclusive(False)
+            else:
+                grouped.setExclusive(True)
+
             for i, name in enumerate(check_names):
                 checkbox = QtGui.QCheckBox(_fromUtf8(name))
 
@@ -341,8 +349,10 @@ class RunOptionsDialog(QtGui.QDialog):
                 if stored_options and stored_options.has_key(opt_name)\
                    and str(check_values[i]) in str(stored_options[opt_name]).strip():
                     checkbox.setChecked(True)
+                grouped.addButton(checkbox)
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
+
             layout.addSpacerItem(QtGui.QSpacerItem(20,40,
                     QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding))
             widget.setLayout(layout)
@@ -353,10 +363,11 @@ class RunOptionsDialog(QtGui.QDialog):
         for option, attr in model_options.items():
             if (attr.has_key('default') and not stored_options.has_key(option)):
                 stored_options[option] = [attr['default']]
+            unique = attr.has_key('is_unique') and attr['is_unique'] == True
             if ((not is_primary and not attr['is_primary_only']) or
                 (is_primary and not attr['is_special_only'])):
                 self.option_checks[option] = create_tab(
-                    option, attr['names'], attr['values'], stored_options)
+                    option, attr['names'], attr['values'], stored_options, unique)
         self.show()
 
     def setupUi(self):
