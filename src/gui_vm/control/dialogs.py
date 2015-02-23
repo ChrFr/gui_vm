@@ -200,10 +200,10 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         primary = self.scenario.primary_run
         # there are already results after a successful run
         # a new run might be unnessecary, if file is present
-        if primary and self.run_name == primary.name:
+        if primary and primary.is_valid and self.run_name == primary.name:
             dialog = QtGui.QMessageBox()
             msg = 'Das Szenario {} '.format(self.scenario.name) + \
-                'wurde scheinbar bereits einmal komplett berechnet.\n' + \
+                'wurde bereits berechnet. \n\n' + \
                 'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?\n\n' + \
                 'Achtung! Die Ergebnisse der spezifischen Läufe des Szenarios werden ebenfalls gelöscht!'
             reply = dialog.question(
@@ -577,3 +577,81 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
 
     def reset(self):
         config.reset()
+
+
+class CopySpecialRunDialog(QtGui.QDialog):
+    '''
+    open a dialog to set the project name and folder and afterwards create
+    a new project
+    '''
+
+    def __init__(self, output_node):
+        super(CopySpecialRunDialog, self).__init__()
+        self.setWindowTitle("{} kopieren".format(output_node.name))
+        self.resize(409, 159)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        self.setSizePolicy(sizePolicy)
+        self.setMinimumSize(QtCore.QSize(409, 159))
+        self.setMaximumSize(QtCore.QSize(409, 159))
+        self.setSizeGripEnabled(False)
+        self.setModal(True)
+
+        self.gridLayout = QtGui.QGridLayout(self)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.name_edit = QtGui.QLineEdit(self)
+        self.name_edit.setText("{}".format(output_node.name))
+        self.gridLayout.addWidget(self.name_edit, 1, 1, 1, 1)
+        self.name_label = QtGui.QLabel(self)
+        self.name_label.setText("Neuer Name")
+        self.gridLayout.addWidget(self.name_label, 1, 0, 1, 1)
+
+        self.buttonBox = QtGui.QDialogButtonBox(self)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.gridLayout.addWidget(self.buttonBox, 6, 0, 1, 2)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)
+
+        self.combo_model = QtGui.QComboBox(self)
+        self.gridLayout.addWidget(self.combo_model, 2, 1, 1, 1)
+        self.combo_label = QtGui.QLabel(self)
+        self.combo_label.setText("Ziel-Szenario")
+        self.gridLayout.addWidget(self.combo_label, 2, 0, 1, 1)
+
+        scenario_names = []
+        idx = 0
+        for i, scen in enumerate(output_node.scenario.project.get_children()):
+            scenario_names.append(scen.name)
+            if scen == output_node.scenario:
+                idx = i
+        self.combo_model.addItems(scenario_names)
+        self.combo_model.setCurrentIndex(idx)
+
+        self.show()
+
+    @staticmethod
+    def getValues(output_node):
+        dialog = CopySpecialRunDialog(output_node)
+        ret = None
+        project = output_node.scenario.project
+        # dialog shall be opened again, if input is not valid
+        # true loop will only be exited, if (ok and valid) or canceled
+        while True:
+            ret = dialog.exec_()
+            output_name = str(remove_special_chars(str(dialog.name_edit.text().toAscii())))
+            scenario_name = str(dialog.combo_model.currentText())
+            if ret == QtGui.QDialog.Accepted:
+                scenario = project.get_child(scenario_name)
+                if len(scenario.find_all(output_name)) > 0:
+                    QtGui.QMessageBox.about(
+                        dialog,  "Warnung!",
+                        _fromUtf8("{} enthält bereits einen Lauf mit dem Namen {}!"
+                        .format(scenario_name, output_name)))
+                #TODO check if same params
+                else:
+                    return (output_name, scenario_name, True)
+            else:
+                return (None, None, False)

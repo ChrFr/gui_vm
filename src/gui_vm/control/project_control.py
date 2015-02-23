@@ -5,7 +5,7 @@ from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
                                     NewScenarioDialog, RunOptionsDialog,
-                                    InputDialog)
+                                    InputDialog, CopySpecialRunDialog)
 from gui_vm.config.config import Config
 import os, subprocess
 from shutil import rmtree
@@ -300,7 +300,9 @@ class VMProjectControl(ProjectTreeControl):
             self.lock_button.setChecked(True)
         else:
             self.lock_button.setChecked(False)
-        map_button(self.copy_button, 'copy')
+
+        if(not isinstance(node, OutputNode) or not node.is_primary):
+            map_button(self.copy_button, 'copy')
         map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
@@ -477,9 +479,11 @@ class VMProjectControl(ProjectTreeControl):
             self.project_changed.emit()
 
     def _copy_special_run(self, output_node=None):
-        #ToDo: Dropdown with every scenario with same model
-        #if exists with name -> rename '<name>-2' '<name>-3' etc. (loop)
-        pass
+        if not output_node:
+            output_node = self.selected_item
+        scenario_name, model_name, ok = CopySpecialRunDialog.getValues(output_node)
+
+        #TODO create new child node
 
     def _clone_scenario(self, scenario_node=None):
         if not scenario_node:
