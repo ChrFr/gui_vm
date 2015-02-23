@@ -79,8 +79,17 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.startButton.hide()
         self.cancelButton.clicked.connect(self.close)
+        self.cancelButton.setText('OK')
+        self.cancelButton.setDisabled(True)
         self.show()
         self.copy(filenames, destinations)
+        self.cancelButton.setDisabled(False)
+
+    #def abort(self):
+        #self.aborted = True
+        #self.cancelButton.setText('OK')
+        #self.log_edit.insertHtml(" ... <b>abgebrochen</b>")
+        #self.cancelButton.clicked.connect(self.close)
 
     def copy(self, filenames, destinations):
 
@@ -138,7 +147,7 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                     yes_to_all = reply == 1
                     cancel = reply == 3
                     if cancel:
-                        self.cancelButton.setText('OK')
+                        #self.cancelButton.setText('OK')
                         return
                 if do_copy or yes_to_all:
                     status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(
@@ -158,7 +167,6 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                         filename, destinations[i])
                     self.log_edit.insertHtml(status_txt)
                 self.log_edit.moveCursor(QtGui.QTextCursor.End)
-            self.cancelButton.setText('OK')
             self.progress_bar.setValue(100)
 
 

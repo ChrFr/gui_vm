@@ -291,7 +291,8 @@ class VMProjectControl(ProjectTreeControl):
 
         map_button(self.plus_button,'add')
         map_button(self.minus_button, 'remove', True)
-        map_button(self.reset_button, 'reset', True)
+        if(len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0):
+            map_button(self.reset_button, 'reset', True)
         map_button(self.edit_button, 'edit', True)
         #self.start_button.setEnabled(cls in self.context_map['execute'])
         map_button(self.lock_button, 'switch_lock')
@@ -374,9 +375,10 @@ class VMProjectControl(ProjectTreeControl):
             None, _fromUtf8("Löschen"),
             _fromUtf8("Soll das gesamte Szenario-Verzeichnis {}\n".format(
                 path) + "von der Festplatte entfernt werden?"),
-            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        do_delete = reply == QtGui.QMessageBox.Yes
-        if do_delete:
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No, QtGui.QMessageBox.Cancel)
+        if reply == QtGui.QMessageBox.Cancel:
+            return
+        if reply == QtGui.QMessageBox.Yes:
             try:
                 rmtree(scenario_node.path)
             except Exception, e:
@@ -425,15 +427,24 @@ class VMProjectControl(ProjectTreeControl):
     def _remove_output(self, resource_node=None):
         if not resource_node:
             resource_node = self.selected_item
+
+        scenario = resource_node.scenario
         if resource_node.is_primary:
-            scenario = resource_node.scenario
-            cur_tmp = self.current_index
-            parent_idx = self.current_index.parent()
-            self.item_clicked(parent_idx.parent())
-            self.remove_row(parent_idx.row(), parent_idx.parent())
-            self.remove_outputs(scenario)
+            msg = "Soll der Gesamtlauf wirklich entfernt werden?"
+            if len(scenario.get_output_files()) > 1:
+                msg += "\nAlle spezifischen Läufe werden ebenfalls gelöscht!"
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Löschen"), _fromUtf8(msg),
+                QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Ok:
+                cur_tmp = self.current_index
+                parent_idx = self.current_index.parent()
+                self.item_clicked(parent_idx.parent())
+                self.remove_row(parent_idx.row(), parent_idx.parent())
+                self.remove_outputs(scenario)
         else:
-            self.remove_resource(remove_node=True, remove_outputs=False)
+            self.remove_resource(remove_node=True, remove_outputs=False,
+                                 confirmation=False)
 
     def run_complete(self, scenario_node=None):
         if not scenario_node:
