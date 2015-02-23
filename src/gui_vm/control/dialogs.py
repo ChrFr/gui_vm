@@ -205,7 +205,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
             msg = 'Das Szenario {} '.format(self.scenario.name) + \
                 'wurde scheinbar bereits einmal komplett berechnet.\n' + \
                 'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?\n\n' + \
-                'Achtung! Alle vorhandenen spezifischen Läufe des Szenarios werden gelöscht!'
+                'Achtung! Die Ergebnisse der spezifischen Läufe des Szenarios werden ebenfalls gelöscht!'
             reply = dialog.question(
                 self, _fromUtf8("erneuter Gesamtlauf"), _fromUtf8(msg),
                 QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
@@ -217,7 +217,6 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
                         rmtree(os.path.split(output.file_absolute)[0])
                     except:
                         pass
-                self.scenario.get_child(self.scenario.OUTPUT_NODES).remove_all_children()
 
         if doStart:
             # run the process
@@ -315,7 +314,7 @@ class RunOptionsDialog(QtGui.QDialog):
     open a dialog to define the parameters for a special run
     '''
 
-    def __init__(self, scenario_node, stored_options=None,
+    def __init__(self, scenario_node, stored_options={},
                  parent=None, is_primary = False):
         super(RunOptionsDialog, self).__init__(parent=parent)
         self.setupUi()
@@ -340,7 +339,7 @@ class RunOptionsDialog(QtGui.QDialog):
 
                 #check the boxes which are stored in options
                 if stored_options and stored_options.has_key(opt_name)\
-                   and check_values[i] in stored_options[opt_name]:
+                   and str(check_values[i]) in str(stored_options[opt_name]).strip():
                     checkbox.setChecked(True)
                 layout.addWidget(checkbox)
                 checks.append(checkbox)
@@ -352,6 +351,8 @@ class RunOptionsDialog(QtGui.QDialog):
 
         model_options = self.scenario.model.options
         for option, attr in model_options.items():
+            if (attr.has_key('default') and not stored_options.has_key(option)):
+                stored_options[option] = [attr['default']]
             if ((not is_primary and not attr['is_primary_only']) or
                 (is_primary and not attr['is_special_only'])):
                 self.option_checks[option] = create_tab(
@@ -387,7 +388,7 @@ class RunOptionsDialog(QtGui.QDialog):
         SpecialRun.setWindowTitle(_translate("SpecialRun", "spezifischer Lauf", None))
 
     @staticmethod
-    def getValues(scenario_node, stored_options=None, is_primary = False):
+    def getValues(scenario_node, stored_options={}, is_primary = False):
         dialog = RunOptionsDialog(
             scenario_node, stored_options=stored_options,
             is_primary=is_primary)

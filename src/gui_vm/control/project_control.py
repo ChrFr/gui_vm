@@ -291,7 +291,7 @@ class VMProjectControl(ProjectTreeControl):
 
         map_button(self.plus_button,'add')
         map_button(self.minus_button, 'remove', True)
-        if(len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0):
+        if(hasattr(node, "model") and len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0):
             map_button(self.reset_button, 'reset', True)
         map_button(self.edit_button, 'edit', True)
         #self.start_button.setEnabled(cls in self.context_map['execute'])
@@ -345,8 +345,7 @@ class VMProjectControl(ProjectTreeControl):
         elif isinstance(node, InputNode):
             details = InputDetails(node, self)
         elif isinstance(node, OutputNode):
-            model = node.get_parent_by_class(Scenario).model
-            details = OutputDetails(node, model.evaluate)
+            details = OutputDetails(node, node.model.evaluate)
 
         #track changes made in details
         if details:

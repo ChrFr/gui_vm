@@ -108,12 +108,14 @@ class SpecificModel(TrafficModel):
         options['calibrate'] = { "names": ['An', 'Aus'],
                                  "values": [True, False],
                                  "is_primary_only": True,
-                                 "is_special_only": False }
+                                 "is_special_only": False,
+                                 "default": True}
 
         options['balance'] = { "names": ['An', 'Aus'],
                                "values": [True, False],
                                "is_primary_only": True,
-                               "is_special_only": False }
+                               "is_special_only": False,
+                               "default": True}
 
         options['detailed'] = { "names": ['Gruppendetails', 'Akitivitätendetails'],
                                 "values": ['groups', 'activities'],

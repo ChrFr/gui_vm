@@ -456,12 +456,12 @@ class Scenario(TreeNode):
     def validate(self):
         resource_nodes = self.get_input_files()
         self.is_valid = True
-        for node in resource_nodes:
-            node.validate()
-            if node.is_checked and not node.is_valid:
-                #node.parent.checked = True
-                #node.parent.is_valid = False
+        for input in resource_nodes:
+            input.validate()
+            if input.is_checked and not input.is_valid:
                 self.is_valid = False
+        for node in self.get_output_files():
+            node.validate()
         self.is_checked = True
 
     def get_default_scenario(self):

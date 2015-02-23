@@ -67,8 +67,8 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         prime_run = self.scenario.primary_run
         if not prime_run:
             msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!')
-        elif prime_run.file_absolute is None or not os.path.exists(prime_run.file_absolute):
-            msg = _fromUtf8('Datei des Gesamtlaufs nicht gefunden! ' +
+        elif prime_run.file_absolute is None or not prime_run.is_valid:
+            msg = _fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
                             'Bitte erneut ausführen.')
         # only call dialog, if scenario is already calculated once and demand
         # file still exists
@@ -329,7 +329,7 @@ class OutputDetails(QtGui.QGroupBox):
     value_changed = QtCore.pyqtSignal()
 
     def __init__(self, output_node, func_evaluate):
-        super(OutputDetails, self).__init__()
+        super(OutputDetails, self).__init__(output_node.name)
         self.output = output_node
         self.resize(450, 309)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
@@ -388,5 +388,12 @@ class OutputDetails(QtGui.QGroupBox):
 
     def run(self):
         scenario = self.output.scenario
-        dialog = ExecDialog(scenario, self.output.name,
+        primary = scenario.primary_run
+        if not self.output.is_primary and not primary.is_valid:
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(_fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
+                                     'Bitte erneut ausführen.'))
+            msgBox.exec_()
+        else:
+            dialog = ExecDialog(scenario, self.output.name,
                             options=self.output.options)
