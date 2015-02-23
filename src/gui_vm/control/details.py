@@ -39,13 +39,14 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.setupUi(self)
         self.setTitle(scenario_node.name)
         self.scenario = scenario_node
+        self.project_control = project_control
         self.combo_model.addItems(config.settings['trafficmodels'].keys())
         index = self.combo_model.findText(self.scenario.model.name)
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
         self.start_button.clicked.connect(
-            lambda: project_control.run_complete(scenario_node))
+            lambda: self.run())
         self.special_button.clicked.connect(self.special_run)
         label = QtGui.QLabel(_fromUtf8('\n\nKenngrössen:\n'))
         self.formLayout.addRow(label)
@@ -95,12 +96,19 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.value_changed.emit()
 
     def run(self):
-        reply = dialog.question(
-            self, _fromUtf8('Simulation starten'),
-            _fromUtf8('Soll die Simulation gestartet werden?'),
-            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.Ok:
-            self.scenario.run()
+        dialog = QtGui.QMessageBox()
+        if not self.scenario.is_valid:
+            msg = _fromUtf8("Beheben Sie bitte zunächst die Fehler im Szenario, \n"+
+                            "bevor sie einen Lauf starten!")
+            dialog.setText(msg)
+            dialog.exec_()
+        else:
+            reply = dialog.question(
+                self, _fromUtf8('Simulation starten'),
+                _fromUtf8('Soll die Simulation gestartet werden?'),
+                QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Ok:
+                self.project_control.run_complete(self.scenario)
 
 
 

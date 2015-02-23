@@ -350,6 +350,7 @@ class VMProjectControl(ProjectTreeControl):
         #track changes made in details
         if details:
             details.value_changed.connect(self.view_changed)
+            details.value_changed.connect(self.project_changed.emit)
             self.details_view.addWidget(details)
             details.update()
 
@@ -438,7 +439,7 @@ class VMProjectControl(ProjectTreeControl):
         if not scenario_node:
             scenario_node = self.selected_item
 
-        options, ok = RunOptionsDialog.getValues(scenario, is_primary=True)
+        options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
         dialog = ExecDialog(scenario_node, 'Gesamtlauf',
                             parent=self.tree_view, options=options)
 
