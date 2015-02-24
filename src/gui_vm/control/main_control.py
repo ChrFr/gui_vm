@@ -125,17 +125,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             recent = h[0]
         else:
             recent = '.'
-        project_folder = str(QtGui.QFileDialog.getExistingDirectory(
-            self, _fromUtf8('Projektordner auswählen'),  recent))
-        if len(project_folder) > 0:
-            project_file = os.path.join(project_folder, Project.FILENAME_DEFAULT)
+        project_file = str(QtGui.QFileDialog.getOpenFileName(
+            self, _fromUtf8('Projektdatei auswählen'),  recent, Project.FILENAME_DEFAULT))
+        if len(project_file) > 0:
             if os.path.isfile(project_file):
                 do_continue = True
                 if self.project_has_changed:
                     do_continue = self.project_changed_message()
                 if do_continue:
                     self.project_control.read_project(project_file)
-                    config.add_to_history(project_folder)
+                    config.add_to_history(os.path.split(project_file)[0])
                     self.project_has_changed = False
                     return True
             else:
