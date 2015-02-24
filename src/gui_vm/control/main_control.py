@@ -52,6 +52,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.project_control.add_scenario)
         self.actionNeues_Projekt.triggered.connect(self.create_project)
         self.actionEinstellungen.triggered.connect(self.edit_settings)
+        self.actionInfo.triggered.connect(self.show_info)
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
         self.project_control.project_changed.connect(self.project_changed_handler)
@@ -65,7 +66,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.project_control.read_project(project_file)
             else:
                 QtGui.QMessageBox.about(
-                    self, 'Projektdatei {} nicht gefunden'.
+                    self, 'Fehler', 'Projektdatei {} nicht gefunden'.
                     format(project_file))
         elif len(h) > 0:
             for recent in h:
@@ -89,6 +90,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         if run_scenario:
             self.project_control.run(run_scenario)
+
+    def show_info(self):
+        QtGui.QMessageBox.about(
+            self, 'Info', _fromUtf8('Oberfläche für Verkehrsmodelle. \n ' +
+            'Copyright: Gertz Gutsche Rümenapp, 2015\n' +
+            'Version: 0.5'))
 
     def create_project(self):
         '''
