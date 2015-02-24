@@ -171,7 +171,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def removeRows(self, row, count, parentIndex):
         self.beginRemoveRows(parentIndex, row, row)
         node = self.nodeFromIndex(parentIndex)
-        if len(node.children) > row:
+        if node is not None and len(node.children) > row:
             node.remove_child_at(row)
         self.endRemoveRows()
 
@@ -646,9 +646,7 @@ class VMProjectControl(ProjectTreeControl):
         if name is None:
             name = 'Neues Projekt'
         if self.project:
-            self.remove(self.project)
-            self.remove_row(self.current_index.row(),
-                            self.parent(self.current_index))
+            self._remove_node(self.project)
         self.model.add_child(Project(name, project_folder=project_folder))
         self.project.on_change(self.project_changed.emit)
         self.item_clicked(self.createIndex(0, 0, self.project))
@@ -656,9 +654,7 @@ class VMProjectControl(ProjectTreeControl):
     def read_project(self, filename):
         self.current_index = self.createIndex(0, 0, self.project)
         if self.project:
-            self.remove(self.project)
-            self.remove_row(self.current_index.row(),
-                            self.parent(self.current_index))
+            self._remove_node(self.project)
         self.model = XMLParser.read_xml(self.model, filename)
         self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]

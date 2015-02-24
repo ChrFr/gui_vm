@@ -4,7 +4,7 @@ from resources import (H5Array, H5Table, H5Resource,
 from resource_dict import (TableDict, FileDict, ArrayDict, ColumnDict)
 from collections import OrderedDict
 import numpy as np
-import os, imp
+import os, imp, sys
 from gui_vm.model.observable import Observable
 from gui_vm.config.config import Config
 from functools import partial
@@ -279,8 +279,7 @@ class TrafficModel(Observable):
         config.read()
         traffic_models = config.settings['trafficmodels']
         if name in traffic_models:
-            main_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), os.path.pardir))
+            main_path = os.path.split((sys.argv)[0])[0]
             config_filename = traffic_models[name]['config_file']
             #complete relative paths
             if not os.path.isabs(config_filename):

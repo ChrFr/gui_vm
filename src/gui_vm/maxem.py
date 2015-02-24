@@ -35,14 +35,15 @@ class SpecificModel(TrafficModel):
                              ('groups_generation', 'Personengruppen')])
 
     def __init__(self, path=None):
-        input_config_file = os.path.join(os.path.dirname(__file__),
+        main_p = os.path.split((sys.argv)[0])[0]
+        input_config_file = os.path.join(main_p,
                                          self.INPUT_CONFIG_FILE)
-        tables_config_file = os.path.join(os.path.dirname(__file__),
-                                         self.TABLES_CONFIG_FILE)
-        arrays_config_file = os.path.join(os.path.dirname(__file__),
-                                         self.ARRAYS_CONFIG_FILE)
-        columns_config_file = os.path.join(os.path.dirname(__file__),
-                                         self.COLUMNS_CONFIG_FILE)
+        tables_config_file = os.path.join(main_p,
+                                          self.TABLES_CONFIG_FILE)
+        arrays_config_file = os.path.join(main_p,
+                                          self.ARRAYS_CONFIG_FILE)
+        columns_config_file = os.path.join(main_p,
+                                           self.COLUMNS_CONFIG_FILE)
         super(SpecificModel, self).__init__(
             'Maxem',
             input_config_file=input_config_file,
