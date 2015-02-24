@@ -1,4 +1,6 @@
 default/
+build/
+dist/
 /gui.wpr
 /gui.wpu
 /org.eclipse.core.resources.prefs

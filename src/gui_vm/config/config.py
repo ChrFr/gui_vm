@@ -1,5 +1,5 @@
 from lxml import etree
-import os
+import os, sys
 
 class Singleton(type):
     '''
@@ -18,9 +18,9 @@ class Config():
     __metaclass__ = Singleton
 
     def __init__(self):
-        curdir = os.path.dirname(__file__)
-        self.filename = os.path.join(curdir, "config.xml")
-        self.default_file = os.path.join(curdir, "default_config.xml")
+        main_p = os.path.split((sys.argv)[0])[0]
+        self.filename = os.path.join(main_p, "config.xml")
+        self.default_file = os.path.join(main_p, "default_config.xml")
         self.settings = {
             'environment': {
                 'python_path': '',
@@ -76,6 +76,8 @@ class Config():
             reset_filename = self.filename
         if not reset_from_filename:
             reset_from_filename = self.default_file
+        if not os.path.isfile(reset_from_filename):
+            raise EnvironmentError('{} not found!'.format(reset_from_filename))
         #keep the history
         hist_tmp = self.settings['history']
         self.read(filename=self.default_file)

@@ -509,9 +509,32 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.OK_button.clicked.connect(self.write_config)
         self.reset_button.clicked.connect(self.reset)
         self.cancel_button.clicked.connect(self.close)
-        self.auto_python_button.clicked.connect(lambda: self.python_edit.setText(sys.executable))
+        self.auto_python_button.clicked.connect(self.set_python_auto)
         self.fill()
         self.show()
+
+    def set_python_auto(self):
+        path = ''
+
+        try:
+            #linux
+            path = os.path.split(os.environ['PYTHONPATH'])[0]
+        except KeyError:
+            #Windows
+            try:
+                f = ''
+                for p in os.environ['PATH'].split(';'):
+                    if 'python' in p.lower():
+                        f = p
+                        break
+                for s in f.split('\\'):
+                    path += s + '\\'
+                    if 'python' in s.lower():
+                        break
+            except KeyError:
+                path = ''
+
+        self.python_edit.setText(os.path.join(path, 'python.exe'))
 
     def fill(self):
         env = config.settings['environment']
