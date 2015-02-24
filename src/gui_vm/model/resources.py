@@ -292,6 +292,8 @@ class H5Resource(ResourceFile):
             filename=filename)
 
     def read(self, path):
+        if self.filename is None:
+            return None, False
         h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
         successful = h5.read()
         return h5, successful
@@ -313,16 +315,14 @@ class H5Resource(ResourceFile):
         '''
         super(H5Resource, self).update(path)
         h5_in = None
-        #reset contents
-        self._content = {}
-        if self.status_flags['filename'] == FOUND:
+        if path is not None:
             h5_in, success = self.read(path)
-            if not success:
-                #set a flag for file not found
-                self.status_flags['filename'] = (NOT_FOUND,
-                                                 'keine gueltige HDF5 Datei')
-            for child in self.children:
-                child.update(path, h5_in=h5_in)
+        if path is None or not success:
+            #set a flag for file not found
+            self.status_flags['filename'] = (NOT_FOUND,
+                                             'keine gueltige HDF5 Datei')
+        for child in self.children:
+            child.update(path, h5_in=h5_in)
         #close file
         del(h5_in)
         self.set_overall_status()
@@ -370,6 +370,8 @@ class H5Node(H5Resource):
                       where the file is in (without subfolder)
         '''
         self.reset()
+        if path is None:
+            return None
         table = self.read(path, h5_in=h5_in)
         if not table:
             self.status_flags['table_path'] = NOT_FOUND

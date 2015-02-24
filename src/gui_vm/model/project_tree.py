@@ -100,7 +100,7 @@ class TreeNode(Observable):
         '''
         self._locked = enabled
 
-    def add_child(self, child):
+    def add_child(self, child, position=None):
         '''
         add a node as a child
 
@@ -110,7 +110,10 @@ class TreeNode(Observable):
                node, that will be new child of this node
         '''
         child.parent = self
-        self.children.append(child)
+        if position is not None:
+            self.children.insert(position, child)
+        else:
+            self.children.append(child)
 
     def get_child(self, name):
         '''
@@ -446,10 +449,13 @@ class Scenario(TreeNode):
         results_run = results_node.get_child(run_name)
         if not results_run:
             results_run = OutputNode(name=run_name, parent=results_node)
-            results_node.add_child(results_run)
+            position = None
+            if run_name == self.PRIMARY_RUN:
+                position = 0
+            results_node.add_child(results_run, position=position)
         results_run.file_relative = os.path.join(run_name, filename)
         if options:
-            results_run.options = options
+            results_run.options = deepcopy(options)
         self.project.emit()
         return results_run
 

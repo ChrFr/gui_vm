@@ -390,7 +390,7 @@ class OutputDetails(QtGui.QGroupBox):
     def run(self):
         scenario = self.output.scenario
         primary = scenario.primary_run
-        if not self.output.is_primary and not primary.is_valid:
+        if primary is None or (not self.output.is_primary and not primary.is_valid):
             msgBox = QtGui.QMessageBox()
             msgBox.setText(_fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
                                      'Bitte erneut ausführen.'))

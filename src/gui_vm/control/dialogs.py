@@ -6,7 +6,7 @@ from gui_vm.view.special_run_ui import Ui_SpecialRun
 from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy, get_free_space
 from PyQt4 import QtGui, QtCore
-import sys, os
+import sys, os, collections
 import re
 from gui_vm.config.config import Config
 from shutil import rmtree
@@ -326,7 +326,6 @@ class RunOptionsDialog(QtGui.QDialog):
         def create_tab(opt_name, check_names, check_values,
                        stored_options, unique=False):
             tab = QtGui.QWidget()
-            tab.setObjectName(_fromUtf8("area_types"))
             grid_layout = QtGui.QGridLayout(tab)
             scroll_area = QtGui.QScrollArea(tab)
             scroll_area.setWidgetResizable(True)
@@ -644,14 +643,29 @@ class CopySpecialRunDialog(QtGui.QDialog):
             output_name = str(remove_special_chars(str(dialog.name_edit.text().toAscii())))
             scenario_name = str(dialog.combo_model.currentText())
             if ret == QtGui.QDialog.Accepted:
-                scenario = project.get_child(scenario_name)
-                if len(scenario.find_all(output_name)) > 0:
+                success = True
+                dest_scen = project.get_child(scenario_name)
+                if len(dest_scen.find_all(output_name)) > 0:
                     QtGui.QMessageBox.about(
                         dialog,  "Warnung!",
-                        _fromUtf8("{} enthält bereits einen Lauf mit dem Namen {}!"
+                        _fromUtf8('"{}" enthält bereits einen Lauf mit dem Namen "{}"!'
                         .format(scenario_name, output_name)))
-                #TODO check if same params
-                else:
+                    continue
+
+                #check if options and values are same in both scenarios
+                #(otherwise no sense in copying runs between scenarios)
+                origin_scen = output_node.scenario
+                if origin_scen.name != scenario_name:
+                    compare = lambda a, b: collections.Counter(a) == collections.Counter(b)
+                    for option, values in dest_scen.model.options.items():
+                        if not compare(values['values'], origin_scen.model.options[option]['values']):
+                            QtGui.QMessageBox.about(
+                                dialog,  "Warnung!",
+                                _fromUtf8('Ausgangs-Szenario "{}" und Ziel-Szenario "{}" haben verschiedene Eingangs-Parameter!'
+                                .format(origin_scen.name, scenario_name)))
+                            success = False
+                            break
+                if success:
                     return (output_name, scenario_name, True)
             else:
                 return (None, None, False)

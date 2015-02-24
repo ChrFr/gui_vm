@@ -481,9 +481,10 @@ class VMProjectControl(ProjectTreeControl):
     def _copy_special_run(self, output_node=None):
         if not output_node:
             output_node = self.selected_item
-        scenario_name, model_name, ok = CopySpecialRunDialog.getValues(output_node)
-
-        #TODO create new child node
+        new_name, scenario_name, ok = CopySpecialRunDialog.getValues(output_node)
+        if ok:
+            scenario = self.project.get_child(scenario_name)
+            new_run = scenario.add_run(new_name, output_node.options)
 
     def _clone_scenario(self, scenario_node=None):
         if not scenario_node:
