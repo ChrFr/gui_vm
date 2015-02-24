@@ -202,7 +202,7 @@ class SpecificModel(TrafficModel):
         callback: function,
                   function to track the progress
         '''
-        python_path = config.settings['environment']['python_path']
+        python_path = config.settings['trafficmodels'][self.name]['interpreter']
         executable = config.settings['trafficmodels'][self.name]['executable']
         cmd = python_path + ' ' + executable
         cmd_scen_name = '-n "{}"'.format(scenario_name)

@@ -1,6 +1,5 @@
 <CONFIG>
   <environment>
-    <python_path></python_path>
 	<hdf5_viewer></hdf5_viewer>
   </environment>
   <trafficmodels>
@@ -8,6 +7,7 @@
       <config_file>maxem.py</config_file>
       <executable></executable>
       <default_folder></default_folder>
+	  <interpreter>python.exe</interpreter>
     </Maxem>
   </trafficmodels>
   <history>

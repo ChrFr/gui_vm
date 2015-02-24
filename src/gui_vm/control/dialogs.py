@@ -539,13 +539,13 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
     def fill(self):
         env = config.settings['environment']
 
-        self.python_edit.setText(env['python_path'])
         self.hdf5_edit.setText(env['hdf5_viewer'])
 
         mod = config.settings['trafficmodels']
         maxem = mod['Maxem']
         self.maxem_default_edit.setText(maxem['default_folder'])
         self.maxem_exec_edit.setText(maxem['executable'])
+        self.python_edit.setText(maxem['interpreter'])
 
         #verkmod = mod['VerkMod']
         #self.verkmod_default_edit.setText(verkmod['default_folder'])
@@ -582,13 +582,13 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
     def write_config(self):
         env = config.settings['environment']
         #env['default_project_folder'] = str(self.project_edit.text())
-        env['python_path'] = str(self.python_edit.text())
         env['hdf5_viewer'] = str(self.hdf5_edit.text())
 
         mod = config.settings['trafficmodels']
         maxem = mod['Maxem']
         maxem['default_folder'] = str(self.maxem_default_edit.text())
         maxem['executable'] = str(self.maxem_exec_edit.text())
+        maxem['interpreter'] = str(self.python_edit.text())
 
         #verkmod = mod['VerkMod']
         #verkmod['default_folder'] = str(self.verkmod_default_edit.text())

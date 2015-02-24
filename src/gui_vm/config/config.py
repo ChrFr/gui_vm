@@ -23,13 +23,13 @@ class Config():
         self.default_file = os.path.join(main_p, "default_config.xml")
         self.settings = {
             'environment': {
-                'python_path': '',
-                'hdf5_viewer': '',
+                'hdf5_viewer': ''
                 },
             'trafficmodels': {
                 'Maxem': {
                     'default_folder': '',
-                    'executable': ''
+                    'executable': '',
+                    'interpreter': '',
                     },
                 'VerkMod': {
                     'default_folder': '',
