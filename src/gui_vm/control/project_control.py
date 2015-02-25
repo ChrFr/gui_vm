@@ -236,8 +236,8 @@ class VMProjectControl(ProjectTreeControl):
                 InputNode: [self._reset_resource, 'Eingabedaten zurücksetzen']
             },
             'edit': {
-                Scenario: [self._rename, 'Szenario umbenennen'],
-                Project: [self._rename, 'Projekt umbenennen'],
+                Scenario: [self._rename_scenario, 'Szenario umbenennen'],
+                Project: [self._rename_node, 'Projekt umbenennen'],
                 InputNode: [self.edit_resource, 'Eingabedaten editieren'],
                 OutputNode: [self.edit_resource, 'Ausgabedaten editieren']
             },
@@ -461,7 +461,8 @@ class VMProjectControl(ProjectTreeControl):
             self.run_complete(scenario_node)
         else:
             QtGui.QMessageBox.about(
-                self, 'Szenario {} nicht gefunden!'.format(scenario_name))
+                None, 'Fehler',
+                'Szenario {} nicht gefunden!'.format(scenario_name))
 
     def _switch_lock(self, resource_node=None):
         if not resource_node:
@@ -469,14 +470,39 @@ class VMProjectControl(ProjectTreeControl):
         resource_node.locked = not resource_node.locked
         self.project_changed.emit()
 
-    def _rename(self):
+    def _rename_node(self):
         node = self.selected_item
-        text, ok = QtGui.QInputDialog.getText(
+        name, ok = QtGui.QInputDialog.getText(
             None, 'Umbenennen', 'Neuen Namen eingeben:',
             QtGui.QLineEdit.Normal, node.name)
         if ok:
-            node.name = str(text)
+            node.name = str(name)
             self.project_changed.emit()
+
+    def _rename_scenario(self, scenario_node=None):
+        if not scenario_node:
+            scenario_node = self.selected_item
+        while True:
+            name, ok = QtGui.QInputDialog.getText(
+                None, 'Umbenennen', 'Neuen Namen eingeben:',
+                QtGui.QLineEdit.Normal, scenario_node.name)
+            if ok:
+                if self.project.has_child(name):
+                    QtGui.QMessageBox.about(
+                        None, 'Fehler',
+                        _fromUtf8('Das Projekt enthält bereits ein Szenario mit dem Namen "{}"'
+                        .format(name)))
+                    continue
+                old_path = scenario_node.path
+                scenario_node.name = str(name)
+                try:
+                    os.rename(old_path, scenario_node.path)
+                except:
+                    pass
+                self.project_changed.emit()
+                break
+            else:
+                break
 
     def _copy_special_run(self, output_node=None):
         if not output_node:
