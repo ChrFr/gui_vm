@@ -410,6 +410,13 @@ class VMProjectControl(ProjectTreeControl):
         if scenario_node is None:
             return
 
+        if scenario_node.locked:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Das Szenario ist gesperrt und kann nicht " +
+                          "gelöscht werden."))
+            return
+
         path = scenario_node.path
         reply = QtGui.QMessageBox.question(
             None, _fromUtf8("Löschen"),

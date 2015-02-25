@@ -26,7 +26,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, project_file=None, run_scenario=None):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
-
         # define the view on the project and connect to the qtreeview in
         # the main window
         self.project_tree = TreeNode('root')
@@ -74,16 +73,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                     self, 'Fehler', 'Projektdatei {} nicht gefunden'.
                     format(project_file))
         elif len(h) > 0:
-            for recent in h:
-                #build history menu and connect it to open the recent projects
-                action = QtGui.QAction(self)
-                action.setText(_fromUtf8(recent))
-                self.recently_used_actions.append(action)
-                self.menuZuletzt_benutzt.addAction(action)
-                project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
-                action.triggered.connect(partial((
-                    lambda filename: self.project_control.read_project(filename)),
-                                                 project_file))
+            self.build_history()
 
             #open recent project
             project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
@@ -95,6 +85,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         if run_scenario:
             self.project_control.run(run_scenario)
+
+    def build_history(self):
+        self.recently_used_actions = []
+        self.menuZuletzt_benutzt.clear()
+        for recent in config.settings['history']:
+            #build history menu and connect it to open the recent projects
+            action = QtGui.QAction(self)
+            action.setText(_fromUtf8(recent))
+            self.recently_used_actions.append(action)
+            self.menuZuletzt_benutzt.addAction(action)
+            project_file = os.path.join(recent, Project.FILENAME_DEFAULT)
+            action.triggered.connect(partial((
+                lambda filename: self.load_project(filename)),
+                                             project_file))
 
     def show_info(self):
         QtGui.QMessageBox.about(
@@ -121,6 +125,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 project_file = self.project_control.project.filename
                 self.save_project(os.path.join(project_file))
                 config.add_to_history(project_folder)
+                self.build_history()
                 return True
         else:
             return False
@@ -128,7 +133,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def edit_settings(self):
         SettingsDialog(self)
 
-    def load_project(self):
+    def load_project(self, project_file=None):
         '''
         load a project
         return True if project was loaded
@@ -139,8 +144,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             recent = h[0]
         else:
             recent = '.'
-        project_file = str(QtGui.QFileDialog.getOpenFileName(
-            self, _fromUtf8('Projektdatei auswählen'),  recent, Project.FILENAME_DEFAULT))
+        if not project_file:
+            project_file = str(QtGui.QFileDialog.getOpenFileName(
+                self, _fromUtf8('Projektdatei auswählen'),  recent, Project.FILENAME_DEFAULT))
+        project_folder = os.path.split(project_file)[0]
         if len(project_file) > 0:
             if os.path.isfile(project_file):
                 do_continue = True
@@ -149,6 +156,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 if do_continue:
                     self.project_control.read_project(project_file)
                     config.add_to_history(os.path.split(project_file)[0])
+                    self.build_history()
                     self.project_has_changed = False
                     return True
             else:
