@@ -53,6 +53,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionNeues_Projekt.triggered.connect(self.create_project)
         self.actionEinstellungen.triggered.connect(self.edit_settings)
         self.actionInfo.triggered.connect(self.show_info)
+        self.actionProjekt_schlie_en.triggered.connect(self.project_control.close_project)
+        self.actionSzenario_duplizieren.triggered.connect(
+            lambda: self.project_control.clone_scenario(do_choose=True))
+        self.actionSzenario_l_schen.triggered.connect(
+            lambda: self.project_control.remove_scenario(do_choose=True))
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
         self.project_control.project_changed.connect(self.project_changed_handler)
@@ -209,7 +214,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return do_continue
 
     def closeEvent(self, event):
-        self.save_project(os.path.join(self.project_control.project.filename))
+        project = self.project_control.project
+        if project is not None:
+            self.save_project(os.path.join(self.project_control.project.filename))
 
 
 

@@ -227,7 +227,7 @@ class VMProjectControl(ProjectTreeControl):
                 OutputNode: [self.add_special_run, 'spezifischen Lauf hinzufügen']
             },
             'remove': {
-                Scenario: [self._remove_scenario, 'Szenario entfernen'],
+                Scenario: [self.remove_scenario, 'Szenario entfernen'],
                 InputNode: [self.remove_resource, 'Eingabedaten entfernen'],
                 OutputNode: [self._remove_output, 'Ausgabedaten entfernen']
             },
@@ -248,7 +248,7 @@ class VMProjectControl(ProjectTreeControl):
                 Scenario: [self._switch_lock, 'Szenario sperren'],
             },
             'copy': {
-                Scenario: [self._clone_scenario, 'Szenario klonen'],
+                Scenario: [self.clone_scenario, 'Szenario klonen'],
                 OutputNode: [self._copy_special_run, 'spezifischen Lauf kopieren']
             },
             'clean': {
@@ -369,9 +369,37 @@ class VMProjectControl(ProjectTreeControl):
                         parent_idx)
         node.remove_all_children()
 
-    def _remove_scenario(self, scenario_node=None):
-        if not scenario_node:
+    def _choose_scenario(self, text=""):
+        combo_model = QtGui.QComboBox()
+
+        scenario_names = [scen.name for scen in self.project.get_children()]
+
+        if len(scenario_names) == 0:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Keine Szenarios vorhanden!"))
+            return None
+
+        combo_model.addItems(scenario_names)
+
+        name, ok = QtGui.QInputDialog.getItem(
+                None, _fromUtf8('Szenario wählen'), text,
+                scenario_names)
+        if ok:
+            return self.project.get_child(name)
+
+        return None
+
+    def remove_scenario(self, scenario_node=None, do_choose=False):
+
+        if not scenario_node and not do_choose:
             scenario_node = self.selected_item
+        if do_choose:
+            scenario_node = self._choose_scenario(
+                _fromUtf8('zu löschendes Szenario auswählen'))
+        if scenario_node is None:
+            return
+
         path = scenario_node.path
         reply = QtGui.QMessageBox.question(
             None, _fromUtf8("Löschen"),
@@ -513,9 +541,17 @@ class VMProjectControl(ProjectTreeControl):
             scenario = self.project.get_child(scenario_name)
             new_run = scenario.add_run(new_name, output_node.options)
 
-    def _clone_scenario(self, scenario_node=None):
-        if not scenario_node:
+    def clone_scenario(self, scenario_node=None, do_choose=False):
+        if not scenario_node and not do_choose:
             scenario_node = self.selected_item
+
+        if do_choose:
+            scenario_node = self._choose_scenario(
+                _fromUtf8('zu klonendes Szenario auswählen'))
+
+        if scenario_node is None:
+            return
+
         text, ok = QtGui.QInputDialog.getText(
                     None, 'Szenario kopieren', 'Name des neuen Szenarios:',
                     QtGui.QLineEdit.Normal, scenario_node.name + ' - Kopie')
@@ -670,7 +706,7 @@ class VMProjectControl(ProjectTreeControl):
         XMLParser.write_xml(self.project, filename)
 
     def new_project(self, name, project_folder):
-        if os.path.join(project_folder, "project.xml"):
+        if os.path.exists(os.path.join(project_folder, "project.xml")):
             QtGui.QMessageBox.about(
                 None, "Fehler",
                 _fromUtf8("Im Ordner ist bereits eine Projektdatei vorhanden! "
@@ -681,16 +717,20 @@ class VMProjectControl(ProjectTreeControl):
         if name is None:
             name = 'Neues Projekt'
         if self.project:
-            self._remove_node(self.project)
+            self.close_project()
         self.model.add_child(Project(name, project_folder=project_folder))
         self.project.on_change(self.project_changed.emit)
         self.item_clicked(self.createIndex(0, 0, self.project))
         return True
 
-    def read_project(self, filename):
+    def close_project(self):
         self.current_index = self.createIndex(0, 0, self.project)
         if self.project:
             self._remove_node(self.project)
+        self.view_changed.emit()
+
+    def read_project(self, filename):
+        self.close_project()
         self.model = XMLParser.read_xml(self.model, filename)
         self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]
