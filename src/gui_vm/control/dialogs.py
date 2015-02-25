@@ -496,7 +496,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.hdf5_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.hdf5_edit, '*.exe'))
         self.maxem_default_browse_button.clicked.connect(
-            lambda: self.set_folder(self.maxem_default_edit))
+            lambda: self.set_file(self.maxem_default_edit, 'project.xml', True))
         self.maxem_exec_browse_button.clicked.connect(
             lambda: self.set_file(self.maxem_exec_edit, '*.py'))
         self.verkmod_default_browse_button.setDisabled(True)
@@ -552,7 +552,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         #self.verkmod_exec_edit.setText(verkmod['executable'])
 
 
-    def set_file(self, line_edit, extension):
+    def set_file(self, line_edit, extension, do_split=False):
         '''
         open a file browser to put a path to a file into the given line edit
         '''
@@ -564,6 +564,8 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         filename = str(
             QtGui.QFileDialog.getOpenFileName(
                 self, _fromUtf8('Datei wählen'), current+'/'+extension))
+        if do_split:
+            filename = os.path.split(filename)[0]
         #filename is '' if canceled
         if len(filename) > 0:
             line_edit.setText(filename)

@@ -278,8 +278,8 @@ class VMProjectControl(ProjectTreeControl):
         locked = node.locked
         cls = node.__class__
 
-        def map_button(button, map_name, depends_on_lock=False):
-            enabled = is_in_map = cls in self.context_map[map_name]
+        def map_button(button, map_name, depends_on_lock=False, condition=True):
+            enabled = is_in_map = cls in self.context_map[map_name] and condition
             if depends_on_lock:
                 enabled = is_in_map and not locked
             button.setEnabled(enabled)
@@ -290,10 +290,11 @@ class VMProjectControl(ProjectTreeControl):
             button.setToolTip(tooltip)
 
         map_button(self.plus_button,'add')
-        map_button(self.minus_button, 'remove', True)
-        if(hasattr(node, "model") and len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0):
-            map_button(self.reset_button, 'reset', True)
-        map_button(self.edit_button, 'edit', True)
+        map_button(self.minus_button, 'remove', depends_on_lock=True)
+        condition = hasattr(node, "model") \
+            and len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0
+        map_button(self.reset_button, 'reset', depends_on_lock=True, condition=condition)
+        map_button(self.edit_button, 'edit', depends_on_lock=True)
         #self.start_button.setEnabled(cls in self.context_map['execute'])
         map_button(self.lock_button, 'switch_lock')
         if node.locked:
@@ -301,8 +302,8 @@ class VMProjectControl(ProjectTreeControl):
         else:
             self.lock_button.setChecked(False)
 
-        if(not isinstance(node, OutputNode) or not node.is_primary):
-            map_button(self.copy_button, 'copy')
+        condition = not isinstance(node, OutputNode) or not node.is_primary
+        map_button(self.copy_button, 'copy', depends_on_lock=True, condition=condition)
         map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
