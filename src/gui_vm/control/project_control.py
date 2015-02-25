@@ -157,6 +157,9 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def nodeFromIndex(self, index):
         return index.internalPointer() if index.isValid() else self.model
 
+    def index_from_node(self, node):
+        self.findChild(node.name)
+
     def insertRow(self, row, parent):
         return self.insertRows(row, 1, parent)
 
@@ -362,10 +365,17 @@ class VMProjectControl(ProjectTreeControl):
     def _remove_node(self, node):
         if not node:
             node = self.selected_item
-        parent_idx = self.parent(self.current_index)
-        cur_tmp = self.current_index
-        self.item_clicked(parent_idx)
-        self.remove_row(cur_tmp.row(),
+        row = node.parent.get_row(node.name)
+        index = self.createIndex(row, 0, node)
+        parent_idx = self.parent(index)
+
+        if row == 0:
+            prev_idx = parent_idx
+        else:
+            prev_idx = self.createIndex(row-1, 0, node.parent.children[row-1])
+        self.item_clicked(prev_idx)
+
+        self.remove_row(index.row(),
                         parent_idx)
         node.remove_all_children()
 
