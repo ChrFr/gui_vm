@@ -188,11 +188,16 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         self.project_control = project_control
         self.setTitle(resource_node.name)
         self.resource_node = resource_node
-        self.browse_button.clicked.connect(self.browse_files)
-        self.edit_button.clicked.connect(
-            lambda: self.project_control.edit_resource(self.resource_node))
-        self.remove_button.clicked.connect(
-            lambda: self.project_control.remove_resource(self.resource_node))
+        if resource_node.locked:
+            self.edit_button.setDisabled(True)
+            self.remove_button.setDisabled(True)
+            self.browse_button.setDisabled(True)
+        else:
+            self.browse_button.clicked.connect(self.browse_files)
+            self.edit_button.clicked.connect(
+                lambda: self.project_control.edit_resource(self.resource_node))
+            self.remove_button.clicked.connect(
+                lambda: self.project_control.remove_resource(self.resource_node))
         #self.file_edit.textChanged.connect(self.update)
         self.status_button.clicked.connect(self.get_status)
         self.setMinimumSize(500, 0)
