@@ -670,6 +670,14 @@ class VMProjectControl(ProjectTreeControl):
         XMLParser.write_xml(self.project, filename)
 
     def new_project(self, name, project_folder):
+        if os.path.join(project_folder, "project.xml"):
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Im Ordner ist bereits eine Projektdatei vorhanden! "
+                          .format(project_folder)+
+                          "Bitte wählen Sie ein anderes Verzeichnis oder"+
+                          " löschen Sie vorher das vorhandene Projekt!"))
+            return False
         if name is None:
             name = 'Neues Projekt'
         if self.project:
@@ -677,6 +685,7 @@ class VMProjectControl(ProjectTreeControl):
         self.model.add_child(Project(name, project_folder=project_folder))
         self.project.on_change(self.project_changed.emit)
         self.item_clicked(self.createIndex(0, 0, self.project))
+        return True
 
     def read_project(self, filename):
         self.current_index = self.createIndex(0, 0, self.project)

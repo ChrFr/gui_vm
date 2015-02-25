@@ -109,7 +109,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             if self.project_has_changed:
                 do_continue = self.project_changed_message()
             if do_continue:
-                self.project_control.new_project(project_name, project_folder)
+                ok = self.project_control.new_project(project_name, project_folder)
+                if not ok:
+                    return False
                 self.project_has_changed = False
                 project_file = self.project_control.project.filename
                 self.save_project(os.path.join(project_file))
