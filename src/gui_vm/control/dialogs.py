@@ -2,7 +2,6 @@
 from gui_vm.view.progress_ui import Ui_ProgressDialog
 from gui_vm.view.new_project_ui import Ui_NewProject
 from gui_vm.view.new_scenario_ui import Ui_NewScenario
-from gui_vm.view.special_run_ui import Ui_SpecialRun
 from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy, get_free_space
 from PyQt4 import QtGui, QtCore

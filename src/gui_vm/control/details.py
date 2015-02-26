@@ -297,13 +297,15 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         change the resource, copy the file
         '''
         src_filename = str(self.file_edit.text())
-        self.resource_node.file_relative = src_filename
+        self.resource_node.original_source = src_filename        
+        self.resource_node.file_relative = os.path.join(
+            self.resource_node.name, os.path.split(src_filename)[1])
         dest_filename = self.resource_node.file_absolute
         self.project_copy.setText(dest_filename)
         #only try to copy file, if not the same file as before is selected
         if os.path.normpath(src_filename) != os.path.normpath(dest_filename):
             dialog = CopyFilesDialog(src_filename,
-                                     self.resource_node.full_path,
+                                     os.path.split(self.resource_node.file_absolute)[0],
                                      parent=self)
         self.resource_node.update()
         self.value_changed.emit()
