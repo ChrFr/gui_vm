@@ -493,10 +493,24 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_resource(remove_node=True, remove_outputs=False,
                                  confirmation=False)
 
-    def run_complete(self, scenario_node=None):
-        if not scenario_node:
-            scenario_node = self.selected_item
+    def run_complete(self, scenario_node=None, do_choose=False):
 
+        if not scenario_node and not do_choose:
+            scenario_node = self.selected_item
+        if do_choose:
+            scenario_node = self._choose_scenario(
+                _fromUtf8('In welchem Szenario soll ein Gesamtlauf ausgeführt werden?'))
+        if scenario_node is None:
+            return
+
+        dialog = QtGui.QMessageBox()
+        if not scenario_node.is_valid:
+            msg = _fromUtf8("Beheben Sie bitte zunächst die Fehler im Szenario, \n"+
+                            "bevor sie einen Lauf starten!")
+            dialog.setText(msg)
+            dialog.exec_()
+            return
+            
         options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
         dialog = ExecDialog(scenario_node, 'Gesamtlauf',
                             parent=self.tree_view, options=options)
@@ -653,10 +667,25 @@ class VMProjectControl(ProjectTreeControl):
                             scenario_node=project.get_child(scenario_name))
                     self.project_changed.emit()
 
-    def add_special_run(self, node=None):
-        if not node:
+    def add_special_run(self, node=None, do_choose=False):
+
+        if not node and not do_choose:
             node = self.selected_item
-        scenario = node.scenario
+            scenario = node.scenario
+        if do_choose:
+            scenario = self._choose_scenario(
+                _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
+        if scenario is None:
+            return
+        
+        prime_run = scenario.primary_run
+        if not prime_run:
+            msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!') 
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(msg)
+            msgBox.exec_()  
+            return
+            
         options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
         if ok:
             default = 'spezifischer Lauf {}'.format(

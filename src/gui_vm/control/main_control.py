@@ -53,10 +53,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionEinstellungen.triggered.connect(self.edit_settings)
         self.actionInfo.triggered.connect(self.show_info)
         self.actionProjekt_schlie_en.triggered.connect(self.project_control.close_project)
+        
         self.actionSzenario_duplizieren.triggered.connect(
             lambda: self.project_control.clone_scenario(do_choose=True))
         self.actionSzenario_l_schen.triggered.connect(
             lambda: self.project_control.remove_scenario(do_choose=True))
+        
+        self.actionGesamtlauf_starten.triggered.connect(
+            lambda: self.project_control.run_complete(do_choose=True))
+        self.actionSpezifischen_Lauf_anlegen.triggered.connect(
+            lambda: self.project_control.add_special_run(do_choose=True))
+        
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
         self.project_control.project_changed.connect(self.project_changed_handler)

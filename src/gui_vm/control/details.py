@@ -97,18 +97,12 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
 
     def run(self):
         dialog = QtGui.QMessageBox()
-        if not self.scenario.is_valid:
-            msg = _fromUtf8("Beheben Sie bitte zunächst die Fehler im Szenario, \n"+
-                            "bevor sie einen Lauf starten!")
-            dialog.setText(msg)
-            dialog.exec_()
-        else:
-            reply = dialog.question(
-                self, _fromUtf8('Simulation starten'),
-                _fromUtf8('Soll die Simulation gestartet werden?'),
-                QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
-            if reply == QtGui.QMessageBox.Ok:
-                self.project_control.run_complete(self.scenario)
+        reply = dialog.question(
+            self, _fromUtf8('Simulation starten'),
+            _fromUtf8('Soll die Simulation gestartet werden?'),
+            QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+        if reply == QtGui.QMessageBox.Ok:
+            self.project_control.run_complete(self.scenario)
 
 
 

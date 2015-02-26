@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Tue Feb 24 11:51:27 2015
-#      by: PyQt4 UI code generator 4.11.2
+# Created: Thu Feb 26 17:41:58 2015
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -179,6 +179,8 @@ class Ui_MainWindow(object):
         self.menuZuletzt_benutzt.setObjectName(_fromUtf8("menuZuletzt_benutzt"))
         self.menuSzenario = QtGui.QMenu(self.menubar)
         self.menuSzenario.setObjectName(_fromUtf8("menuSzenario"))
+        self.menuL_ufe = QtGui.QMenu(self.menubar)
+        self.menuL_ufe.setObjectName(_fromUtf8("menuL_ufe"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
         self.statusbar.setObjectName(_fromUtf8("statusbar"))
@@ -205,6 +207,12 @@ class Ui_MainWindow(object):
         self.actionProjekt_schlie_en.setObjectName(_fromUtf8("actionProjekt_schlie_en"))
         self.actionBla = QtGui.QAction(MainWindow)
         self.actionBla.setObjectName(_fromUtf8("actionBla"))
+        self.actionGesamtlauf_starten = QtGui.QAction(MainWindow)
+        self.actionGesamtlauf_starten.setObjectName(_fromUtf8("actionGesamtlauf_starten"))
+        self.actionSpezifischen_Lauf_anlegen = QtGui.QAction(MainWindow)
+        self.actionSpezifischen_Lauf_anlegen.setObjectName(_fromUtf8("actionSpezifischen_Lauf_anlegen"))
+        self.actionSpezifischen_Lauf_starten = QtGui.QAction(MainWindow)
+        self.actionSpezifischen_Lauf_starten.setObjectName(_fromUtf8("actionSpezifischen_Lauf_starten"))
         self.menuDatei.addAction(self.actionEinstellungen)
         self.menuDatei.addSeparator()
         self.menuDatei.addAction(self.actionBeenden)
@@ -217,9 +225,13 @@ class Ui_MainWindow(object):
         self.menuSzenario.addAction(self.actionNeues_Szenario)
         self.menuSzenario.addAction(self.actionSzenario_duplizieren)
         self.menuSzenario.addAction(self.actionSzenario_l_schen)
+        self.menuL_ufe.addAction(self.actionGesamtlauf_starten)
+        self.menuL_ufe.addAction(self.actionSpezifischen_Lauf_anlegen)
+        self.menuL_ufe.addAction(self.actionSpezifischen_Lauf_starten)
         self.menubar.addAction(self.menuDatei.menuAction())
         self.menubar.addAction(self.menuProjekt.menuAction())
         self.menubar.addAction(self.menuSzenario.menuAction())
+        self.menubar.addAction(self.menuL_ufe.menuAction())
         self.menubar.addAction(self.menuHilfe.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -241,6 +253,7 @@ class Ui_MainWindow(object):
         self.menuProjekt.setTitle(_translate("MainWindow", "Projekt", None))
         self.menuZuletzt_benutzt.setTitle(_translate("MainWindow", "zuletzt benutzt", None))
         self.menuSzenario.setTitle(_translate("MainWindow", "Szenario", None))
+        self.menuL_ufe.setTitle(_translate("MainWindow", "Läufe", None))
         self.actionBeenden.setText(_translate("MainWindow", "Beenden", None))
         self.actionProjekt_ffnen.setText(_translate("MainWindow", "Projekt öffnen", None))
         self.actionProjekt_speichern.setText(_translate("MainWindow", "Projekt speichern", None))
@@ -252,5 +265,8 @@ class Ui_MainWindow(object):
         self.actionSzenario_l_schen.setText(_translate("MainWindow", "Szenario löschen", None))
         self.actionProjekt_schlie_en.setText(_translate("MainWindow", "Projekt schließen", None))
         self.actionBla.setText(_translate("MainWindow", "bla", None))
+        self.actionGesamtlauf_starten.setText(_translate("MainWindow", "Gesamtlauf starten", None))
+        self.actionSpezifischen_Lauf_anlegen.setText(_translate("MainWindow", "spezifischen Lauf anlegen", None))
+        self.actionSpezifischen_Lauf_starten.setText(_translate("MainWindow", "spezifischen Lauf starten", None))
 
 import gui_rc

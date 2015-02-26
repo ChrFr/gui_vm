@@ -466,9 +466,18 @@
     <addaction name="actionSzenario_duplizieren"/>
     <addaction name="actionSzenario_l_schen"/>
    </widget>
+   <widget class="QMenu" name="menuL_ufe">
+    <property name="title">
+     <string>Läufe</string>
+    </property>
+    <addaction name="actionGesamtlauf_starten"/>
+    <addaction name="actionSpezifischen_Lauf_anlegen"/>
+    <addaction name="actionSpezifischen_Lauf_starten"/>
+   </widget>
    <addaction name="menuDatei"/>
    <addaction name="menuProjekt"/>
    <addaction name="menuSzenario"/>
+   <addaction name="menuL_ufe"/>
    <addaction name="menuHilfe"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -525,6 +534,21 @@
   <action name="actionBla">
    <property name="text">
     <string>bla</string>
+   </property>
+  </action>
+  <action name="actionGesamtlauf_starten">
+   <property name="text">
+    <string>Gesamtlauf starten</string>
+   </property>
+  </action>
+  <action name="actionSpezifischen_Lauf_anlegen">
+   <property name="text">
+    <string>spezifischen Lauf anlegen</string>
+   </property>
+  </action>
+  <action name="actionSpezifischen_Lauf_starten">
+   <property name="text">
+    <string>spezifischen Lauf starten</string>
    </property>
   </action>
  </widget>
