@@ -19,6 +19,15 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
+class _Index(object):
+    """representation of an index"""
+    def __init__(self, qmodelindex):
+        self.parent = qmodelindex.parent()
+        self.row = qmodelindex.row()
+        self.column = qmodelindex.column()
+
+
+
 class ProjectTreeControl(QtCore.QAbstractItemModel):
     '''
     view on the project, holds the project itself and communicates with it,
@@ -40,7 +49,17 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         self.model = None
         self.header = ('Projekt', 'Details')
         self.count = 0
-        self.current_index = None
+        #self.current_index = None
+
+    @property
+    def current_index(self):
+        return self.index(self._current_index.row,
+                          self._current_index.column,
+                          self._current_index.parent)
+    @current_index.setter
+    def current_index(self, value):
+        self._current_index = _Index(value)
+
 
     @property
     def selected_item(self):
@@ -140,7 +159,13 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         if node is None or not isinstance(node, TreeNode):
             return QtCore.QModelIndex()
 
-        parent = node.parent
+        try:
+            parent = node.parent
+        except AttributeError:
+            print node
+            print node.__class__
+            print node.name
+            raise
 
         if parent is None:
             return QtCore.QModelIndex()
@@ -157,16 +182,13 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def nodeFromIndex(self, index):
         return index.internalPointer() if index.isValid() else self.model
 
-    def index_from_node(self, node):
-        self.findChild(node.name)
+    #def insertRow(self, row, parent):
+        #return self.insertRows(row, 1, parent)
 
-    def insertRow(self, row, parent):
-        return self.insertRows(row, 1, parent)
-
-    def insertRows(self, row, count, parent):
-        self.beginInsertRows(parent, row, (row + (count - 1)))
-        self.endInsertRows()
-        return True
+    #def insertRows(self, row, count, parent):
+        #self.beginInsertRows(parent, row, (row + (count - 1)))
+        #self.endInsertRows()
+        #return True
 
     def remove_row(self, row, parentIndex):
         return self.removeRows(row, 1, parentIndex)
@@ -273,7 +295,7 @@ class VMProjectControl(ProjectTreeControl):
         cls = node.__class__
         if cls in self.context_map[function_name]:
             self.context_map[function_name][cls][0]()
-        self.project_changed.emit()
+        #self.project_changed.emit()
 
     def _map_buttons(self, node):
 
@@ -320,6 +342,11 @@ class VMProjectControl(ProjectTreeControl):
             if cls in value:
                 action_map[context_menu.addAction(_fromUtf8(value[cls][1]))] = \
                     value[cls][0]
+        #shows double details if not hidden
+        for i in reversed(range(self.details_view.count())):
+            widget = self.details_view.itemAt(i).widget()
+            if widget: widget.hide()
+
         action = context_menu.exec_(self.tree_view.mapToGlobal(pos))
         context_menu.close()
         if action:
@@ -361,6 +388,12 @@ class VMProjectControl(ProjectTreeControl):
             details.update()
 
         self._map_buttons(node)
+
+    def _insert_node(self, row, column, node, parentIndex):
+        new_index = self.createIndex(row, column, node)
+        self.beginInsertRows(parentIndex, row, column)
+        self.insertRow(row, parentIndex)
+        self.endInsertRows()
 
     def _remove_node(self, node):
         if not node:
@@ -622,8 +655,8 @@ class VMProjectControl(ProjectTreeControl):
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal
             self.tree_view.setUpdatesEnabled(False)
-            dialog = CopyFilesDialog(filenames, destinations,
-                                     parent=self.tree_view)
+            dialog = CopyFilesDialog(filenames, destinations)
+                                     #parent=self.tree_view)
             self.tree_view.setUpdatesEnabled(True)
             scenario_node.update()
             self.project_changed.emit()
@@ -701,10 +734,10 @@ class VMProjectControl(ProjectTreeControl):
         to the project/scenario folder and link the project tree to those
         files
         '''
-        #self.project_tree_view.reset(self.row_index)
         if not scenario_node:
             scenario_node = self.selected_item
-        scenario_node = scenario_node.reset_to_default()
+
+        scenario_node.reset_to_default()
 
         if not scenario_node:
             QtGui.QMessageBox.about(
@@ -721,8 +754,8 @@ class VMProjectControl(ProjectTreeControl):
             #bad workaround (as it has to know the parents qtreeview)
             #but the view crashes otherwise, maybe make update signal
             self.tree_view.setUpdatesEnabled(False)
-            dialog = CopyFilesDialog(filenames, destinations,
-                                     parent=self.tree_view)
+            dialog = CopyFilesDialog(filenames, destinations)
+            dialog.exec_()
             self.tree_view.setUpdatesEnabled(True)
             #dialog.deleteLater()
             scenario_node.update()

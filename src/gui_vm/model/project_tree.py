@@ -493,20 +493,20 @@ class Scenario(TreeNode):
         reset the simrun to the defaults
         '''
         default_model = self.get_default_scenario()
-        if not default_model:
-            return None
+        default_nodes = default_model.get_input_files()
+        default_names = [d.name for d in default_nodes]
+        default_map = dict(zip(default_names, default_nodes))
+
         #set the original sources to the files in the default folder
-        for res_node in default_model.get_input_files():
-            res_node.original_source = os.path.join(self.default_folder,
-                                                    default_model.name,
-                                                    res_node.subfolder,
-                                                    res_node.file_relative)
-        #swap this node with the default one
-        parent = self.parent
-        parent.replace_child(self, default_model)
-        default_model.name = self.name
-        default_model.locked = False
-        return default_model
+        for res_node in self.get_input_files():
+            default_node = default_map[res_node.name]
+            res_node.file_relative = default_node.file_relative
+            res_node.original_source = os.path.join(
+                self.default_folder,
+                default_model.name,
+                default_node.subfolder,
+                default_node.file_relative)
+
 
     def get_input(self, name):
         '''
@@ -845,7 +845,6 @@ class ResourceNode(TreeNode):
         return os.path.join(scen_path, self.subfolder)
 
     def update(self):
-        print self.name
         self.resource.update(self.path)
 
     def validate(self):
@@ -865,8 +864,7 @@ class ResourceNode(TreeNode):
         #find corresponding default resource node
         res_default = default_model.get_input(self.name)
         #rename source
-        self.resource.filename = res_default.resource.filename
-        self.resource.subfolder = res_default.resource.subfolder
+        self.resource.file_relative = res_default.file_relative
         self.original_source = os.path.join(scenario.default_folder,
                                             default_model.name,
                                             Scenario.INPUT_NODES,

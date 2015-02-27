@@ -72,10 +72,10 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
     '''
 
     def __init__(self, filenames, destinations, parent=None):
-        super(CopyFilesDialog, self).__init__(parent=parent)
+        super(CopyFilesDialog, self).__init__(parent=None)
         self.parent = parent
         self.setupUi(self)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        #self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.startButton.hide()
         self.cancelButton.clicked.connect(self.close)
         self.cancelButton.setText('OK')
@@ -83,12 +83,6 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.show()
         self.copy(filenames, destinations)
         self.cancelButton.setDisabled(False)
-
-    #def abort(self):
-        #self.aborted = True
-        #self.cancelButton.setText('OK')
-        #self.log_edit.insertHtml(" ... <b>abgebrochen</b>")
-        #self.cancelButton.clicked.connect(self.close)
 
     def copy(self, filenames, destinations):
 
@@ -192,7 +186,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
         self.show()
         #start process when window is opened
-        self.startButton.clicked.emit(True)
+        #self.startButton.clicked.emit(True)
 
     def run(self):
         doStart = True

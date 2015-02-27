@@ -301,8 +301,8 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         #only try to copy file, if not the same file as before is selected
         if os.path.normpath(src_filename) != os.path.normpath(dest_filename):
             dialog = CopyFilesDialog(src_filename,
-                                     os.path.split(self.resource_node.file_absolute)[0],
-                                     parent=self)
+                                     os.path.split(self.resource_node.file_absolute)[0])
+            dialog.exec_()
         self.resource_node.update()
         self.value_changed.emit()
         self.show_attributes()
