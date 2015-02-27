@@ -510,7 +510,7 @@ class VMProjectControl(ProjectTreeControl):
             dialog.setText(msg)
             dialog.exec_()
             return
-            
+
         options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
         dialog = ExecDialog(scenario_node, 'Gesamtlauf',
                             parent=self.tree_view, options=options)
@@ -677,15 +677,15 @@ class VMProjectControl(ProjectTreeControl):
                 _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
         if scenario is None:
             return
-        
+
         prime_run = scenario.primary_run
         if not prime_run:
-            msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!') 
+            msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!')
             msgBox = QtGui.QMessageBox()
             msgBox.setText(msg)
-            msgBox.exec_()  
+            msgBox.exec_()
             return
-            
+
         options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
         if ok:
             default = 'spezifischer Lauf {}'.format(
@@ -732,6 +732,8 @@ class VMProjectControl(ProjectTreeControl):
 
     def validate_project(self):
         scenarios = self.project.find_all_by_class(Scenario)
+        #for scen in scenarios:
+            #scen.update()
         for scen in scenarios:
             scen.validate()
         self.view_changed.emit()

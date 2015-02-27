@@ -2,6 +2,8 @@
 from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
+from gui_vm.model.resources import (NOT_CHECKED, NOT_NEEDED, FOUND,
+                                    CHECKED_AND_VALID, NOT_FOUND, MISMATCH)
 from gui_vm.control.dialogs import (CopyFilesDialog, RunOptionsDialog,
                                     InputDialog, ExecDialog)
 from PyQt4 import QtGui, QtCore
@@ -219,9 +221,9 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             green = QtGui.QColor('green')
             red = QtGui.QColor('red')
             black = QtGui.QColor('black')
-            if status in [3, 4]:
+            if status in [NOT_FOUND, MISMATCH]:
                 status_color = red
-            elif status in [1, 2]:
+            elif status in [FOUND, CHECKED_AND_VALID]:
                 status_color = green
             else:
                 status_color = black
@@ -252,7 +254,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
                 status_color = get_status_color(status)
                 item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(message)])
                 item.setFont(0, font)
-                if status in [2, 3, 4]:
+                if status in [CHECKED_AND_VALID, NOT_FOUND, MISMATCH]:
                     item.setTextColor(0, status_color)
                 item.setTextColor(1, status_color)
                 if level == 0:
@@ -291,7 +293,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         change the resource, copy the file
         '''
         src_filename = str(self.file_edit.text())
-        self.resource_node.original_source = src_filename        
+        self.resource_node.original_source = src_filename
         self.resource_node.file_relative = os.path.join(
             self.resource_node.name, os.path.split(src_filename)[1])
         dest_filename = self.resource_node.file_absolute

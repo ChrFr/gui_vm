@@ -335,7 +335,7 @@ class TreeNode(Observable):
 
     def update(self):
         '''
-        update the the node and its children, if sth shall happen, it has to
+        update the node and its children, if sth shall happen, it has to
         be defined in the subclasses
         '''
         for child in self.children:
@@ -461,6 +461,8 @@ class Scenario(TreeNode):
 
     def validate(self):
         resource_nodes = self.get_input_files()
+        #for input in resource_nodes:
+            #input.update()
         self.is_valid = True
         for input in resource_nodes:
             input.validate()
@@ -843,6 +845,7 @@ class ResourceNode(TreeNode):
         return os.path.join(scen_path, self.subfolder)
 
     def update(self):
+        print self.name
         self.resource.update(self.path)
 
     def validate(self):

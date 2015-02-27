@@ -10,12 +10,13 @@ import copy
 
 #status flags (with ascending priority)
 NOT_CHECKED = 0
-FOUND = 1
-CHECKED_AND_VALID = 2
-NOT_FOUND = 3
-MISMATCH = 4
+NOT_NEEDED = 1
+FOUND = 2
+CHECKED_AND_VALID = 3
+NOT_FOUND = 4
+MISMATCH = 5
 
-DEFAULT_MESSAGES = ['', 'vorhanden', 'überprüft',
+DEFAULT_MESSAGES = ['', 'nicht benötigt', 'vorhanden', 'überprüft',
                     'nicht vorhanden', 'Fehler']
 
 
@@ -127,6 +128,7 @@ class Resource(Observable):
 
         status = OrderedDict()
         attributes = OrderedDict()
+
         #add the status of the monitored attributes
         for i, attr in enumerate(self.monitored):
             target = getattr(self, attr)
@@ -148,14 +150,14 @@ class Resource(Observable):
 
     @property
     def is_checked(self):
-        if self.overall_status[0] > 1:
+        if self.overall_status[0] > NOT_NEEDED:
             return True
         else:
             return False
 
     @property
     def is_valid(self):
-        if self.overall_status[0] == 2:
+        if self.overall_status[0] == CHECKED_AND_VALID:
             return True
         else:
             return False
@@ -550,6 +552,8 @@ class H5TableColumn(H5Resource):
             self.dtype = table.dtype[self.name]
             if self.required:
                 self.status_flags['dtype'] = FOUND
+            else:
+                self.status_flags['dtype'] = NOT_NEEDED
             content = table[self.name]
             if self.dtype.char != 'S':
                 self.max_value = content.max()

@@ -12,7 +12,6 @@ MIV;/iv/cost_passenger;MIV;H5Array
 MIV;/visum/Fahrweite;MIV;H5Array
 MIV;/visum/t0;MIV;H5Array
 MIV;/visum/tAkt;MIV;H5Array
-Tarifrelationen;/tarif_relationen;OV;H5Array
 OV;/Bezirke;OV;H5Table
 OV;/put/cost_put;OV;H5Array
 OV;/put/no_connection;OV;H5Array
