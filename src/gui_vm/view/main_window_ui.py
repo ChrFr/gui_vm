@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Thu Feb 26 17:41:58 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -69,7 +68,6 @@ class Ui_MainWindow(object):
         self.layoutWidget = QtGui.QWidget(self.splitter)
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.layoutWidget)
-        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.gridLayout_4 = QtGui.QGridLayout()
         self.gridLayout_4.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
@@ -94,6 +92,7 @@ class Ui_MainWindow(object):
         self.context_button_group.setObjectName(_fromUtf8("context_button_group"))
         self.plus_button = QtGui.QToolButton(self.context_button_group)
         self.plus_button.setGeometry(QtCore.QRect(10, 5, 25, 25))
+        self.plus_button.setText(_fromUtf8(""))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/plus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.plus_button.setIcon(icon2)
@@ -101,6 +100,7 @@ class Ui_MainWindow(object):
         self.plus_button.setObjectName(_fromUtf8("plus_button"))
         self.minus_button = QtGui.QToolButton(self.context_button_group)
         self.minus_button.setGeometry(QtCore.QRect(40, 5, 25, 25))
+        self.minus_button.setText(_fromUtf8(""))
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/minus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.minus_button.setIcon(icon3)
@@ -160,7 +160,6 @@ class Ui_MainWindow(object):
         self.layoutWidget1 = QtGui.QWidget(self.splitter)
         self.layoutWidget1.setObjectName(_fromUtf8("layoutWidget1"))
         self.details_layout = QtGui.QVBoxLayout(self.layoutWidget1)
-        self.details_layout.setMargin(0)
         self.details_layout.setObjectName(_fromUtf8("details_layout"))
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.details_layout.addItem(spacerItem2)
@@ -239,10 +238,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "GGR Verkehrsmodelle", None))
+        self.open_button.setToolTip(_translate("MainWindow", "Projekt öffnen", None))
         self.plus_button.setToolTip(_translate("MainWindow", "Hinzufügen", None))
-        self.plus_button.setText(_translate("MainWindow", "...", None))
         self.minus_button.setToolTip(_translate("MainWindow", "Entfernen", None))
-        self.minus_button.setText(_translate("MainWindow", "...", None))
         self.edit_button.setToolTip(_translate("MainWindow", "Umbenennen", None))
         self.reset_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))
         self.lock_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))

@@ -159,6 +159,9 @@
               <height>30</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Projekt öffnen</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -198,7 +201,7 @@
               <string>Hinzufügen</string>
              </property>
              <property name="text">
-              <string>...</string>
+              <string/>
              </property>
              <property name="icon">
               <iconset resource="gui.qrc">
@@ -224,7 +227,7 @@
               <string>Entfernen</string>
              </property>
              <property name="text">
-              <string>...</string>
+              <string/>
              </property>
              <property name="icon">
               <iconset resource="gui.qrc">
