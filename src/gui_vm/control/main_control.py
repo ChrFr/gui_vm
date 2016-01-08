@@ -73,22 +73,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         # if project is passed, open it
         if project_file:
-            if os.path.isfile(project_file):
-                self.project_control.read_project(project_file)
-            else:
-                QtGui.QMessageBox.about(
-                    self, 'Fehler', 'Projektdatei {} nicht gefunden'.
-                    format(project_file))
+            self.load_project(project_file)
+        # no project passed in arguments -> open recent project from history
         elif len(h) > 0:
-            self.build_history()
-
-            #open recent project
             project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
-            if os.path.isfile(project_file):
-                self.project_control.read_project(project_file)
+            self.load_project(project_file)
         #welcome screen if there is none (assumed first start)
         else:
             welcome = WelcomeDialog(self)
+            
+        self.build_history()        
 
         if run_scenario:
             self.project_control.run(run_scenario)
@@ -160,18 +154,24 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 do_continue = True
                 if self.project_has_changed:
                     do_continue = self.project_changed_message()
-                if do_continue:
-                    self.project_control.read_project(project_file)
+                if do_continue: 
+                    try:
+                        self.project_control.read_project(project_file)
+                    except:
+                        config.remove_from_history(os.path.split(project_file)[0])
+                        QtGui.QMessageBox.about(
+                            self, 'Fehler', 'Die Projektdatei "{}" konnte nicht geladen werden'.
+                            format(project_file))   
                     config.add_to_history(os.path.split(project_file)[0])
                     self.build_history()
                     self.project_has_changed = False
                     return True
-            else:
+            else:                
+                config.remove_from_history(os.path.split(project_file)[0])                
                 QtGui.QMessageBox.about(
                     self,
-                    _fromUtf8('Ungültiger Projektordner'),
-                    "Im angegebenen Ordner konnte keine " +
-                    Project.FILENAME_DEFAULT + " gefunden werden!")
+                    _fromUtf8('Ungültiger Projektpfad'),
+                    'Die Projektdatei "{}" exisitiert nicht.'.format(project_file))
         return False
 
     def save_project(self, filename=None):

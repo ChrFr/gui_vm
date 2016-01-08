@@ -39,16 +39,21 @@ class Config():
             'history': [],
         }
 
-    def add_to_history(self, project):
+    def add_to_history(self, project_folder):
         h = self.settings['history']
-        try:
-            h.remove(project)
-        except:
-            pass
-        h.insert(0, project)
+        # try to remove first to avoid double entries if already in history
+        self.remove_from_history(project_folder)
+        h.insert(0, project_folder)
         if len(h) > 10:
             self.settings['history'] = h[:10]
         self.write()
+        
+    def remove_from_history(self, project_folder):
+        h = self.settings['history']
+        try:
+            h.remove(project_folder)
+        except:
+            pass        
 
     '''
     read the config from given xml file (default config.xml)
