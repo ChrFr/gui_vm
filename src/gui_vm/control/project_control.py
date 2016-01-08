@@ -537,8 +537,9 @@ class VMProjectControl(ProjectTreeControl):
 
         dialog = QtGui.QMessageBox()
         if not scenario_node.is_valid:
-            msg = _fromUtf8("Beheben Sie bitte zunächst die Fehler im Szenario, \n"+
+            msg = _fromUtf8("Beheben Sie bitte zunächst die rot markierten Fehler im Szenario, "+
                             "bevor sie einen Lauf starten!")
+            dialog.setWindowTitle("Fehler")
             dialog.setText(msg)
             dialog.exec_()
             return
@@ -697,7 +698,7 @@ class VMProjectControl(ProjectTreeControl):
                     if do_copy:
                         self._reset_scenario(
                             scenario_node=project.get_child(scenario_name))
-                    self.project_changed.emit()
+                self.project_changed.emit()
 
     def add_special_run(self, node=None, do_choose=False):
 
@@ -735,14 +736,13 @@ class VMProjectControl(ProjectTreeControl):
         '''
         if not scenario_node:
             scenario_node = self.selected_item
+            
+        success, message = scenario_node.reset_to_default()
 
-        scenario_node.reset_to_default()
-
-        if not scenario_node:
+        if not success:
             QtGui.QMessageBox.about(
                 None, "Fehler",
-                _fromUtf8("Die Defaults des Modells " +
-                          "konnten nicht geladen werden."))
+                _fromUtf8(message))
         else:
             filenames = []
             destinations = []
@@ -772,15 +772,22 @@ class VMProjectControl(ProjectTreeControl):
 
     def _reset_resource(self):
         res_node = self.selected_item
-        res_node.reset_to_default()
-        filename = res_node.original_source
-        destination = os.path.split(res_node.file_absolute)[0]
-        dialog = CopyFilesDialog(filename, destination,
-                                 parent=self.tree_view)
-        res_node.update()
-        scenario = res_node.scenario
-        self.remove_outputs(scenario)
-        self.project_changed.emit()
+        
+        success, message = res_node.reset_to_default()
+
+        if not success:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8(message))
+        else:
+            filename = res_node.original_source
+            destination = os.path.split(res_node.file_absolute)[0]
+            dialog = CopyFilesDialog(filename, destination,
+                                     parent=self.tree_view)
+            res_node.update()
+            scenario = res_node.scenario
+            self.remove_outputs(scenario)
+            self.project_changed.emit()
 
     def write_project(self, filename):
         XMLParser.write_xml(self.project, filename)

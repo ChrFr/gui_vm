@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from copy import deepcopy
 import os
 import time
@@ -493,6 +494,8 @@ class Scenario(TreeNode):
         reset the simrun to the defaults
         '''
         default_model = self.get_default_scenario()
+        if not default_model:
+            return False, "Es sind keine Defaults für das gewählte Modell gefunden worden."
         default_nodes = default_model.get_input_files()
         default_names = [d.name for d in default_nodes]
         default_map = dict(zip(default_names, default_nodes))
@@ -506,6 +509,7 @@ class Scenario(TreeNode):
                 default_model.name,
                 default_node.subfolder,
                 default_node.file_relative)
+        return True, "Szenario erfolgreich auf defaults zurückgesetzt"
 
 
     def get_input(self, name):
@@ -861,6 +865,8 @@ class ResourceNode(TreeNode):
         '''
         scenario = self.scenario
         default_model = scenario.get_default_scenario()
+        if not default_model:
+            return False, "Es sind keine Defaults für das gewählte Modell gefunden worden."
         #find corresponding default resource node
         res_default = default_model.get_input(self.name)
         #rename source
@@ -868,7 +874,9 @@ class ResourceNode(TreeNode):
         self.original_source = os.path.join(scenario.default_folder,
                                             default_model.name,
                                             Scenario.INPUT_NODES,
-                                            self.file_relative)
+                                            self.file_relative)        
+        
+        return True, "Szenario erfolgreich auf defaults zurückgesetzt"        
 
 
 class InputNode(ResourceNode):
