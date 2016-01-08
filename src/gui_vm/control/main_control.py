@@ -82,8 +82,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         else:
             welcome = WelcomeDialog(self)
             
-        self.build_history()        
-
         if run_scenario:
             self.project_control.run(run_scenario)
 
@@ -161,17 +159,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                         config.remove_from_history(os.path.split(project_file)[0])
                         QtGui.QMessageBox.about(
                             self, 'Fehler', 'Die Projektdatei "{}" konnte nicht geladen werden'.
-                            format(project_file))   
+                            format(project_file))  
+                        self.build_history()    
+                        return False    
                     config.add_to_history(os.path.split(project_file)[0])
-                    self.build_history()
                     self.project_has_changed = False
+                    self.build_history()    
                     return True
             else:                
                 config.remove_from_history(os.path.split(project_file)[0])                
                 QtGui.QMessageBox.about(
                     self,
                     _fromUtf8('Ungültiger Projektpfad'),
-                    'Die Projektdatei "{}" exisitiert nicht.'.format(project_file))
+                    'Die Projektdatei "{}" exisitiert nicht.'.format(project_file))          
+                self.build_history()                 
+                return False  
         return False
 
     def save_project(self, filename=None):

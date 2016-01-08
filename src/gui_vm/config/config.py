@@ -53,7 +53,8 @@ class Config():
         try:
             h.remove(project_folder)
         except:
-            pass        
+            pass                
+        self.write()        
 
     '''
     read the config from given xml file (default config.xml)

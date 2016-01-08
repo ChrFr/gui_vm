@@ -46,7 +46,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def __init__(self, view=None):
         super(ProjectTreeControl, self).__init__()
         self.tree_view = view
-        self.model = None
+        self.model = TreeNode('root')
         self.header = ('Projekt', 'Details')
         self.count = 0
         #self.current_index = None
@@ -209,7 +209,6 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 class VMProjectControl(ProjectTreeControl):
     def __init__(self, view=None, details_view=None, button_group=None):
         super(VMProjectControl, self).__init__(view)
-        self.model = TreeNode('root')
         self.details_view = details_view
         self.button_group = button_group
         self.plus_button = self.button_group.findChild(
@@ -812,7 +811,12 @@ class VMProjectControl(ProjectTreeControl):
 
     def read_project(self, filename):
         self.close_project()
-        self.model = XMLParser.read_xml(self.model, filename)
+        try:
+            XMLParser.read_xml(self.model, filename)
+        except:
+            # reset to clean node
+            self.model = TreeNode('root')
+            raise Exception
         self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
