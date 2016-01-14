@@ -331,6 +331,7 @@ class VMProjectControl(ProjectTreeControl):
         map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
+        #self.item_clicked(self.current_index)
         node = self.selected_item
         if node.locked:
             return
@@ -350,6 +351,7 @@ class VMProjectControl(ProjectTreeControl):
         context_menu.close()
         if action:
             action_map[action]()
+
 
     def update_view(self):
         self.tree_view.expandAll()
@@ -736,7 +738,7 @@ class VMProjectControl(ProjectTreeControl):
         '''
         if not scenario_node:
             scenario_node = self.selected_item
-            
+
         success, message = scenario_node.reset_to_default()
 
         if not success:
@@ -772,7 +774,7 @@ class VMProjectControl(ProjectTreeControl):
 
     def _reset_resource(self):
         res_node = self.selected_item
-        
+
         success, message = res_node.reset_to_default()
 
         if not success:

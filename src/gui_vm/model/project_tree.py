@@ -10,6 +10,8 @@ from gui_vm.model.resources import ResourceFile, H5Resource
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.observable import Observable
 from gui_vm.model.backend import hard_copy
+from gui_vm.model.resources import (NOT_CHECKED, NOT_NEEDED, FOUND,
+                                    CHECKED_AND_VALID, NOT_FOUND, MISMATCH)
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -938,7 +940,7 @@ class OutputNode(ResourceNode):
         self.resource.validate(self.path)
         self.is_checked = True
         #resource found is enough, no further validations needed here
-        self.is_valid = self.resource.overall_status[0] == 1
+        self.is_valid = self.resource.overall_status[0] == FOUND
 
     @property
     def is_primary(self):
@@ -949,9 +951,9 @@ class OutputNode(ResourceNode):
             return True
         return False
 
-    @property
-    def status(self):
-        return None
+    #@property
+    #def status(self):
+    #    return None
 
 
 class XMLParser(object):

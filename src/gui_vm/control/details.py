@@ -50,6 +50,10 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.start_button.clicked.connect(
             lambda: self.run())
         self.special_button.clicked.connect(self.special_run)
+        if scenario_node.locked:
+            self.start_button.setEnabled(False)
+            self.special_button.setEnabled(False)
+            self.combo_model.setEnabled(False)
         label = QtGui.QLabel(_fromUtf8('\n\nKenngrössen:\n'))
         self.formLayout.addRow(label)
         for meta in scenario_node.meta:
