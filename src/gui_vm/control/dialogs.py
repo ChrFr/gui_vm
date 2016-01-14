@@ -309,7 +309,7 @@ class RunOptionsDialog(QtGui.QDialog):
     '''
 
     def __init__(self, scenario_node, stored_options={},
-                 parent=None, is_primary = False):
+                 parent=None, is_primary = False, standard_button_texts=None):
         super(RunOptionsDialog, self).__init__(parent=parent)
         self.setupUi()
         self.scenario = scenario_node
@@ -375,6 +375,8 @@ class RunOptionsDialog(QtGui.QDialog):
         buttonBox = QtGui.QDialogButtonBox(self)
         buttonBox.setOrientation(QtCore.Qt.Horizontal)
         buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        # buttonBox.button(QtGui.QDialogButtonBox.Ok).setText(standard_button_texts[0])
+        # buttonBox.button(QtGui.QDialogButtonBox.Cancel).setText(standard_button_texts[1]) _fromUtf8('Änderungen speichern')
         self.horizontalLayout.addWidget(buttonBox)
         QtCore.QObject.connect(buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), self.accept)
         QtCore.QObject.connect(buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), self.reject)

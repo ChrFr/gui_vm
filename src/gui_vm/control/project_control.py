@@ -328,7 +328,7 @@ class VMProjectControl(ProjectTreeControl):
             self.lock_button.setChecked(False)
 
         condition = not isinstance(node, OutputNode) or not node.is_primary
-        map_button(self.copy_button, 'copy', depends_on_lock=True, condition=condition)
+        map_button(self.copy_button, 'copy', depends_on_lock=False, condition=condition)
         map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
