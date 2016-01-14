@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created: Thu Jan 14 15:23:25 2016
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -68,6 +69,7 @@ class Ui_MainWindow(object):
         self.layoutWidget = QtGui.QWidget(self.splitter)
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.layoutWidget)
+        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.gridLayout_4 = QtGui.QGridLayout()
         self.gridLayout_4.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
@@ -153,13 +155,27 @@ class Ui_MainWindow(object):
         self.gridLayout_4.addWidget(self.context_button_group, 0, 5, 1, 3)
         self.verticalLayout.addLayout(self.gridLayout_4)
         self.qtreeview = QtGui.QTreeView(self.layoutWidget)
+        self.qtreeview.setEnabled(True)
         self.qtreeview.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        palette = QtGui.QPalette()
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
+        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
+        brush = QtGui.QBrush(QtGui.QColor(241, 241, 241))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
+        self.qtreeview.setPalette(palette)
         self.qtreeview.setExpandsOnDoubleClick(False)
         self.qtreeview.setObjectName(_fromUtf8("qtreeview"))
+        self.qtreeview.header().setMinimumSectionSize(50)
         self.verticalLayout.addWidget(self.qtreeview)
         self.layoutWidget1 = QtGui.QWidget(self.splitter)
         self.layoutWidget1.setObjectName(_fromUtf8("layoutWidget1"))
         self.details_layout = QtGui.QVBoxLayout(self.layoutWidget1)
+        self.details_layout.setMargin(0)
         self.details_layout.setObjectName(_fromUtf8("details_layout"))
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.details_layout.addItem(spacerItem2)

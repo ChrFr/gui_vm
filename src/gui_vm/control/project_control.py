@@ -56,6 +56,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         return self.index(self._current_index.row,
                           self._current_index.column,
                           self._current_index.parent)
+
     @current_index.setter
     def current_index(self, value):
         self._current_index = _Index(value)
@@ -182,13 +183,13 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def nodeFromIndex(self, index):
         return index.internalPointer() if index.isValid() else self.model
 
-    #def insertRow(self, row, parent):
-        #return self.insertRows(row, 1, parent)
+    def insertRow(self, row, parent):
+        return self.insertRows(row, 1, parent)
 
-    #def insertRows(self, row, count, parent):
-        #self.beginInsertRows(parent, row, (row + (count - 1)))
-        #self.endInsertRows()
-        #return True
+    def insertRows(self, row, count, parent):
+        self.beginInsertRows(parent, row, (row + (count - 1)))
+        self.endInsertRows()
+        return True
 
     def remove_row(self, row, parentIndex):
         return self.removeRows(row, 1, parentIndex)
@@ -354,7 +355,12 @@ class VMProjectControl(ProjectTreeControl):
 
 
     def update_view(self):
-        self.tree_view.expandAll()
+        if self.project:
+            #workaround: added nodes are not shown because -> collapse and expand project node (insert_row doesn't work)
+            index = self.createIndex(0, 0, self.project)
+            self.tree_view.collapse(index)
+            self.tree_view.expand(index)
+
         for column in range(self.tree_view.model()
                             .columnCount(QtCore.QModelIndex())):
             self.tree_view.resizeColumnToContents(column)
@@ -831,6 +837,7 @@ class VMProjectControl(ProjectTreeControl):
         self.project.update()
         self.project_changed.emit()
         self.view_changed.emit()
+        self.tree_view.header().resizeSection(0, 200)
 
     def remove_outputs(self, scenario):
         for output in scenario.get_output_files():

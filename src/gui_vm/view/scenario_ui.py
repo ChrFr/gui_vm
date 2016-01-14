@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Tue Jan 13 16:52:52 2015
-#      by: PyQt4 UI code generator 4.10.4
+# Created: Thu Jan 14 15:23:25 2016
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -65,5 +65,5 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
         self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
         self.start_button.setText(_translate("DetailsScenario", "Gesamtlauf", None))
-        self.special_button.setText(_translate("DetailsScenario", "spezifischer Lauf", None))
+        self.special_button.setText(_translate("DetailsScenario", "Sonderauswertung", None))
 

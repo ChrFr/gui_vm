@@ -61,7 +61,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             txt = scenario_node.meta[meta]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
-                txt = unicode(txt, "ISO-8859-1").encode('ascii', 'xmlcharrefreplace')
+                #txt = unicode(txt, "ISO-8859-1").encode('ascii', 'xmlcharrefreplace')
                 edit = QtGui.QTextEdit(txt)
                 edit.setMinimumHeight(100)
             else:
@@ -87,7 +87,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
                     'Name für den spezifischen Lauf'), default)
                 if ok:
                     dialog = ExecDialog(self.scenario, run_name,
-                                        options=options)
+                                        options=options, parent=config.mainWindow)
             return
         msgBox = QtGui.QMessageBox()
         msgBox.setText(msg)
@@ -404,4 +404,4 @@ class OutputDetails(QtGui.QGroupBox):
             msgBox.exec_()
         else:
             dialog = ExecDialog(scenario, self.output.name,
-                            options=self.output.options)
+                            options=self.output.options, parent=config.mainWindow)

@@ -555,9 +555,13 @@ class H5TableColumn(H5Resource):
             else:
                 self.status_flags['dtype'] = NOT_NEEDED
             content = table[self.name]
+            # für Nicht-String-Variablen checke die Min- und Max-Grenzen
             if self.dtype.char != 'S':
                 self.max_value = content.max()
                 self.min_value = content.min()
+            # für String-Variablen: Konvertiere in UTF 8
+            else:
+                content = np.char.decode(content, encoding='CP1252')
             #check if all values are unique if primary key
             if self.primary_key and np.unique(content).size != content.size:
                 self.status_flags['primary_key'] = (MISMATCH,

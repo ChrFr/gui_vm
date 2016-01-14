@@ -21,6 +21,7 @@ class Config():
         main_p = os.path.split((sys.argv)[0])[0]
         self.filename = os.path.join(main_p, "config.xml")
         self.default_file = os.path.join(main_p, "default_config.xml")
+        self.mainWindow = None
         self.settings = {
             'environment': {
                 'hdf5_viewer': ''
@@ -47,14 +48,14 @@ class Config():
         if len(h) > 10:
             self.settings['history'] = h[:10]
         self.write()
-        
+
     def remove_from_history(self, project_folder):
         h = self.settings['history']
         try:
             h.remove(project_folder)
         except:
-            pass                
-        self.write()        
+            pass
+        self.write()
 
     '''
     read the config from given xml file (default config.xml)

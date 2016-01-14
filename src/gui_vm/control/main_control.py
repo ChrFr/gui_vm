@@ -20,12 +20,21 @@ except AttributeError:
         return s
 
 
+def disableWhileProcessing(function, parameter=None):
+    config.mainWindow.setEnabled(False)
+    function()
+    config.mainWindow.setEnabled(True)
+
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     project_changed = QtCore.pyqtSignal()
 
     def __init__(self, project_file=None, run_scenario=None):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
+
+        #global access to main window
+        config.mainWindow = self
+
         # define the view on the project and connect to the qtreeview in
         # the main window
         self.project_tree = TreeNode('root')
@@ -43,27 +52,33 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_has_changed = False
         self.recently_used_actions = []
 
-        self.actionProjekt_ffnen.triggered.connect(self.load_project)
-        self.open_button.clicked.connect(self.load_project)
+        self.actionProjekt_ffnen.triggered.connect(
+            lambda: disableWhileProcessing(self.load_project))
+        self.open_button.clicked.connect(
+            lambda: disableWhileProcessing(self.load_project))
 
         # connect the menubar
         self.actionNeues_Szenario.triggered.connect(
-            self.project_control.add_scenario)
-        self.actionNeues_Projekt.triggered.connect(self.create_project)
-        self.actionEinstellungen.triggered.connect(self.edit_settings)
-        self.actionInfo.triggered.connect(self.show_info)
-        self.actionProjekt_schlie_en.triggered.connect(self.project_control.close_project)
-        
+            lambda: disableWhileProcessing(self.project_control.add_scenario))
+        self.actionNeues_Projekt.triggered.connect(
+            lambda: disableWhileProcessing(self.create_project))
+        self.actionEinstellungen.triggered.connect(
+            lambda: disableWhileProcessing(self.edit_settings))
+        self.actionInfo.triggered.connect(
+            lambda: disableWhileProcessing(self.show_info))
+        self.actionProjekt_schlie_en.triggered.connect(
+            lambda: disableWhileProcessing(self.project_control.close_project))
+
         self.actionSzenario_duplizieren.triggered.connect(
             lambda: self.project_control.clone_scenario(do_choose=True))
         self.actionSzenario_l_schen.triggered.connect(
             lambda: self.project_control.remove_scenario(do_choose=True))
-        
+
         self.actionGesamtlauf_starten.triggered.connect(
             lambda: self.project_control.run_complete(do_choose=True))
         self.actionSpezifischen_Lauf_anlegen.triggered.connect(
             lambda: self.project_control.add_special_run(do_choose=True))
-        
+
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
         self.project_control.project_changed.connect(self.project_changed_handler)
@@ -81,7 +96,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #welcome screen if there is none (assumed first start)
         else:
             welcome = WelcomeDialog(self)
-            
+
         if run_scenario:
             self.project_control.run(run_scenario)
 
@@ -152,28 +167,28 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 do_continue = True
                 if self.project_has_changed:
                     do_continue = self.project_changed_message()
-                if do_continue: 
+                if do_continue:
                     try:
                         self.project_control.read_project(project_file)
                     except:
                         config.remove_from_history(os.path.split(project_file)[0])
                         QtGui.QMessageBox.about(
                             self, 'Fehler', 'Die Projektdatei "{}" konnte nicht geladen werden'.
-                            format(project_file))  
-                        self.build_history()    
-                        return False    
+                            format(project_file))
+                        self.build_history()
+                        return False
                     config.add_to_history(os.path.split(project_file)[0])
                     self.project_has_changed = False
-                    self.build_history()    
+                    self.build_history()
                     return True
-            else:                
-                config.remove_from_history(os.path.split(project_file)[0])                
+            else:
+                config.remove_from_history(os.path.split(project_file)[0])
                 QtGui.QMessageBox.about(
                     self,
                     _fromUtf8('Ungültiger Projektpfad'),
-                    'Die Projektdatei "{}" exisitiert nicht.'.format(project_file))          
-                self.build_history()                 
-                return False  
+                    'Die Projektdatei "{}" exisitiert nicht.'.format(project_file))
+                self.build_history()
+                return False
         return False
 
     def save_project(self, filename=None):

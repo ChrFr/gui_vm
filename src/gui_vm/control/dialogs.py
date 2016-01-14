@@ -186,7 +186,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
 
         self.show()
         #start process when window is opened
-        #self.startButton.clicked.emit(True)
+        self.startButton.clicked.emit(True)
 
     def run(self):
         doStart = True

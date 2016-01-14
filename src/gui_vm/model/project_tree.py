@@ -922,7 +922,7 @@ class OutputNode(ResourceNode):
             if len(opt_arr) > 0:
                 opt = etree.SubElement(
                     xml_element, 'Option')
-                opt.text = ','.join(opt_arr)
+                opt.text = ','.join((str(e) for e in opt_arr))
                 opt.attrib['name'] = opt_name
 
     def from_xml(self, element):

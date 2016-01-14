@@ -120,7 +120,7 @@ class SpecificModel(TrafficModel):
                                "default": True,
                                "is_unique": True}
 
-        options['detailed'] = { "names": ['Gruppendetails', 'Akitivitätendetails'],
+        options['detailed'] = { "names": ['Gruppendetails', 'Aktivitätendetails'],
                                 "values": ['groups', 'activities'],
                                 "is_primary_only": False,
                                 "is_special_only": True }
