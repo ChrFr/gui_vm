@@ -870,13 +870,13 @@ class ResourceNode(TreeNode):
         #find corresponding default resource node
         res_default = default_model.get_input(self.name)
         #rename source
-        self.resource.file_relative = res_default.file_relative
+        self.file_relative = res_default.file_relative
         self.original_source = os.path.join(scenario.default_folder,
                                             default_model.name,
                                             Scenario.INPUT_NODES,
-                                            self.file_relative)        
-        
-        return True, "Szenario erfolgreich auf defaults zurückgesetzt"        
+                                            self.file_relative)
+
+        return True, "Szenario erfolgreich auf defaults zurückgesetzt"
 
 
 class InputNode(ResourceNode):
