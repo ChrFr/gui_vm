@@ -40,9 +40,15 @@ class Params(object):
             param_values.append(scenario_param[-1])
         return param_values
 
+    def get_scenarios(self):
+        """
+        return a list of all scenarios in the config file
+        """
+        scenarios = self.root.children[0].children_names
+        return scenarios
 
 def main():
-    parser = ArgumentParser(description="GUI Verkehrsmodelle")
+    parser = ArgumentParser(description="GUI Verkehrsmodelle - get Parameter")
 
     parser.add_argument("-o", action="store",
                         help="vorhandene XML-Projektdatei öffnen",
