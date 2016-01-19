@@ -414,6 +414,7 @@ class VMProjectControl(ProjectTreeControl):
         else:
             prev_idx = self.createIndex(row-1, 0, node.parent.children[row-1])
         self.item_clicked(prev_idx)
+        self.tree_view.setCurrentIndex(prev_idx)
 
         self.remove_row(index.row(),
                         parent_idx)
