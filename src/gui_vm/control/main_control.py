@@ -250,6 +250,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if project is not None:
             self.save_project(os.path.join(self.project_control.project.filename))
 
+    def clone_scenario(self, source_scenario_name, new_scenario_name):
+        project = self.project_control.project
+        source_scenario = project.get_child(source_scenario_name)
+        if not source_scenario:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Das Szenario '{}' existiert nicht."
+                          .format(source_scenario_name)))
+            return
+        self.project_control.clone_scenario(scenario_node=source_scenario, new_scenario_name=new_scenario_name)
+
 
 
 class WelcomeDialog(QtGui.QDialog, Ui_Welcome):

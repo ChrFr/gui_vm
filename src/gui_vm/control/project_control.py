@@ -613,7 +613,7 @@ class VMProjectControl(ProjectTreeControl):
             scenario = self.project.get_child(scenario_name)
             new_run = scenario.add_run(new_name, output_node.options)
 
-    def clone_scenario(self, scenario_node=None, do_choose=False):
+    def clone_scenario(self, scenario_node=None, do_choose=False, new_scenario_name=None):
         if not scenario_node and not do_choose:
             scenario_node = self.selected_item
 
@@ -624,50 +624,57 @@ class VMProjectControl(ProjectTreeControl):
         if scenario_node is None:
             return
 
-        text, ok = QtGui.QInputDialog.getText(
-                    None, 'Szenario kopieren', 'Name des neuen Szenarios:',
-                    QtGui.QLineEdit.Normal, scenario_node.name + ' - Kopie')
-        if ok:
-            new_scen_name = str(text)
-            if new_scen_name in self.project.children_names:
-                QtGui.QMessageBox.about(
-                    None, "Fehler",
-                    _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
-                              .format(new_scen_name)))
-                return
-            new_scenario_node = scenario_node.clone(new_scen_name)
-            scenario_node.parent.add_child(new_scenario_node)
-            path = new_scenario_node.path
-            if os.path.exists(new_scenario_node.path):
-                reply = QtGui.QMessageBox.question(
-                    None, _fromUtf8("Fehler"),
-                    _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
-                                  .format(path)),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-                if reply == QtGui.QMessageBox.No:
-                    return
-            filenames = []
-            destinations = []
-            for i, nodes in enumerate([scenario_node.get_input_files(),
-                                       scenario_node.get_output_files()]):
-                is_input = i == 0
-                for res_node in nodes:
-                    if is_input:
-                        new_res_node = new_scenario_node.get_input(res_node.name)
-                    else:
-                        new_res_node = new_scenario_node.get_output(res_node.name)
-                    if new_res_node and os.path.exists(res_node.file_absolute):
-                        filenames.append(res_node.file_absolute)
-                        destinations.append(os.path.split(new_res_node.file_absolute)[0])
+        if not new_scenario_name:
 
-            #bad workaround (as it has to know the parents qtreeview)
-            #but the view crashes otherwise, maybe make update signal
-            self.tree_view.setUpdatesEnabled(False)
-            dialog = CopyFilesDialog(filenames, destinations)
-                                     #parent=self.tree_view)
-            self.tree_view.setUpdatesEnabled(True)
-            scenario_node.update()
-            self.project_changed.emit()
+            # get name of new scenario by dialog, if not passed
+            text, ok = QtGui.QInputDialog.getText(
+                        None, 'Szenario kopieren', 'Name des neuen Szenarios:',
+                        QtGui.QLineEdit.Normal, scenario_node.name + ' - Kopie')
+            if ok:
+                new_scenario_name = str(text)
+            else:
+                return
+
+        if new_scenario_name in self.project.children_names:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Der Szenarioname '{}' ist bereits vergeben."
+                          .format(new_scenario_name)))
+            return
+
+        new_scenario_node = scenario_node.clone(new_scenario_name)
+        scenario_node.parent.add_child(new_scenario_node)
+        path = new_scenario_node.path
+        if os.path.exists(new_scenario_node.path):
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Fehler"),
+                _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
+                              .format(path)),
+                QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            if reply == QtGui.QMessageBox.No:
+                return
+        filenames = []
+        destinations = []
+        for i, nodes in enumerate([scenario_node.get_input_files(),
+                                   scenario_node.get_output_files()]):
+            is_input = i == 0
+            for res_node in nodes:
+                if is_input:
+                    new_res_node = new_scenario_node.get_input(res_node.name)
+                else:
+                    new_res_node = new_scenario_node.get_output(res_node.name)
+                if new_res_node and os.path.exists(res_node.file_absolute):
+                    filenames.append(res_node.file_absolute)
+                    destinations.append(os.path.split(new_res_node.file_absolute)[0])
+
+        #bad workaround (as it has to know the parents qtreeview)
+        #but the view crashes otherwise, maybe make update signal
+        self.tree_view.setUpdatesEnabled(False)
+        dialog = CopyFilesDialog(filenames, destinations)
+                                 #parent=self.tree_view)
+        self.tree_view.setUpdatesEnabled(True)
+        scenario_node.update()
+        self.project_changed.emit()
 
     def edit_resource(self, resource_node=None):
         if not resource_node:
