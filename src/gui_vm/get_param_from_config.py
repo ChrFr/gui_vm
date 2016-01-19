@@ -31,11 +31,14 @@ class Params(object):
             the name of the scenario
         """
         scenario = self.root.find_all(scenario_name)[0]
+        if not scenario:
+            raise ValueError('scenario {} not found'.format(scenario_name))
         param_values = []
         for param_name in params:
             scenario_param = scenario.find_all(param_name.strip("\""))
             if not scenario_param:
-                raise ValueError('scenario {} not found'.format(scenario_name))
+                raise ValueError('param {} in scenario {} not found'.format(
+                    scenario_param, scenario_name))
 
             param_values.append(scenario_param[-1])
         return param_values
@@ -72,6 +75,7 @@ def main():
     for param_value in param_values:
         path = os.path.join(p.project_folder,
                             options.scenario_name,
+                            param_value.subfolder,
                             param_value.file_relative)
         print(path)
 
