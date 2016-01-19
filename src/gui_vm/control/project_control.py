@@ -528,6 +528,7 @@ class VMProjectControl(ProjectTreeControl):
                 cur_tmp = self.current_index
                 parent_idx = self.current_index.parent()
                 self.item_clicked(parent_idx.parent())
+                self.tree_view.setCurrentIndex(parent_idx.parent())
                 self.remove_row(parent_idx.row(), parent_idx.parent())
                 self.remove_outputs(scenario)
         else:
@@ -823,7 +824,9 @@ class VMProjectControl(ProjectTreeControl):
             self.close_project()
         self.model.add_child(Project(name, project_folder=project_folder))
         self.project.on_change(self.project_changed.emit)
-        self.item_clicked(self.createIndex(0, 0, self.project))
+        index = self.createIndex(0, 0, self.project)
+        self.item_clicked(index)
+        self.tree_view.setCurrentIndex(index)
         return True
 
     def close_project(self):

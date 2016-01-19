@@ -25,15 +25,16 @@ setup(
     include_package_data=True,
     zip_safe=False,
     package_data={
-        'gui_vm': ['config/*.csv'],
+        'gui_vm': ['*.csv',
+                   'default_config.xml'],
     },
 
 
     install_requires=[
         'setuptools',
         'numpy',
-        'tables'
-
+        'tables',
+        'lxml'
     ],
 
     # PyQT 4 needed, no disutils available for the package.

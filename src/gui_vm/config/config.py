@@ -18,7 +18,7 @@ class Config():
     __metaclass__ = Singleton
 
     def __init__(self):
-        main_p = os.path.split((sys.argv)[0])[0]
+        main_p = os.path.split(os.path.split(__file__)[0])[0]
         self.filename = os.path.join(main_p, "config.xml")
         self.default_file = os.path.join(main_p, "default_config.xml")
         self.mainWindow = None
