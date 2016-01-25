@@ -28,7 +28,25 @@ def disableWhileProcessing(function, parameter=None):
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     project_changed = QtCore.pyqtSignal()
 
-    def __init__(self, project_file=None, run_scenario=None):
+    @classmethod
+    def only_validate(cls, project_file, scenario_name):
+        """
+        only
+        """
+        self = MainWindow(project_file, scenario_name)
+        scenario_node = self.project_control.project.get_child(scenario_name)
+        if scenario_node:
+            if scenario_node.is_valid:
+                # everything is ok
+                self.project_control.close_project()
+                self.validated = True
+        return self
+
+    def __init__(self,
+                 project_file=None,
+                 run_scenario=None):
+        """
+        """
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
 
@@ -85,10 +103,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_changed.connect(self.project_changed_handler)
 
         h = config.settings['history']
+        self.validated = False
 
         # if project is passed, open it
         if project_file:
             self.load_project(project_file)
+
         # no project passed in arguments -> open recent project from history
         elif len(h) > 0:
             project_file = os.path.join(h[0], Project.FILENAME_DEFAULT)
@@ -96,9 +116,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         #welcome screen if there is none (assumed first start)
         else:
             welcome = WelcomeDialog(self)
-
-        if run_scenario:
-            self.project_control.run(run_scenario)
 
     def build_history(self):
         self.recently_used_actions = []
@@ -160,7 +177,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             recent = '.'
         if not project_file:
             project_file = str(QtGui.QFileDialog.getOpenFileName(
-                self, _fromUtf8('Projektdatei auswählen'),  recent, Project.FILENAME_DEFAULT))
+                self,
+                _fromUtf8('Projektdatei auswählen'),
+                recent,
+                Project.FILENAME_DEFAULT))
         project_folder = os.path.split(project_file)[0]
         if len(project_file) > 0:
             if os.path.isfile(project_file):
@@ -259,7 +279,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 _fromUtf8("Das Szenario '{}' existiert nicht."
                           .format(source_scenario_name)))
             return
-        self.project_control.clone_scenario(scenario_node=source_scenario, new_scenario_name=new_scenario_name)
+        self.project_control.clone_scenario(scenario_node=source_scenario,
+                                            new_scenario_name=new_scenario_name)
 
 
 

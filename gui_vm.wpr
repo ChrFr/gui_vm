@@ -5,12 +5,49 @@
 ##################################################################
 [project attributes]
 proj.directory-list = [{'dirloc': loc('.'),
+                        'excludes': [u'src/gui_vm/default_config.xml',
+                                     u'dist',
+                                     u'build'],
+                        'filter': '*',
+                        'include_hidden': False,
+                        'recursive': True,
+                        'watch_for_changes': True},
+                       {'dirloc': loc('../VisumAddIn'),
                         'excludes': (),
                         'filter': u'*',
                         'include_hidden': False,
                         'recursive': True,
                         'watch_for_changes': True}]
 proj.file-type = 'shared'
-proj.launch-config = {loc('setup.py'): ('project',
+proj.launch-config = {loc('../../Anaconda/envs/elan/Scripts/get_param_from_config-script.py'): ('p'\
+        'roject',
+        (u'--help',
+         '')),
+                      loc('../VisumAddIn/VisumAddins.git/Scripts/KenngroessenmatrizenBerechnenOV.py'): ('p'\
+        'roject',
+        (u'-f E:\\GGR\\KS\\Projektordner -s gerger --pythonpath C:\\Anaconda\\envs\\elan\\python',
+         '')),
+                      loc('../VisumAddIn/VisumAddins.git/Scripts/get_params.py'): ('p'\
+        'roject',
+        (u'-f E:\\GGR\\KS\\Projektordner -s gerger --pythonpath C:\\Anaconda\\envs\\elan\\python --params OV',
+         '')),
+                      loc('../VisumAddIn/VisumAddins.git/get_params.py'): ('p'\
+        'roject',
+        (u'-f "E:\\GGR\\KS\\Projektordner" -s gerger --params "OV" "MIV" --pythonpath C:\\Anaconda\\envs\\elan\\python',
+         '')),
+                      loc('setup.py'): ('project',
         (u'develop',
+         '')),
+                      loc('src/gui_vm/config/get_param_from_config.py'): ('p'\
+        'roject',
+        (u'-o E:\\GGR\\KS\\Projektordner\\project.xml -s gerger',
+         '')),
+                      loc('src/gui_vm/get_param_from_config.py'): ('project',
+        (u'-o E:\\GGR\\KS\\Projektordner\\project.xml -s gerger -p Betas "Fuss und Rad"',
+         '')),
+                      loc('src/gui_vm/main.py'): ('project',
+        (u'-o C:\\Projektordner\\project.xml ',
+         '')),
+                      loc('src/gui_vm/validate_scenario.py'): ('project',
+        (u'-f E:\\GGR\\KS\\Projektordner\\project.xml -s ge4rger',
          ''))}

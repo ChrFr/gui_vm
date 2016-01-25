@@ -159,7 +159,7 @@ class SpecificModel(TrafficModel):
 
     def evaluate (self, file_path, overwrite=False):
         '''
-        evaluate the demand file at the given path and run the evluation script
+        evaluate the demand file at the given path and run the evaluation script
         (creates csv file)
         '''
         eval_script = os.path.join(os.path.dirname(__file__),

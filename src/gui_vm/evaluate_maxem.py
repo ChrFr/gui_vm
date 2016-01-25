@@ -21,27 +21,26 @@ def evaluate(h5_in_path, csv_out):
     if h5_in_path is None or not os.path.exists(h5_in_path):
         print 'Datei {} nicht vorhanden!'.format(h5_in_path)
         return
-    h5_in = tables.openFile(h5_in_path)
 
-    try:
-        for name, mode_table in modes.items():
-            path = mode_path + '/' + mode_table
-            table = h5_in.getNode(path).read()
-            mode_sum = table.sum()
-            meta['Wegesumme ' + name] = int(round(mode_sum))
-            modes[name] = mode_sum
-            modes_sum += mode_sum
-    except tables.NoSuchNodeError as e:
-        print e.message
-        meta = {'Fehler': 'Benötigte Tabelle fehlt: "{}"'.format(
-            e.message
-        )}
-    else:
-        meta['Summe aller Wege'] = int(round(modes_sum))
-        for name, mode_sum in modes.items():
-            meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
+    with tables.openFile(h5_in_path) as h5_in:
 
-    h5_in.close()
+        try:
+            for name, mode_table in modes.items():
+                path = mode_path + '/' + mode_table
+                table = h5_in.getNode(path).read()
+                mode_sum = table.sum()
+                meta['Wegesumme ' + name] = int(round(mode_sum))
+                modes[name] = mode_sum
+                modes_sum += mode_sum
+        except tables.NoSuchNodeError as e:
+            print e.message
+            meta = {'Fehler': 'Benötigte Tabelle fehlt: "{}"'.format(
+                e.message
+            )}
+        else:
+            meta['Summe aller Wege'] = int(round(modes_sum))
+            for name, mode_sum in modes.items():
+                meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
 
     with open(csv_out, 'wb') as csv_file:
         w = csv.DictWriter(csv_file, meta.keys())

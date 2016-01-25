@@ -15,6 +15,7 @@ def startmain():
                         help="angegebenes Szenario ausführen",
                         dest="scenario_name", default=None)
 
+
     arguments = parser.parse_args()
 
     app = QtGui.QApplication(sys.argv)
@@ -22,11 +23,15 @@ def startmain():
     run_scenario = arguments.scenario_name
     if run_scenario and not project_file:
         print('Um ein Szenario ausführen zu können, muss eine Projektdatei angegeben werden')
+        ret = -1
     else:
-        mainwindow = MainWindow(project_file = project_file,
-                                run_scenario = run_scenario)
+        mainwindow = MainWindow(project_file=project_file,
+                                run_scenario=run_scenario)
+        if run_scenario:
+            mainwindow.project_control.run(scenario_name=run_scenario)
         mainwindow.show()
-        sys.exit(app.exec_())
+        ret = app.exec_()
+    sys.exit(ret)
 
 if __name__ == "__main__":
     startmain()

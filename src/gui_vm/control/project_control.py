@@ -353,7 +353,6 @@ class VMProjectControl(ProjectTreeControl):
         if action:
             action_map[action]()
 
-
     def update_view(self):
         if self.project:
             #workaround: added nodes are not shown because -> collapse and expand project node (insert_row doesn't work)
