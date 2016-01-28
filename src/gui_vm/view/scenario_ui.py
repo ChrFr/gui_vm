@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Thu Jan 14 16:34:11 2016
+# Created: Thu Jan 28 15:33:11 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_DetailsScenario(object):
     def setupUi(self, DetailsScenario):
         DetailsScenario.setObjectName(_fromUtf8("DetailsScenario"))
-        DetailsScenario.resize(450, 309)
+        DetailsScenario.resize(450, 622)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -34,7 +34,7 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setSizePolicy(sizePolicy)
         DetailsScenario.setMinimumSize(QtCore.QSize(450, 0))
         self.formLayoutWidget = QtGui.QWidget(DetailsScenario)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 80, 391, 221))
+        self.formLayoutWidget.setGeometry(QtCore.QRect(10, 100, 391, 221))
         self.formLayoutWidget.setObjectName(_fromUtf8("formLayoutWidget"))
         self.formLayout = QtGui.QFormLayout(self.formLayoutWidget)
         self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
@@ -47,14 +47,21 @@ class Ui_DetailsScenario(object):
         self.combo_model = QtGui.QComboBox(self.formLayoutWidget)
         self.combo_model.setObjectName(_fromUtf8("combo_model"))
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.combo_model)
-        self.start_button = QtGui.QPushButton(DetailsScenario)
-        self.start_button.setGeometry(QtCore.QRect(10, 30, 140, 31))
-        self.start_button.setMinimumSize(QtCore.QSize(140, 0))
-        self.start_button.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.start_button.setObjectName(_fromUtf8("start_button"))
-        self.special_button = QtGui.QPushButton(DetailsScenario)
-        self.special_button.setGeometry(QtCore.QRect(160, 30, 140, 31))
+        self.groupBox = QtGui.QGroupBox(DetailsScenario)
+        self.groupBox.setGeometry(QtCore.QRect(10, 30, 391, 61))
+        self.groupBox.setObjectName(_fromUtf8("groupBox"))
+        self.primary_button = QtGui.QPushButton(self.groupBox)
+        self.primary_button.setGeometry(QtCore.QRect(30, 20, 140, 31))
+        self.primary_button.setMinimumSize(QtCore.QSize(140, 0))
+        self.primary_button.setMaximumSize(QtCore.QSize(100, 16777215))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/plus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.primary_button.setIcon(icon)
+        self.primary_button.setObjectName(_fromUtf8("primary_button"))
+        self.special_button = QtGui.QPushButton(self.groupBox)
+        self.special_button.setGeometry(QtCore.QRect(220, 20, 140, 31))
         self.special_button.setMinimumSize(QtCore.QSize(140, 0))
+        self.special_button.setIcon(icon)
         self.special_button.setObjectName(_fromUtf8("special_button"))
 
         self.retranslateUi(DetailsScenario)
@@ -64,6 +71,8 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setWindowTitle(_translate("DetailsScenario", "GroupBox", None))
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
         self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
-        self.start_button.setText(_translate("DetailsScenario", "Gesamtlauf", None))
+        self.groupBox.setTitle(_translate("DetailsScenario", "Läufe hinzufügen", None))
+        self.primary_button.setText(_translate("DetailsScenario", "Gesamtlauf", None))
         self.special_button.setText(_translate("DetailsScenario", "Sonderauswertung", None))
 
+import gui_rc

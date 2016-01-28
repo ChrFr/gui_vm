@@ -47,11 +47,11 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.combo_model.setCurrentIndex(index)
         self.combo_model.currentIndexChanged['QString'].connect(
             self.changeModel)
-        self.start_button.clicked.connect(
-            lambda: self.run())
+        self.primary_button.clicked.connect(
+            lambda: self.primary_run())
         self.special_button.clicked.connect(self.special_run)
         if scenario_node.locked:
-            self.start_button.setEnabled(False)
+            self.primary_button.setEnabled(False)
             self.special_button.setEnabled(False)
             self.combo_model.setEnabled(False)
         label = QtGui.QLabel(_fromUtf8('\n\nKenngrössen:\n'))
@@ -71,28 +71,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
 
     def special_run(self):
         prime_run = self.scenario.primary_run
-        if not prime_run:
-            msg = _fromUtf8('Sie müssen zunächst einen Gesamtlauf durchführen!')
-        elif prime_run.file_absolute is None or not prime_run.is_valid:
-            msg = _fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
-                            'Bitte erneut ausführen.')
-        # only call dialog, if scenario is already calculated once and demand
-        # file still exists
-        else:
-            options, ok = RunOptionsDialog.getValues(self.scenario)
-            if ok:
-                default = 'spezifischer Lauf {}'.format(
-                    len(self.scenario.get_output_files()) - 1)
-                run_name, ok = InputDialog.getValues(_fromUtf8(
-                    'Name für den spezifischen Lauf'), default)
-                if ok:
-                    dialog = ExecDialog(self.scenario, run_name,
-                                        options=options, parent=config.mainWindow)
-            return
-        msgBox = QtGui.QMessageBox()
-        msgBox.setText(msg)
-        msgBox.exec_()
-
+        self.project_control.add_special_run(self.scenario)
 
     def changeModel(self, name):
         '''
@@ -101,15 +80,8 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.scenario.set_model(str(name))
         self.value_changed.emit()
 
-    def run(self):
-        dialog = QtGui.QMessageBox()
-        reply = dialog.question(
-            self, _fromUtf8('Simulation starten'),
-            _fromUtf8('Soll die Simulation gestartet werden?'),
-            QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
-        if reply == QtGui.QMessageBox.Ok:
-            self.project_control.run(self.scenario)
-
+    def primary_run(self):
+        self.project_control.add_primary_run(self.scenario)
 
 
 class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):

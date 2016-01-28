@@ -108,18 +108,18 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
             return node
 
         #color the the 2nd column of a node depending on its status
-        if role == QtCore.Qt.TextColorRole and index.column() == 1:
+        if role == QtCore.Qt.TextColorRole:
             #if hasattr(node, 'is_checked'):
             is_checked = node.is_checked
             if is_checked:
                 #if hasattr(node, 'is_valid'):
                 is_valid = node.is_valid
                 if is_valid:
-                    return QtCore.QVariant(QtGui.QColor(QtCore.Qt.darkGreen))
+                    if index.column() == 1:
+                        return QtCore.QVariant(QtGui.QColor(QtCore.Qt.darkGreen))
                 else:
                     return QtCore.QVariant(QtGui.QColor(QtCore.Qt.red))
-            else:
-                return QtCore.QVariant(QtGui.QColor(QtCore.Qt.black))
+            return QtCore.QVariant(QtGui.QColor(QtCore.Qt.black))
 
         if role == QtCore.Qt.FontRole:
             #if  (index.column() == 0 and
@@ -355,7 +355,8 @@ class VMProjectControl(ProjectTreeControl):
             action_map[action]()
 
     def update_view(self):
-        #workaround: added nodes are not shown because -> collapse and expand project node (insert_row doesn't work)
+        #workaround: added nodes are not shown because not added the right way via insertRow(buggy)
+        #-> collapse and expand project node (insert_row doesn't work)
         if self.project:
             index = self.createIndex(0, 0, self.project)
             self.tree_view.collapse(index)
@@ -722,9 +723,31 @@ class VMProjectControl(ProjectTreeControl):
                             scenario_node=project.get_child(scenario_name))
                 self.project_changed.emit()
 
-    def add_special_run(self, node=None, do_choose=False):
+    def add_primary_run(self, scenario=None, do_choose=False):
+        if not scenario and not do_choose:
+            node = self.selected_item
+            scenario = node.scenario
+        if do_choose:
+            scenario = self._choose_scenario(
+                _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
+        if scenario is None:
+            return
 
-        if not node and not do_choose:
+        if scenario.get_output(Scenario.PRIMARY_RUN) is not None:
+            msg = _fromUtf8('Es existiert bereits ein ' + Scenario.PRIMARY_RUN)
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(msg)
+            msgBox.exec_()
+            return
+
+        options, ok = RunOptionsDialog.getValues(scenario, is_primary=True)
+        if not ok:
+            return
+        scenario.add_run(Scenario.PRIMARY_RUN, options)
+
+
+    def add_special_run(self, scenario=None, do_choose=False):
+        if not scenario and not do_choose:
             node = self.selected_item
             scenario = node.scenario
         if do_choose:
@@ -740,6 +763,13 @@ class VMProjectControl(ProjectTreeControl):
             msgBox.setText(msg)
             msgBox.exec_()
             return
+        elif prime_run.file_absolute is None or not prime_run.is_valid:
+            msg = _fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
+                            'Bitte erneut ausführen.')
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText(msg)
+            msgBox.exec_()
+
 
         options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
         if ok:

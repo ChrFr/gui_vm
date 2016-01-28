@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>450</width>
-    <height>309</height>
+    <height>622</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +32,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>80</y>
+     <y>100</y>
      <width>391</width>
      <height>221</height>
     </rect>
@@ -56,51 +56,74 @@
     </item>
    </layout>
   </widget>
-  <widget class="QPushButton" name="start_button">
+  <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>30</y>
-     <width>140</width>
-     <height>31</height>
+     <width>391</width>
+     <height>61</height>
     </rect>
    </property>
-   <property name="minimumSize">
-    <size>
-     <width>140</width>
-     <height>0</height>
-    </size>
+   <property name="title">
+    <string>Läufe hinzufügen</string>
    </property>
-   <property name="maximumSize">
-    <size>
-     <width>100</width>
-     <height>16777215</height>
-    </size>
-   </property>
-   <property name="text">
-    <string>Gesamtlauf</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="special_button">
-   <property name="geometry">
-    <rect>
-     <x>160</x>
-     <y>30</y>
-     <width>140</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>140</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="text">
-    <string>Sonderauswertung</string>
-   </property>
+   <widget class="QPushButton" name="primary_button">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>20</y>
+      <width>140</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>140</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>100</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Gesamtlauf</string>
+    </property>
+    <property name="icon">
+     <iconset resource="gui.qrc">
+      <normaloff>:/buttons/icons/plus.png</normaloff>:/buttons/icons/plus.png</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="special_button">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>20</y>
+      <width>140</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>140</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Sonderauswertung</string>
+    </property>
+    <property name="icon">
+     <iconset resource="gui.qrc">
+      <normaloff>:/buttons/icons/plus.png</normaloff>:/buttons/icons/plus.png</iconset>
+    </property>
+   </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="gui.qrc"/>
+ </resources>
  <connections/>
 </ui>
