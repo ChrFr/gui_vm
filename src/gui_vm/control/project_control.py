@@ -62,7 +62,6 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def current_index(self, value):
         self._current_index = _Index(value)
 
-
     @property
     def selected_item(self):
         if self.current_index is None:
@@ -107,7 +106,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         if role == QtCore.Qt.UserRole:
             return node
 
-        #color the the 2nd column of a node depending on its status
+        #color the the columns of a node depending on its status
         if role == QtCore.Qt.TextColorRole:
             #if hasattr(node, 'is_checked'):
             is_checked = node.is_checked

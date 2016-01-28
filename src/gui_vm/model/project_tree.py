@@ -470,15 +470,20 @@ class Scenario(TreeNode):
         #for input in resource_nodes:
             #input.update()
         self.is_valid = True
+        inputs_parent_node = self.get_child(self.INPUT_NODES)
+        inputs_parent_node.is_checked = False
         for input_node in resource_nodes:
+            input_parent = input_node.get_parent_by_class(TreeNode)
+            input_parent.is_checked = False
             input_node.validate()
-            input_parent = self.get_child(self.INPUT_NODES)
             if input_node.is_checked and not input_node.is_valid:
                 self.is_valid = False
+                # 'Eingaben' is is not valid (for colouring purposes)
+                inputs_parent_node.is_checked = True
+                inputs_parent_node.is_valid = False
+                # direct parent (e.g. 'OV') is not valid too
                 input_parent.is_checked = True
                 input_parent.is_valid = False
-            else:
-                input_parent.is_checked = False
         for node in self.get_output_files():
             node.validate()
         self.is_checked = True
