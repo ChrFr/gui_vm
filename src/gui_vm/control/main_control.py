@@ -8,7 +8,7 @@ from gui_vm.control.project_control import VMProjectControl
 from gui_vm.model.project_tree import Project
 from gui_vm.control.dialogs import NewProjectDialog, SettingsDialog
 from gui_vm.config.config import Config
-from gui_vm.model.project_tree import TreeNode
+from gui_vm.model.project_tree import TreeNode, Scenario
 
 config = Config()
 config.read()
@@ -93,7 +93,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             lambda: self.project_control.remove_scenario(do_choose=True))
 
         self.actionGesamtlauf_starten.triggered.connect(
-            lambda: self.project_control.run_complete(do_choose=True))
+            lambda: self.project_control.run(do_choose=True))
         self.actionSpezifischen_Lauf_anlegen.triggered.connect(
             lambda: self.project_control.add_special_run(do_choose=True))
 
@@ -282,6 +282,31 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_control.clone_scenario(scenario_node=source_scenario,
                                             new_scenario_name=new_scenario_name)
 
+    # to be called when command line arguments are passed
+    def run(self, scenario_name, run_name=Scenario.PRIMARY_RUN, do_calibrate=False, do_balancing=True):
+        scenario_node = self.project_control.project.get_child(scenario_name)
+        if not scenario_node:
+            QtGui.QMessageBox.about(
+                None, 'Fehler',
+                'Szenario "{}" nicht gefunden!'.format(scenario_name))
+            return
+        if scenario_node.locked:
+            QtGui.QMessageBox.about(
+                None, 'Fehler',
+                'Szenario "{}" ist gesperrt!'.format(scenario_name))
+            return
+        options = {}
+        if run_name == Scenario.PRIMARY_RUN:
+            options = {'calibrate': [str(do_calibrate)], 'balance': [str(do_balancing)]}
+        else:
+            specific_run = scenario_node.get_output(run_name)
+            if not specific_run:
+                QtGui.QMessageBox.about(
+                    None, 'Fehler',
+                    'Lauf "{}" in Szenario "{}" nicht gefunden!'.format(run_name, scenario_name))
+                return
+            options = specific_run.options
+        self.project_control.run(scenario_node, run_name=run_name, options=options)
 
 
 class WelcomeDialog(QtGui.QDialog, Ui_Welcome):

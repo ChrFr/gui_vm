@@ -191,25 +191,14 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
     def run(self):
         doStart = True
         primary = self.scenario.primary_run
-        # there are already results after a successful run
-        # a new run might be unnessecary, if file is present
+        # specific runs become invalid if primary run is executed again, delete them
         if primary and primary.is_valid and self.run_name == primary.name:
             dialog = QtGui.QMessageBox()
-            msg = 'Das Szenario {} '.format(self.scenario.name) + \
-                'wurde bereits berechnet. \n\n' + \
-                'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?\n\n' + \
-                'Achtung! Die Ergebnisse der spezifischen Läufe des Szenarios werden ebenfalls gelöscht!'
-            reply = dialog.question(
-                self, _fromUtf8("erneuter Gesamtlauf"), _fromUtf8(msg),
-                QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
-            if reply == QtGui.QMessageBox.Cancel:
-                doStart = False
-            else:
-                for output in self.scenario.get_output_files():
-                    try:
-                        rmtree(os.path.split(output.file_absolute)[0])
-                    except:
-                        pass
+            for output in self.scenario.get_output_files():
+                try:
+                    rmtree(os.path.split(output.file_absolute)[0])
+                except:
+                    pass
 
         if doStart:
             # run the process
@@ -364,7 +353,7 @@ class RunOptionsDialog(QtGui.QDialog):
         self.show()
 
     def setupUi(self):
-        self.setObjectName(_fromUtf8("SpecialRun"))
+        self.setObjectName(_fromUtf8("RunOptions"))
         self.resize(372, 362)
         self.gridLayout = QtGui.QGridLayout(self)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
@@ -390,8 +379,8 @@ class RunOptionsDialog(QtGui.QDialog):
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self, SpecialRun):
-        SpecialRun.setWindowTitle(_translate("SpecialRun", "spezifischer Lauf", None))
+    def retranslateUi(self, RunOptions):
+        RunOptions.setWindowTitle(_translate("RunOptions", "Optionen", None))
 
     @staticmethod
     def getValues(scenario_node, stored_options={}, is_primary = False):

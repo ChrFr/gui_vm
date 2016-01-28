@@ -11,9 +11,20 @@ def startmain():
                         help="vorhandene XML-Projektdatei öffnen",
                         dest="project_file", default=None)
 
-    parser.add_argument("-run", action="store",
+    parser.add_argument("--scenario", "-s", action="store",
                         help="angegebenes Szenario ausführen",
                         dest="scenario_name", default=None)
+
+    parser.add_argument("--run-specific", "-r", action="store",
+                        help="Lauf ausführen",
+                        dest="run_name", default="Gesamtlauf")
+    parser.add_argument("--calibrate", "-c", action="store_true",
+                        help="Kalibrierung durchführen (gilt nur für Gesamtlauf)",
+                        dest="calibrate", default=False)
+
+    parser.add_argument("--no-balancing", action="store_false",
+                        help="Randsummenabgleich deaktivieren (gilt nur für Gesamtlauf)",
+                        dest="do_balancing", default=True)
 
 
     arguments = parser.parse_args()
@@ -21,6 +32,10 @@ def startmain():
     app = QtGui.QApplication(sys.argv)
     project_file = arguments.project_file
     run_scenario = arguments.scenario_name
+    run_name = arguments.run_name
+    calibrate = arguments.calibrate
+    do_balancing = arguments.do_balancing
+
     if run_scenario and not project_file:
         print('Um ein Szenario ausführen zu können, muss eine Projektdatei angegeben werden')
         ret = -1
@@ -28,7 +43,7 @@ def startmain():
         mainwindow = MainWindow(project_file=project_file,
                                 run_scenario=run_scenario)
         if run_scenario:
-            mainwindow.project_control.run(scenario_name=run_scenario)
+            mainwindow.run(scenario_name=run_scenario, run_name=run_name, do_calibrate=calibrate, do_balancing=do_balancing)
         mainwindow.show()
         ret = app.exec_()
     sys.exit(ret)

@@ -46,10 +46,11 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     def __init__(self, view=None):
         super(ProjectTreeControl, self).__init__()
         self.tree_view = view
+        self.tree_view.expanded.connect(lambda: self.tree_view.resizeColumnToContents(0))
+        self.tree_view.collapsed.connect(lambda: self.tree_view.resizeColumnToContents(0))
         self.model = TreeNode('root')
         self.header = ('Projekt', 'Details')
         self.count = 0
-        #self.current_index = None
 
     @property
     def current_index(self):
@@ -267,7 +268,7 @@ class VMProjectControl(ProjectTreeControl):
                 OutputNode: [self.edit_resource, 'Ausgabedaten editieren']
             },
             'execute': {
-                Scenario: [self.run_complete, 'Szenario starten']
+                Scenario: [self.run, 'Szenario starten']
             },
             'switch_lock': {
                 Scenario: [self._switch_lock, 'Szenario sperren'],
@@ -354,15 +355,13 @@ class VMProjectControl(ProjectTreeControl):
             action_map[action]()
 
     def update_view(self):
+        #workaround: added nodes are not shown because -> collapse and expand project node (insert_row doesn't work)
         if self.project:
-            #workaround: added nodes are not shown because -> collapse and expand project node (insert_row doesn't work)
             index = self.createIndex(0, 0, self.project)
             self.tree_view.collapse(index)
             self.tree_view.expand(index)
 
-        for column in range(self.tree_view.model()
-                            .columnCount(QtCore.QModelIndex())):
-            self.tree_view.resizeColumnToContents(column)
+        self.tree_view.resizeColumnToContents(0)
 
         #clear the old details
         for i in reversed(range(self.details_view.count())):
@@ -384,7 +383,7 @@ class VMProjectControl(ProjectTreeControl):
         elif isinstance(node, InputNode):
             details = InputDetails(node, self)
         elif isinstance(node, OutputNode):
-            details = OutputDetails(node, node.model.evaluate)
+            details = OutputDetails(node, self, node.model.evaluate)
 
         #track changes made in details
         if details:
@@ -534,37 +533,43 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_resource(remove_node=True, remove_outputs=False,
                                  confirmation=False)
 
-    def run_complete(self, scenario_node=None, do_choose=False):
-
+    def run(self, scenario_node=None, do_choose=False, run_name=Scenario.PRIMARY_RUN, options=None):
+        '''
+        Parameter
+        ---------
+        do_choose: opens a dialog to choose the scenario, where to execute the run
+        scenario_node: if not given, try to select
+        '''
         if not scenario_node and not do_choose:
             scenario_node = self.selected_item
         if do_choose:
             scenario_node = self._choose_scenario(
-                _fromUtf8('In welchem Szenario soll ein Gesamtlauf ausgeführt werden?'))
+                _fromUtf8('In welchem Szenario soll der Lauf ausgeführt werden?'))
         if scenario_node is None:
             return
 
         dialog = QtGui.QMessageBox()
         if not scenario_node.is_valid:
-            msg = _fromUtf8("Beheben Sie bitte zunächst die rot markierten Fehler im Szenario, "+
-                            "bevor sie einen Lauf starten!")
+            msg = _fromUtf8("Das Szenario ist fehlerhaft (rot markierte Felder)."+
+                            "Der Lauf kann nicht gestartet werden.")
             dialog.setWindowTitle("Fehler")
             dialog.setText(msg)
             dialog.exec_()
             return
 
-        options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
-        dialog = ExecDialog(scenario_node, 'Gesamtlauf',
-                            parent=self.tree_view, options=options)
+        if run_name != Scenario.PRIMARY_RUN:
+            primary = scenario_node.primary_run
+            if primary is None or not primary.is_valid:
+                msgBox = QtGui.QMessageBox()
+                msgBox.setText(_fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
+                                         'Bitte erneut ausführen.'))
+                msgBox.exec_()
+                return
 
-    def run(self, scenario_name):
-        scenario_node = self.project.get_child(scenario_name)
-        if scenario_node:
-            self.run_complete(scenario_node)
-        else:
-            QtGui.QMessageBox.about(
-                None, 'Fehler',
-                'Szenario {} nicht gefunden!'.format(scenario_name))
+        if not options:
+            options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
+        dialog = ExecDialog(scenario_node, run_name,
+                            parent=self.tree_view, options=options)
 
     def _switch_lock(self, resource_node=None):
         if not resource_node:

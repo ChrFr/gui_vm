@@ -422,6 +422,9 @@ class Scenario(TreeNode):
         #results with given name do not exist yet -> create them
         if results_run is None:
             results_run = self.add_run(run_name, options=options)
+        if(options):
+            results_run.options = deepcopy(options)
+            self.project.emit()
         project_xml = self.project.filename
 
         def on_success():

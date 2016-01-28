@@ -108,7 +108,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             _fromUtf8('Soll die Simulation gestartet werden?'),
             QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
         if reply == QtGui.QMessageBox.Ok:
-            self.project_control.run_complete(self.scenario)
+            self.project_control.run(self.scenario)
 
 
 
@@ -335,10 +335,11 @@ class OutputDetails(QtGui.QGroupBox):
     '''
     value_changed = QtCore.pyqtSignal()
 
-    def __init__(self, output_node, func_evaluate):
+    def __init__(self, output_node, project_control, func_evaluate):
         super(OutputDetails, self).__init__(output_node.name)
         self.output = output_node
         self.resize(450, 309)
+        self.project_control = project_control
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -395,13 +396,4 @@ class OutputDetails(QtGui.QGroupBox):
             scenario.project.emit()
 
     def run(self):
-        scenario = self.output.scenario
-        primary = scenario.primary_run
-        if primary is None or (not self.output.is_primary and not primary.is_valid):
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText(_fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
-                                     'Bitte erneut ausführen.'))
-            msgBox.exec_()
-        else:
-            dialog = ExecDialog(scenario, self.output.name,
-                            options=self.output.options, parent=config.mainWindow)
+        self.project_control.run(self.output.scenario, run_name=self.output.name)
