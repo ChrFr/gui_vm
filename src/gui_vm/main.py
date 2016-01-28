@@ -35,6 +35,7 @@ def startmain():
     run_name = arguments.run_name
     calibrate = arguments.calibrate
     do_balancing = arguments.do_balancing
+    ret = -1
 
     if run_scenario and not project_file:
         print('Um ein Szenario ausführen zu können, muss eine Projektdatei angegeben werden')
@@ -42,10 +43,12 @@ def startmain():
     else:
         mainwindow = MainWindow(project_file=project_file,
                                 run_scenario=run_scenario)
-        if run_scenario:
-            mainwindow.run(scenario_name=run_scenario, run_name=run_name, do_calibrate=calibrate, do_balancing=do_balancing)
         mainwindow.show()
-        ret = app.exec_()
+        if run_scenario:
+            # main window closes after closing run dialog, because not exec_()
+            mainwindow.batch_run(scenario_name=run_scenario, run_name=run_name, do_calibrate=calibrate, do_balancing=do_balancing)
+        else:
+            ret = app.exec_()
     sys.exit(ret)
 
 if __name__ == "__main__":

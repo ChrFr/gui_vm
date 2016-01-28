@@ -270,7 +270,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         if project is not None:
             self.save_project(os.path.join(self.project_control.project.filename))
 
-    def clone_scenario(self, source_scenario_name, new_scenario_name):
+    def batch_clone_scenario(self, source_scenario_name, new_scenario_name):
+        config.batch_mode = True
         project = self.project_control.project
         source_scenario = project.get_child(source_scenario_name)
         if not source_scenario:
@@ -283,7 +284,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                                             new_scenario_name=new_scenario_name)
 
     # to be called when command line arguments are passed
-    def run(self, scenario_name, run_name=Scenario.PRIMARY_RUN, do_calibrate=False, do_balancing=True):
+    def batch_run(self, scenario_name, run_name=Scenario.PRIMARY_RUN, do_calibrate=False, do_balancing=True):
+        config.batch_mode = True
         scenario_node = self.project_control.project.get_child(scenario_name)
         if not scenario_node:
             QtGui.QMessageBox.about(

@@ -361,8 +361,6 @@ class VMProjectControl(ProjectTreeControl):
             self.tree_view.collapse(index)
             self.tree_view.expand(index)
 
-        self.tree_view.resizeColumnToContents(0)
-
         #clear the old details
         for i in reversed(range(self.details_view.count())):
             widget = self.details_view.itemAt(i).widget()
@@ -568,8 +566,11 @@ class VMProjectControl(ProjectTreeControl):
 
         if not options:
             options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
+            if not ok:
+                return
         dialog = ExecDialog(scenario_node, run_name,
                             parent=self.tree_view, options=options)
+        dialog.exec_()
 
     def _switch_lock(self, resource_node=None):
         if not resource_node:
@@ -852,7 +853,7 @@ class VMProjectControl(ProjectTreeControl):
         self.project.update()
         self.project_changed.emit()
         self.view_changed.emit()
-        self.tree_view.header().resizeSection(0, 200)
+        self.tree_view.resizeColumnToContents(0)
 
     def remove_outputs(self, scenario):
         for output in scenario.get_output_files():

@@ -27,7 +27,7 @@ def clone():
     new_scenario_name = arguments.new_scenario
     mainwindow = MainWindow(project_file = project_file)
     mainwindow.show()
-    mainwindow.clone_scenario(template, new_scenario_name)
+    mainwindow.batch_clone_scenario(template, new_scenario_name)
 
 if __name__ == "__main__":
     clone()

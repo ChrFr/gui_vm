@@ -22,6 +22,7 @@ class Config():
         self.filename = os.path.join(main_p, "config.xml")
         self.default_file = os.path.join(main_p, "default_config.xml")
         self.mainWindow = None
+        self.batch_mode = False
         self.settings = {
             'environment': {
                 'hdf5_viewer': ''

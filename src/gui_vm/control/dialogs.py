@@ -172,6 +172,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.scenario = scenario
         self.options = options
         self.setupUi(self)
+        self.setWindowTitle(self.windowTitle() + ' ' + scenario.name + ' / ' + run_name)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.cancelButton.clicked.connect(self.close)
         self.startButton.clicked.connect(self.run)
@@ -189,18 +190,29 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.startButton.clicked.emit(True)
 
     def run(self):
-        doStart = True
+        cancel = False
         primary = self.scenario.primary_run
         # specific runs become invalid if primary run is executed again, delete them
         if primary and primary.is_valid and self.run_name == primary.name:
-            dialog = QtGui.QMessageBox()
-            for output in self.scenario.get_output_files():
-                try:
-                    rmtree(os.path.split(output.file_absolute)[0])
-                except:
+            if not config.batch_mode:
+                dialog = QtGui.QMessageBox()
+                msg = 'Das Szenario {} '.format(self.scenario.name) + \
+                    'wurde bereits berechnet. \n\n' + \
+                    'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?\n\n' + \
+                    'Achtung! Die Ergebnisse der spezifischen LÃ¤ufe des Szenarios werden ebenfalls gelÃ¶scht!'
+                reply = dialog.question(
+                    self, _fromUtf8("erneuter Gesamtlauf"), _fromUtf8(msg),
+                    QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+                cancel = reply == QtGui.QMessageBox.Cancel
+            if not cancel:
+                for output in self.scenario.get_output_files():
+                    try:
+                        rmtree(os.path.split(output.file_absolute)[0])
+                    except:
+                        pass
                     pass
 
-        if doStart:
+        if not cancel:
             # run the process
             self.scenario.run(self.process, self.run_name, options=self.options,
                               callback=self.show_status)
@@ -218,6 +230,8 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.cancelButton.setText(_fromUtf8('Schließen'))
         self.cancelButton.clicked.disconnect(self.kill)
         self.cancelButton.clicked.connect(self.close)
+        if config.batch_mode:
+            self.close()
 
     def finished(self):
         # strange: process returns 1 even if successful
