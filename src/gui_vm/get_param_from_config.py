@@ -21,6 +21,8 @@ class Params(object):
         self.root = TreeNode('root')
         XMLParser.read_xml(self.root, project_file)
         self.project_folder = os.path.split(project_file)[0]
+        for project in self.root.children:
+            project.project_folder = self.project_folder
 
     def get_params_of_scenario(self, scenario_name, params):
         """

@@ -26,7 +26,7 @@ def startmain():
                         help="Kalibrierung durchführen (gilt nur für Gesamtlauf)",
                         dest="calibrate", default=False)
 
-    parser.add_argument("--no-balancing", action="store_false",
+    parser.add_argument("--balancing", action="store_false",
                         help="Randsummenabgleich deaktivieren (gilt nur für Gesamtlauf)",
                         dest="do_balancing", default=True)
 
@@ -52,7 +52,10 @@ def startmain():
         mainwindow.show()
         if run_scenario:
             # main window closes after closing run dialog, because not exec_()
-            mainwindow.batch_run(scenario_name=run_scenario, run_name=run_name, do_calibrate=calibrate, do_balancing=do_balancing)
+            mainwindow.batch_run(scenario_name=run_scenario,
+                                 run_name=run_name,
+                                 do_calibrate=calibrate,
+                                 do_balancing=do_balancing)
         else:
             ret = app.exec_()
     sys.exit(ret)
