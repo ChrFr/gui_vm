@@ -492,39 +492,57 @@ class Scenario(TreeNode):
         '''
         get the defaults from the default xml depending on the model
         '''
+        if len(self.default_folder) == 0:
+            raise Exception('Es sind keine Defaults für das gewählte Modell angegeben (siehe Einstellungen).')
+        
         default_project_file = os.path.join(self.default_folder,
                                             TrafficModel.FILENAME_DEFAULT)
+        if not os.path.exists(default_project_file):
+            raise Exception('Die Default-Projektdatei existiert nicht "{}".'.format(default_project_file))
+        
         #get the default simrun(scenario) for the traffic model
         #from the default file
         tmp_root = TreeNode('default_root')
-        try:
-            defaults = XMLParser.read_xml(tmp_root, default_project_file)
-        except:
-            return None
-        default_model = defaults.find_all(self.model.name)[0]
-        return default_model
+        err_msg = 'Die Default-Projektdatei ist fehlerhaft.'
+        defaults = XMLParser.read_xml(tmp_root, default_project_file)
+        
+        default_project = defaults.find_all_by_class(Project)
+        if not default_project:
+            raise Exception(err_msg)
+        
+        default_model = default_project[0].find_all(self.model.name)
+        
+        if not default_model:
+            raise Exception(err_msg)
+            
+        return default_model[0]
 
     def reset_to_default(self):
         '''
-        reset the simrun to the defaults
+        reset the scenario to the defaults
         '''
-        default_model = self.get_default_scenario()
-        if not default_model:
-            return False, "Es sind keine Defaults für das gewählte Modell gefunden worden."
-        default_nodes = default_model.get_input_files()
-        default_names = [d.name for d in default_nodes]
-        default_map = dict(zip(default_names, default_nodes))
-
-        #set the original sources to the files in the default folder
-        for res_node in self.get_input_files():
-            default_node = default_map[res_node.name]
-            res_node.file_relative = default_node.file_relative
-            res_node.original_source = os.path.join(
-                self.default_folder,
-                default_model.name,
-                default_node.subfolder,
-                default_node.file_relative)
-        return True, "Szenario erfolgreich auf defaults zurückgesetzt"
+        try:
+            default_model = self.get_default_scenario()
+        except Exception, e:
+            return False, str(e)
+        
+        try:
+            default_nodes = default_model.get_input_files()
+            default_names = [d.name for d in default_nodes]
+            default_map = dict(zip(default_names, default_nodes))
+    
+            #set the original sources to the files in the default folder
+            for res_node in self.get_input_files():
+                default_node = default_map[res_node.name]
+                res_node.file_relative = default_node.file_relative
+                res_node.original_source = os.path.join(
+                    self.default_folder,
+                    default_model.name,
+                    default_node.subfolder,
+                    default_node.file_relative)
+        except:
+            return False, 'Die Default-Projektdatei ist fehlerhaft.'
+        return True, 'Szenario erfolgreich auf defaults zurückgesetzt'
 
 
     def get_input(self, name):
@@ -787,7 +805,7 @@ class ResourceNode(TreeNode):
         '''
         super(ResourceNode, self).from_xml(element)
         if self.model is None:
-            raise Exception('The traffic model of the simrun has to be'+
+            raise Exception('The traffic model of the scenario has to be'+
                             'defined before defining its resources!')
         self.resource_name = self.name
         self.original_source = element.find('Quelle').text
@@ -833,6 +851,8 @@ class ResourceNode(TreeNode):
         '''
         sets the relative path of the resource to file_path
         '''
+        if self.resource is None:
+            raise Exception('"{}" ist nicht definiert für das Verkehrsmodell'.format(self.name))
         if file_path is not None:
             subfolder, filename = os.path.split(file_path.replace('\\','/'))
         else:
@@ -873,17 +893,21 @@ class ResourceNode(TreeNode):
 
     def reset_to_default(self):
         '''
-        reset the simrun to the defaults
+        reset the scenario to the defaults
         no real reset, only setting of source, because the resource can't be
         set to the old model (incl. references of rules and resource list
         of model) at the moment
         '''
         scenario = self.scenario
-        default_model = scenario.get_default_scenario()
-        if not default_model:
-            return False, "Es sind keine Defaults für das gewählte Modell gefunden worden."
+        try:
+            default_model = self.get_default_scenario()
+        except Exception, e:
+            return False, str(e)
+        
         #find corresponding default resource node
         res_default = default_model.get_input(self.name)
+        if not res_default:
+            return False, "Die Default-Projektdatei ist fehlerhaft."            
         #rename source
         self.file_relative = res_default.file_relative
         self.original_source = os.path.join(scenario.default_folder,
@@ -985,7 +1009,7 @@ class XMLParser(object):
         if root_element.tag == 'GUI_VM_PROJECT':
             self.build_xml(root_element, root)
         else:
-            print "Warning: node GUI_VM_PROJECT not found in {0}".format(filename)
+            raise Exception("Root node GUI_VM_PROJECT not found in {0}".format(filename))
         return root
 
     @classmethod
@@ -1005,7 +1029,7 @@ class XMLParser(object):
                     node = glob_class(name='', parent=parent)
                 else:
                     raise Exception('wrong class definition in xml file! '+
-                                    "'{}' is unknown".format(classname))
+                                    '"{}" is unknown'.format(classname))
                 #assign attributes to node
                 node.from_xml(subelement)
                 #add child to project tree (resources handle this itself)

@@ -99,8 +99,9 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
         #(assuming all files are copied to the same drive)
         size = 0
         for filename in filenames:
-            statinfo = os.stat(filename)
-            size += statinfo.st_size
+            if os.path.exists(filename):
+                statinfo = os.stat(filename)
+                size += statinfo.st_size
         drive = os.path.splitdrive(destinations[0])[0]
         not_enough = False
         # don't know how to get the root drive under linux, splitdrive returns ''
@@ -118,6 +119,11 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
 
         else:
             for i in xrange(len(filenames)):
+                if not os.path.exists(filenames[i]):
+                    status_txt = '<i><b>{}</b> existiert nicht ... &uuml;berspringe </i><br>'.format(filename)
+                    self.log_edit.insertHtml(status_txt)
+                    continue
+                    
                 d, filename = os.path.split(filenames[i])
                 dest_filename = os.path.join(destinations[i], filename)
                 do_copy = True
