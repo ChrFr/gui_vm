@@ -1,8 +1,8 @@
 default/
 build/
 dist/
-/gui.wpr
-/gui.wpu
+/*.wpr
+/*.wpu
 /org.eclipse.core.resources.prefs
 /dist/*
 /build/*
