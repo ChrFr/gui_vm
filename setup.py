@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gui_vm",
-    version="0.1",
+    version="0.7",
     url='https://github.com/ChrFr/gui_vm',
     author='Christoph Franke',
     description="graphical user interface for different traffic models",
@@ -29,12 +29,12 @@ setup(
                    'default_config.xml'],
     },
 
-
+    # deactivated requirements to avoid vcvarsall.bat errors in wheel installer, have to be installed with conda/pip before
     install_requires=[
-        'setuptools',
-        'numpy',
-        'tables',
-        'lxml'
+        'setuptools'#,
+        #'numpy',
+        #'tables',
+        #'lxml'
     ],
 
     # PyQT 4 needed, no disutils available for the package.
@@ -43,7 +43,7 @@ setup(
     entry_points={
         'console_scripts': [
             'gui_vm=gui_vm.main:startmain',
-            'gui_vm.clone_scenario=gui_vm.main:clone_scenario',
+            #'gui_vm.clone_scenario=gui_vm.clone_scenario:main',
             'get_param_from_config=gui_vm.get_param_from_config:main'
         ],
     },

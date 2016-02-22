@@ -1,10 +1,10 @@
-call conda create -n tdmks python=2.7
-call activate tdmks
+call conda create -y -n gui_test python=2.7
+call activate gui_test
 call conda install -y pyqt=4 
 call conda install -y numpy
 call conda install -y pytables
 call conda install -y lxml
-call python setup.py install
+call pip install gui_vm-0.7-py2-none-any.whl
 echo.
 echo.
 echo Installation der grafischen Oberflaeche beendet.
