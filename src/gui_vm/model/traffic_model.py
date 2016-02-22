@@ -279,7 +279,7 @@ class TrafficModel(Observable):
         config.read()
         traffic_models = config.settings['trafficmodels']
         if name in traffic_models:
-            main_path = os.path.split((sys.argv)[0])[0]
+            main_path = os.path.split(os.path.split(__file__)[0])[0]
             config_filename = traffic_models[name]['config_file']
             #complete relative paths
             if not os.path.isabs(config_filename):

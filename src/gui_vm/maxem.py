@@ -35,7 +35,7 @@ class SpecificModel(TrafficModel):
                              ('groups_generation', 'Personengruppen')])
 
     def __init__(self, path=None):
-        main_p = os.path.split((sys.argv)[0])[0]
+        main_p = os.path.split(__file__)[0]
         input_config_file = os.path.join(main_p,
                                          self.INPUT_CONFIG_FILE)
         tables_config_file = os.path.join(main_p,

@@ -873,10 +873,11 @@ class VMProjectControl(ProjectTreeControl):
         self.close_project()
         try:
             XMLParser.read_xml(self.model, filename)
-        except:
+        except Exception, e:
             # reset to clean node
             self.model = TreeNode('root')
-            raise Exception
+            print filename
+            raise e
         self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
