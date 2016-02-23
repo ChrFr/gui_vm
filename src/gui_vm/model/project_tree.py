@@ -900,7 +900,7 @@ class ResourceNode(TreeNode):
         '''
         scenario = self.scenario
         try:
-            default_model = self.get_default_scenario()
+            default_model = scenario.get_default_scenario()
         except Exception, e:
             return False, str(e)
 
