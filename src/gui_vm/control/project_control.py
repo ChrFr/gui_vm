@@ -235,8 +235,13 @@ class VMProjectControl(ProjectTreeControl):
         self.edit_button.clicked.connect(lambda: self.start_function('edit'))
         self.reset_button.clicked.connect(lambda: self.start_function('reset'))
         #self.start_button.clicked.connect(self.project_control.execute)
+
+        # TODO: disable lock when not in admin_mode
+        if not config.admin_mode:
+            self.lock_button.setEnabled(False)
         self.lock_button.clicked.connect(lambda:
                                          self.start_function('switch_lock'))
+
         self.copy_button.clicked.connect(lambda: self.start_function('copy'))
 
         self.project_changed.connect(self.item_clicked)

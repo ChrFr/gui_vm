@@ -530,7 +530,7 @@ class H5TableColumn(H5Resource):
             self.add_rule(max_rule)
 
         if exp_dtype:
-            type_rule = CompareRule('dtype', '==', exp_dtype,
+            type_rule = DtypeCompareRule('dtype', '==', exp_dtype,
                                     error_msg='falscher dtype',
                                     success_msg='dtype überprüft')
             self.add_rule(type_rule)
@@ -723,10 +723,6 @@ class Rule(object):
         return result, message
 
 
-class DtypeRule(object):
-    pass
-
-
 def is_number(s):
     '''
     check if String represents a number
@@ -812,7 +808,7 @@ class CompareRule(Rule):
             l = left[i]
             r = right[i]
             #ignore wildcards
-            if left[i] or right[i] in self.wildcards:
+            if (left[i] in self.wildcards) or (right[i] in self.wildcards):
                 continue
             #compare the value with the field of the given object
             if not operator(left[i], right[i]):
@@ -828,3 +824,7 @@ class CompareRule(Rule):
         if self.success_msg:
             return True, self.success_msg
         return True
+
+class DtypeCompareRule(CompareRule):
+    wildcards = []
+

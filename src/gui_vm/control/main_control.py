@@ -44,14 +44,17 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def __init__(self,
                  project_file=None,
-                 run_scenario=None):
+                 run_scenario=None,
+                 admin_mode=False):
         """
         """
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
 
-        #global access to main window
+        # global access to main window
         config.mainWindow = self
+        # global access to admin mode
+        config.admin_mode = admin_mode
 
         # define the view on the project and connect to the qtreeview in
         # the main window

@@ -187,17 +187,17 @@
               <property name="minimumSize">
                <size>
                 <width>265</width>
-                <height>35</height>
+                <height>45</height>
                </size>
               </property>
               <property name="title">
-               <string/>
+               <string>Kontextmenü</string>
               </property>
               <widget class="QToolButton" name="plus_button">
                <property name="geometry">
                 <rect>
                  <x>10</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
@@ -223,7 +223,7 @@
                <property name="geometry">
                 <rect>
                  <x>70</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
@@ -249,7 +249,7 @@
                <property name="geometry">
                 <rect>
                  <x>120</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
@@ -284,7 +284,7 @@
                <property name="geometry">
                 <rect>
                  <x>150</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
@@ -310,7 +310,7 @@
                <property name="geometry">
                 <rect>
                  <x>230</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
@@ -340,7 +340,7 @@
                <property name="geometry">
                 <rect>
                  <x>40</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
@@ -366,7 +366,7 @@
                <property name="geometry">
                 <rect>
                  <x>180</x>
-                 <y>5</y>
+                 <y>14</y>
                  <width>25</width>
                  <height>25</height>
                 </rect>
