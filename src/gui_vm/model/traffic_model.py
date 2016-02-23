@@ -226,8 +226,7 @@ class TrafficModel(Observable):
                         reference = self
                     min_rule = CompareRule('min_value', '>=', minimum,
                                            reference=reference,
-                                           error_msg='Minimum von '
-                                           + minimum + ' unterschritten',
+                                           error_msg='Minimum unterschritten',
                                            success_msg='Minimum überprüft')
                     node.add_rule(min_rule)
                 if maximum != '':
@@ -237,8 +236,7 @@ class TrafficModel(Observable):
                         reference = self
                     max_rule = CompareRule('max_value', '<=', maximum,
                                            reference=reference,
-                                           error_msg='Maximum von '
-                                           + maximum + ' überschritten',
+                                           error_msg='Maximum überschritten',
                                            success_msg='Maximum überprüft')
                     node.add_rule(max_rule)
                 if (np.array(dimension) != '').any():

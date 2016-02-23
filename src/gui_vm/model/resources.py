@@ -718,8 +718,8 @@ class Rule(object):
         else:
             message = DEFAULT_MESSAGES[MISMATCH]
         #append place where mismatch happened to message
-        if not result:
-            message += " (in '{}')".format(obj.name)
+        #if not result:
+            #message += " (in '{}')".format(obj.name)
         return result, message
 
 
@@ -798,11 +798,12 @@ class CompareRule(Rule):
         if not hasattr(right, '__iter__'):
             right = [right]
 
+        if self.error_msg:
+            error_msg = self.error_msg + ' - erwartet: {} {}'.format(self.operator, right)
+
         #elementwise compare -> same number of elements needed
         if len(right) != len(left):
-            if self.error_msg:
-                return False, self.error_msg
-            return False
+            return False, error_msg
         #compare left and right elementwise
         for i in xrange(len(left)):
             l = left[i]
@@ -818,9 +819,7 @@ class CompareRule(Rule):
                 if isinstance(r, str) and is_number(r):
                     r = float(r)
                 if not operator(l, r):
-                    if self.error_msg:
-                        return False, self.error_msg
-                    return False
+                    return False, error_msg
         if self.success_msg:
             return True, self.success_msg
         return True
