@@ -8,6 +8,7 @@ import sys
 import csv
 import numpy as np
 from gui_vm.config.config import Config
+import gui_vm
 
 config = Config()
 config.read()
@@ -35,14 +36,14 @@ class SpecificModel(TrafficModel):
                              ('groups_generation', 'Personengruppen')])
 
     def __init__(self, path=None):
-        main_p = os.path.split(__file__)[0]
-        input_config_file = os.path.join(main_p,
+        maxem_path = os.path.dirname(__file__)
+        input_config_file = os.path.join(maxem_path,
                                          self.INPUT_CONFIG_FILE)
-        tables_config_file = os.path.join(main_p,
+        tables_config_file = os.path.join(maxem_path,
                                           self.TABLES_CONFIG_FILE)
-        arrays_config_file = os.path.join(main_p,
+        arrays_config_file = os.path.join(maxem_path,
                                           self.ARRAYS_CONFIG_FILE)
-        columns_config_file = os.path.join(main_p,
+        columns_config_file = os.path.join(maxem_path,
                                            self.COLUMNS_CONFIG_FILE)
         super(SpecificModel, self).__init__(
             'Maxem',

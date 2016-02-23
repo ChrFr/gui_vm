@@ -8,6 +8,7 @@ import os, imp, sys
 from gui_vm.model.observable import Observable
 from gui_vm.config.config import Config
 from functools import partial
+import importlib
 
 
 class TrafficModel(Observable):
@@ -278,13 +279,18 @@ class TrafficModel(Observable):
         traffic_models = config.settings['trafficmodels']
         if name in traffic_models:
             main_path = os.path.split(os.path.split(__file__)[0])[0]
-            config_filename = traffic_models[name]['config_file']
-            #complete relative paths
-            if not os.path.isabs(config_filename):
-                config_filename = os.path.join(main_path,
-                                               config_filename)
-            return (imp.load_source('SpecificModel', config_filename)
-                    .SpecificModel())
+            class_module = traffic_models[name]['class_module']
+
+            module = importlib.import_module(class_module)
+
+            return module.SpecificModel()
+            ##complete relative paths
+            #if not os.path.isabs(config_filename):
+                #config_filename = os.path.join(main_path,
+                                               #config_filename)
+            #package_file = imp.find_module('')
+            #return (imp.load_source('SpecificModel', config_filename)
+                    #.SpecificModel())
         else:
             return None
 

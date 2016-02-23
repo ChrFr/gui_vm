@@ -4,7 +4,7 @@
   </environment>
   <trafficmodels>
     <Maxem>
-      <config_file>maxem.py</config_file>
+      <class_module>gui_vm.maxem.maxem</class_module>
       <executable></executable>
       <default_folder></default_folder>
 	  <interpreter>python.exe</interpreter>

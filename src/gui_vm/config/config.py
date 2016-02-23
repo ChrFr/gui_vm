@@ -1,5 +1,7 @@
 from lxml import etree
 import os, sys
+import gui_vm
+
 
 class Singleton(type):
     '''
@@ -18,7 +20,7 @@ class Config():
     __metaclass__ = Singleton
 
     def __init__(self):
-        main_p = os.path.split(os.path.split(__file__)[0])[0]
+        main_p = os.path.dirname(gui_vm.__file__)
         self.filename = os.path.join(main_p, "config.xml")
         self.default_file = os.path.join(main_p, "default_config.xml")
         self.mainWindow = None
