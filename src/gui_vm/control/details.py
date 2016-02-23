@@ -268,7 +268,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         src_filename = str(self.file_edit.text())
         self.resource_node.original_source = src_filename
         self.resource_node.file_relative = os.path.join(
-            self.resource_node.name, os.path.split(src_filename)[1])
+            self.resource_node.parent.name, os.path.split(src_filename)[1])
         dest_filename = self.resource_node.file_absolute
         self.project_copy.setText(dest_filename)
         #only try to copy file, if not the same file as before is selected
