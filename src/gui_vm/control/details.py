@@ -53,8 +53,6 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             self.primary_button.setEnabled(False)
             self.special_button.setEnabled(False)
             self.combo_model.setEnabled(False)
-        label = QtGui.QLabel(_fromUtf8('\n\nKenngrössen:\n'))
-        self.formLayout.addRow(label)
         for meta in scenario_node.meta:
             label = QtGui.QLabel(_fromUtf8(meta))
             txt = scenario_node.meta[meta]
@@ -66,7 +64,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             else:
                 edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
             edit.setReadOnly(True)
-            self.formLayout.addRow(label, edit)
+            self.data_form.addRow(label, edit)
 
     def special_run(self):
         prime_run = self.scenario.primary_run

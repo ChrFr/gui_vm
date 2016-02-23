@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>960</width>
-    <height>766</height>
+    <width>987</width>
+    <height>814</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,9 +42,9 @@
          <colorrole role="Window">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>255</red>
-            <green>170</green>
-            <blue>0</blue>
+            <red>136</red>
+            <green>136</green>
+            <blue>136</blue>
            </color>
           </brush>
          </colorrole>
@@ -62,9 +62,9 @@
          <colorrole role="Window">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>156</red>
-            <green>156</green>
-            <blue>156</blue>
+            <red>136</red>
+            <green>136</green>
+            <blue>136</blue>
            </color>
           </brush>
          </colorrole>
@@ -73,18 +73,18 @@
          <colorrole role="Base">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>0</red>
-            <green>0</green>
-            <blue>0</blue>
+            <red>136</red>
+            <green>136</green>
+            <blue>136</blue>
            </color>
           </brush>
          </colorrole>
          <colorrole role="Window">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>0</red>
-            <green>0</green>
-            <blue>0</blue>
+            <red>136</red>
+            <green>136</green>
+            <blue>136</blue>
            </color>
           </brush>
          </colorrole>
@@ -103,39 +103,377 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
+      <property name="opaqueResize">
+       <bool>true</bool>
+      </property>
       <property name="handleWidth">
        <number>2</number>
       </property>
       <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
-          </property>
-          <item row="0" column="3" colspan="2">
-           <spacer name="horizontalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetDefaultConstraint</enum>
             </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
+            <item row="0" column="3" colspan="2">
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="8">
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="open_button">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>Projekt öffnen</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="gui.qrc">
+                <normaloff>:/buttons/icons/open.png</normaloff>:/buttons/icons/open.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>28</width>
+                <height>28</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5" colspan="3">
+             <widget class="QGroupBox" name="context_button_group">
+              <property name="minimumSize">
+               <size>
+                <width>265</width>
+                <height>35</height>
+               </size>
+              </property>
+              <property name="title">
+               <string/>
+              </property>
+              <widget class="QToolButton" name="plus_button">
+               <property name="geometry">
+                <rect>
+                 <x>10</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="toolTip">
+                <string>Hinzufügen</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/plus.png</normaloff>:/buttons/icons/plus.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>21</width>
+                 <height>21</height>
+                </size>
+               </property>
+              </widget>
+              <widget class="QToolButton" name="minus_button">
+               <property name="geometry">
+                <rect>
+                 <x>70</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="toolTip">
+                <string>Entfernen</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/minus.png</normaloff>:/buttons/icons/minus.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>21</width>
+                 <height>21</height>
+                </size>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="edit_button">
+               <property name="geometry">
+                <rect>
+                 <x>120</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="toolTip">
+                <string>Umbenennen</string>
+               </property>
+               <property name="locale">
+                <locale language="German" country="Germany"/>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/edit.png</normaloff>:/buttons/icons/edit.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>21</width>
+                 <height>21</height>
+                </size>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="reset_button">
+               <property name="geometry">
+                <rect>
+                 <x>150</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="toolTip">
+                <string>Zurücksetzen</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/reset.png</normaloff>:/buttons/icons/reset.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>21</width>
+                 <height>21</height>
+                </size>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="lock_button">
+               <property name="geometry">
+                <rect>
+                 <x>230</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="toolTip">
+                <string>Zurücksetzen</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/unlocked-yellow.png</normaloff>
+                 <normalon>:/buttons/icons/locked-yellow.png</normalon>:/buttons/icons/unlocked-yellow.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>19</width>
+                 <height>19</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="copy_button">
+               <property name="geometry">
+                <rect>
+                 <x>40</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="toolTip">
+                <string>Kopieren</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/copy.png</normaloff>:/buttons/icons/copy.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>21</width>
+                 <height>21</height>
+                </size>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="clean_button">
+               <property name="geometry">
+                <rect>
+                 <x>180</x>
+                 <y>5</y>
+                 <width>25</width>
+                 <height>25</height>
+                </rect>
+               </property>
+               <property name="toolTip">
+                <string>Aufräumen</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="gui.qrc">
+                 <normaloff>:/buttons/icons/clean.png</normaloff>:/buttons/icons/clean.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>22</width>
+                 <height>21</height>
+                </size>
+               </property>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTreeView" name="qtreeview">
+            <property name="enabled">
+             <bool>true</bool>
             </property>
-            <property name="sizeHint" stdset="0">
+            <property name="maximumSize">
              <size>
-              <width>20</width>
-              <height>20</height>
+              <width>16777215</width>
+              <height>16777215</height>
              </size>
             </property>
-           </spacer>
+            <property name="palette">
+             <palette>
+              <active>
+               <colorrole role="Base">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>255</red>
+                  <green>255</green>
+                  <blue>255</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </active>
+              <inactive>
+               <colorrole role="Base">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>255</red>
+                  <green>255</green>
+                  <blue>255</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </inactive>
+              <disabled>
+               <colorrole role="Base">
+                <brush brushstyle="SolidPattern">
+                 <color alpha="255">
+                  <red>241</red>
+                  <green>241</green>
+                  <blue>241</blue>
+                 </color>
+                </brush>
+               </colorrole>
+              </disabled>
+             </palette>
+            </property>
+            <property name="expandsOnDoubleClick">
+             <bool>false</bool>
+            </property>
+            <attribute name="headerMinimumSectionSize">
+             <number>50</number>
+            </attribute>
+           </widget>
           </item>
-          <item row="0" column="8">
-           <spacer name="horizontalSpacer_3">
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>&lt; </string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string> &gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="details_layout">
+          <item>
+           <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Expanding</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -145,320 +483,7 @@
             </property>
            </spacer>
           </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="open_button">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>30</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>Projekt öffnen</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="gui.qrc">
-              <normaloff>:/buttons/icons/open.png</normaloff>:/buttons/icons/open.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>28</width>
-              <height>28</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="5" colspan="3">
-           <widget class="QGroupBox" name="context_button_group">
-            <property name="minimumSize">
-             <size>
-              <width>265</width>
-              <height>35</height>
-             </size>
-            </property>
-            <property name="title">
-             <string/>
-            </property>
-            <widget class="QToolButton" name="plus_button">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="toolTip">
-              <string>Hinzufügen</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/plus.png</normaloff>:/buttons/icons/plus.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>21</width>
-               <height>21</height>
-              </size>
-             </property>
-            </widget>
-            <widget class="QToolButton" name="minus_button">
-             <property name="geometry">
-              <rect>
-               <x>70</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="toolTip">
-              <string>Entfernen</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/minus.png</normaloff>:/buttons/icons/minus.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>21</width>
-               <height>21</height>
-              </size>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="edit_button">
-             <property name="geometry">
-              <rect>
-               <x>120</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Umbenennen</string>
-             </property>
-             <property name="locale">
-              <locale language="German" country="Germany"/>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/edit.png</normaloff>:/buttons/icons/edit.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>21</width>
-               <height>21</height>
-              </size>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="reset_button">
-             <property name="geometry">
-              <rect>
-               <x>150</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="toolTip">
-              <string>Zurücksetzen</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/reset.png</normaloff>:/buttons/icons/reset.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>21</width>
-               <height>21</height>
-              </size>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="lock_button">
-             <property name="geometry">
-              <rect>
-               <x>230</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="toolTip">
-              <string>Zurücksetzen</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/unlocked-yellow.png</normaloff>
-               <normalon>:/buttons/icons/locked-yellow.png</normalon>:/buttons/icons/unlocked-yellow.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>19</width>
-               <height>19</height>
-              </size>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="copy_button">
-             <property name="geometry">
-              <rect>
-               <x>40</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="toolTip">
-              <string>Kopieren</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/copy.png</normaloff>:/buttons/icons/copy.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>21</width>
-               <height>21</height>
-              </size>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="clean_button">
-             <property name="geometry">
-              <rect>
-               <x>180</x>
-               <y>5</y>
-               <width>25</width>
-               <height>25</height>
-              </rect>
-             </property>
-             <property name="toolTip">
-              <string>Aufräumen</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="gui.qrc">
-               <normaloff>:/buttons/icons/clean.png</normaloff>:/buttons/icons/clean.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>22</width>
-               <height>21</height>
-              </size>
-             </property>
-            </widget>
-           </widget>
-          </item>
          </layout>
-        </item>
-        <item>
-         <widget class="QTreeView" name="qtreeview">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="palette">
-           <palette>
-            <active>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>255</red>
-                <green>255</green>
-                <blue>255</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </active>
-            <inactive>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>255</red>
-                <green>255</green>
-                <blue>255</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </inactive>
-            <disabled>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>241</red>
-                <green>241</green>
-                <blue>241</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </disabled>
-           </palette>
-          </property>
-          <property name="expandsOnDoubleClick">
-           <bool>false</bool>
-          </property>
-          <attribute name="headerMinimumSectionSize">
-           <number>50</number>
-          </attribute>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="details_layout">
-        <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </widget>
@@ -471,7 +496,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>960</width>
+     <width>987</width>
      <height>21</height>
     </rect>
    </property>
