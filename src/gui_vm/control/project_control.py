@@ -11,7 +11,6 @@ import os, subprocess
 from shutil import rmtree
 
 config = Config()
-config.read()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -559,8 +558,9 @@ class VMProjectControl(ProjectTreeControl):
             primary = scenario_node.primary_run
             if primary is None or not primary.is_valid:
                 msgBox = QtGui.QMessageBox()
+                msgBox.setWindowTitle(_fromUtf8('Fehler'))
                 msgBox.setText(_fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
-                                         'Bitte erneut ausführen.'))
+                                         'Bitte führen Sie ihn erneut aus, bevor Sie spezifische Läufe starten!'))
                 msgBox.exec_()
                 return
 
@@ -764,11 +764,12 @@ class VMProjectControl(ProjectTreeControl):
             return
         elif prime_run.file_absolute is None or not prime_run.is_valid:
             msg = _fromUtf8('Der Gesamtlauf ist fehlerhaft! ' +
-                            'Bitte erneut ausführen.')
+                            'Bitte führen Sie ihn erneut aus, bevor Sie einen neuen spezifischen Lauf anlegen!')
             msgBox = QtGui.QMessageBox()
+            msgBox.setWindowTitle(_fromUtf8('Fehler'))
             msgBox.setText(msg)
             msgBox.exec_()
-
+            return
 
         options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
         if ok:

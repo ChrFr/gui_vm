@@ -12,7 +12,6 @@ from functools import partial
 import os
 
 config = Config()
-config.read()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

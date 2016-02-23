@@ -110,7 +110,7 @@ class SpecificModel(TrafficModel):
                                  "values": [True, False],
                                  "is_primary_only": True,
                                  "is_special_only": False,
-                                 "default": True,
+                                 "default": False,
                                  "is_unique": True}
 
         options['balance'] = { "names": ['An', 'Aus'],

@@ -24,7 +24,6 @@ XML_CLASS_NAMES = {
 }
 
 config = Config()
-config.read()
 
 
 class TreeNode(Observable):

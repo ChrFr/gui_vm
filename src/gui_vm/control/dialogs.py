@@ -11,7 +11,6 @@ from gui_vm.config.config import Config
 from shutil import rmtree
 
 config = Config()
-config.read()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -123,7 +122,7 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                     status_txt = '<i><b>{}</b> existiert nicht ... &uuml;berspringe </i><br>'.format(filename)
                     self.log_edit.insertHtml(status_txt)
                     continue
-                    
+
                 d, filename = os.path.split(filenames[i])
                 dest_filename = os.path.join(destinations[i], filename)
                 do_copy = True
