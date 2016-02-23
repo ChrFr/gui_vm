@@ -31,6 +31,7 @@ OV;/visum/Umsteigewartezeit;OV;H5Array
 OV;/visum/Zugangszeit;OV;H5Array
 OV;/visum/in_vehicle_time_ast;OV;H5Array
 OV;/visum/in_vehicle_time_bus;OV;H5Array
+Tarifrelationen;/tarif_relationen;OV;H5Array
 Betas;/coefficients/betas;Parameter;H5Table
 Betas;/coefficients/offset_ls_a;Parameter;H5Array
 Konstanten;/constants;Parameter;H5Table

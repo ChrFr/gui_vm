@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gui_vm",
-    version="0.7",
+    version="0.71",
     url='https://github.com/ChrFr/gui_vm',
     author='Christoph Franke',
     description="graphical user interface for different traffic models",

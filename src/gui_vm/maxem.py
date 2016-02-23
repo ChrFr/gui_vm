@@ -203,7 +203,8 @@ class SpecificModel(TrafficModel):
                   function to track the progress
         '''
         python_path = config.settings['trafficmodels'][self.name]['interpreter']
-        executable = config.settings['trafficmodels'][self.name]['executable']
+        #executable = config.settings['trafficmodels'][self.name]['executable']
+        executable = '-m tdmks.main'
         cmd = python_path + ' ' + executable
         cmd_scen_name = '-n "{}"'.format(scenario_name)
 
@@ -251,4 +252,9 @@ class SpecificModel(TrafficModel):
         process.readyReadStandardOutput.connect(progress)
         process.readyReadStandardError.connect(progress)
         #process.finished.connect(self.finished)
+
+        # log the command issued
+        if callback:
+            callback(full_cmd, 0)
+        # start
         process.start(full_cmd)

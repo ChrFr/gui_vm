@@ -8,7 +8,7 @@ MIV;/iv/cost_passenger;n_zones x n_zones;;
 MIV;/visum/Fahrweite;n_zones x n_zones;;
 MIV;/visum/t0;n_zones x n_zones;;
 MIV;/visum/tAkt;n_zones x n_zones;;
-OV;/tarif_relationen;n_zones;;
+Tarifrelationen;/tarif_relationen;n_zones;;
 OV;/put/cost_put;n_time_series x n_zones x n_zones;;
 OV;/put/no_connection;n_time_series x n_zones x n_zones;;
 OV;/put/share_bus;n_time_series x n_zones x n_zones;;

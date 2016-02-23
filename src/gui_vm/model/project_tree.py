@@ -494,27 +494,27 @@ class Scenario(TreeNode):
         '''
         if len(self.default_folder) == 0:
             raise Exception('Es sind keine Defaults für das gewählte Modell angegeben (siehe Einstellungen).')
-        
+
         default_project_file = os.path.join(self.default_folder,
                                             TrafficModel.FILENAME_DEFAULT)
         if not os.path.exists(default_project_file):
             raise Exception('Die Default-Projektdatei existiert nicht "{}".'.format(default_project_file))
-        
+
         #get the default simrun(scenario) for the traffic model
         #from the default file
         tmp_root = TreeNode('default_root')
         err_msg = 'Die Default-Projektdatei ist fehlerhaft.'
         defaults = XMLParser.read_xml(tmp_root, default_project_file)
-        
+
         default_project = defaults.find_all_by_class(Project)
         if not default_project:
             raise Exception(err_msg)
-        
+
         default_model = default_project[0].find_all(self.model.name)
-        
+
         if not default_model:
             raise Exception(err_msg)
-            
+
         return default_model[0]
 
     def reset_to_default(self):
@@ -525,12 +525,12 @@ class Scenario(TreeNode):
             default_model = self.get_default_scenario()
         except Exception, e:
             return False, str(e)
-        
+
         try:
             default_nodes = default_model.get_input_files()
             default_names = [d.name for d in default_nodes]
             default_map = dict(zip(default_names, default_nodes))
-    
+
             #set the original sources to the files in the default folder
             for res_node in self.get_input_files():
                 default_node = default_map[res_node.name]
@@ -540,8 +540,8 @@ class Scenario(TreeNode):
                     default_model.name,
                     default_node.subfolder,
                     default_node.file_relative)
-        except:
-            return False, 'Die Default-Projektdatei ist fehlerhaft.'
+        except Exception, e:
+            return False, 'Die Default-Projektdatei ist fehlerhaft.\n"{}"'.format(str(e))
         return True, 'Szenario erfolgreich auf defaults zurückgesetzt'
 
 
@@ -903,11 +903,11 @@ class ResourceNode(TreeNode):
             default_model = self.get_default_scenario()
         except Exception, e:
             return False, str(e)
-        
+
         #find corresponding default resource node
         res_default = default_model.get_input(self.name)
         if not res_default:
-            return False, "Die Default-Projektdatei ist fehlerhaft."            
+            return False, "Die Default-Projektdatei ist fehlerhaft."
         #rename source
         self.file_relative = res_default.file_relative
         self.original_source = os.path.join(scenario.default_folder,
