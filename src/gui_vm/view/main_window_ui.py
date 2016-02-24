@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Wed Feb 24 14:20:51 2016
+# Created: Wed Feb 24 15:51:20 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -92,7 +92,7 @@ class Ui_MainWindow(object):
         self.open_button.setObjectName(_fromUtf8("open_button"))
         self.gridLayout_4.addWidget(self.open_button, 0, 0, 1, 1)
         self.context_button_group = QtGui.QGroupBox(self.layoutWidget)
-        self.context_button_group.setMinimumSize(QtCore.QSize(265, 45))
+        self.context_button_group.setMinimumSize(QtCore.QSize(295, 45))
         self.context_button_group.setObjectName(_fromUtf8("context_button_group"))
         self.plus_button = QtGui.QToolButton(self.context_button_group)
         self.plus_button.setGeometry(QtCore.QRect(10, 14, 25, 25))
@@ -121,7 +121,7 @@ class Ui_MainWindow(object):
         self.edit_button.setIconSize(QtCore.QSize(21, 21))
         self.edit_button.setObjectName(_fromUtf8("edit_button"))
         self.reset_button = QtGui.QPushButton(self.context_button_group)
-        self.reset_button.setGeometry(QtCore.QRect(150, 14, 25, 25))
+        self.reset_button.setGeometry(QtCore.QRect(180, 14, 25, 25))
         self.reset_button.setText(_fromUtf8(""))
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/reset.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -129,7 +129,7 @@ class Ui_MainWindow(object):
         self.reset_button.setIconSize(QtCore.QSize(21, 21))
         self.reset_button.setObjectName(_fromUtf8("reset_button"))
         self.lock_button = QtGui.QPushButton(self.context_button_group)
-        self.lock_button.setGeometry(QtCore.QRect(230, 14, 25, 25))
+        self.lock_button.setGeometry(QtCore.QRect(260, 14, 25, 25))
         self.lock_button.setText(_fromUtf8(""))
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/unlocked-yellow.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -147,13 +147,21 @@ class Ui_MainWindow(object):
         self.copy_button.setIconSize(QtCore.QSize(21, 21))
         self.copy_button.setObjectName(_fromUtf8("copy_button"))
         self.clean_button = QtGui.QPushButton(self.context_button_group)
-        self.clean_button.setGeometry(QtCore.QRect(180, 14, 25, 25))
+        self.clean_button.setGeometry(QtCore.QRect(210, 14, 25, 25))
         self.clean_button.setText(_fromUtf8(""))
         icon8 = QtGui.QIcon()
         icon8.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/clean.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.clean_button.setIcon(icon8)
         self.clean_button.setIconSize(QtCore.QSize(22, 21))
         self.clean_button.setObjectName(_fromUtf8("clean_button"))
+        self.context_open_button = QtGui.QPushButton(self.context_button_group)
+        self.context_open_button.setGeometry(QtCore.QRect(150, 14, 25, 25))
+        self.context_open_button.setMinimumSize(QtCore.QSize(0, 0))
+        self.context_open_button.setMaximumSize(QtCore.QSize(30, 30))
+        self.context_open_button.setText(_fromUtf8(""))
+        self.context_open_button.setIcon(icon1)
+        self.context_open_button.setIconSize(QtCore.QSize(20, 20))
+        self.context_open_button.setObjectName(_fromUtf8("context_open_button"))
         self.gridLayout_4.addWidget(self.context_button_group, 0, 5, 1, 3)
         self.verticalLayout_3.addLayout(self.gridLayout_4)
         self.qtreeview = QtGui.QTreeView(self.layoutWidget)
@@ -275,6 +283,7 @@ class Ui_MainWindow(object):
         self.lock_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))
         self.copy_button.setToolTip(_translate("MainWindow", "Kopieren", None))
         self.clean_button.setToolTip(_translate("MainWindow", "Aufräumen", None))
+        self.context_open_button.setToolTip(_translate("MainWindow", "Öffnen", None))
         self.label_2.setText(_translate("MainWindow", "< ", None))
         self.label.setText(_translate("MainWindow", " >", None))
         self.menuDatei.setTitle(_translate("MainWindow", "Datei", None))

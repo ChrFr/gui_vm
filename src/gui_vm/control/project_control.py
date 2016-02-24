@@ -9,6 +9,7 @@ from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
 from gui_vm.config.config import Config
 import os, subprocess
 from shutil import rmtree
+import subprocess
 
 config = Config()
 
@@ -230,6 +231,8 @@ class VMProjectControl(ProjectTreeControl):
             QtGui.QAbstractButton, 'copy_button')
         self.clean_button = self.button_group.findChild(
             QtGui.QAbstractButton, 'clean_button')
+        self.open_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'context_open_button')
 
         self.view_changed.connect(self.update_view)
         self.dataChanged.connect(self.update_view)
@@ -238,6 +241,7 @@ class VMProjectControl(ProjectTreeControl):
         self.plus_button.clicked.connect(lambda: self.start_function('add'))
         self.minus_button.clicked.connect(lambda: self.start_function('remove'))
         self.edit_button.clicked.connect(lambda: self.start_function('edit'))
+        self.open_button.clicked.connect(lambda: self.start_function('open'))
         self.reset_button.clicked.connect(lambda: self.start_function('reset'))
         #self.start_button.clicked.connect(self.project_control.execute)
 
@@ -266,11 +270,17 @@ class VMProjectControl(ProjectTreeControl):
                 Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
                 InputNode: [self._reset_resource, 'Eingabedaten zurücksetzen']
             },
+            'open': {
+                Scenario: [self._open_explorer, 'in Windows-Explorer anzeigen'],
+                Project: [self._open_explorer, 'in Windows-Explorer anzeigen'],
+                OutputNode: [self._open_explorer, 'in Windows-Explorer anzeigen'],
+                InputNode: [self.edit_resource, 'Eingabedaten öffnen'],
+                OutputNode: [self.edit_resource, 'Ausgabedaten öffnen']
+            },
             'edit': {
                 Scenario: [self._rename_scenario, 'Szenario umbenennen'],
                 Project: [self._rename_node, 'Projekt umbenennen'],
-                InputNode: [self.edit_resource, 'Eingabedaten editieren'],
-                OutputNode: [self.edit_resource, 'Ausgabedaten editieren']
+                OutputNode: [self._edit_options, 'Optionen editieren']
             },
             'execute': {
                 Scenario: [self.run, 'Szenario starten']
@@ -326,6 +336,7 @@ class VMProjectControl(ProjectTreeControl):
             and len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0
         map_button(self.reset_button, 'reset', depends_on_lock=True, condition=condition)
         map_button(self.edit_button, 'edit', depends_on_lock=True)
+        map_button(self.open_button, 'open', depends_on_lock=True)
         #self.start_button.setEnabled(cls in self.context_map['execute'])
         map_button(self.lock_button, 'switch_lock')
         if node.locked:
@@ -398,6 +409,15 @@ class VMProjectControl(ProjectTreeControl):
 
         self._map_buttons(node)
 
+    def _edit_options(self, output_node=None):
+        if not output_node:
+            output_node = self.selected_item
+        scenario_node = output_node.scenario
+        options, ok = RunOptionsDialog.getValues(scenario_node, stored_options=output_node.options, is_primary=output_node.is_primary)
+        if ok:
+            output_node.options = options
+            self.project_changed.emit()
+
     def _insert_node(self, row, column, node, parentIndex):
         new_index = self.createIndex(row, column, node)
         self.beginInsertRows(parentIndex, row, column)
@@ -421,6 +441,23 @@ class VMProjectControl(ProjectTreeControl):
         self.remove_row(index.row(),
                         parent_idx)
         node.remove_all_children()
+
+    def _open_explorer(self, path=None):
+        if not path:
+            if hasattr(self.selected_item, 'path'):
+                path = self.selected_item.path
+            elif hasattr(self.selected_item, 'project_folder'):
+                path = self.selected_item.project_folder
+            else:
+                return
+        if not os.path.exists(path):
+            msg = _fromUtf8('Der Pfad "{}" existiert nicht'.format(path))
+            dialog = QtGui.QMessageBox()
+            dialog.setWindowTitle("Fehler")
+            dialog.setText(msg)
+            dialog.exec_()
+            return
+        subprocess.Popen(r'explorer "{}"'.format(os.path.normpath(path)))
 
     def _choose_scenario(self, text=""):
         combo_model = QtGui.QComboBox()
