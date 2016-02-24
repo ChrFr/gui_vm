@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Wed Feb 24 17:12:10 2016
+# Created: Wed Feb 24 18:04:47 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -185,7 +185,7 @@ class Ui_MainWindow(object):
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
         self.qtreeview.setPalette(palette)
-        self.qtreeview.setExpandsOnDoubleClick(False)
+        self.qtreeview.setExpandsOnDoubleClick(True)
         self.qtreeview.setObjectName(_fromUtf8("qtreeview"))
         self.qtreeview.header().setMinimumSectionSize(50)
         self.verticalLayout_3.addWidget(self.qtreeview)

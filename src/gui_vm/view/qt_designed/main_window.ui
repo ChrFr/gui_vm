@@ -513,7 +513,7 @@ Szenario wählen
              </palette>
             </property>
             <property name="expandsOnDoubleClick">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <attribute name="headerMinimumSectionSize">
              <number>50</number>

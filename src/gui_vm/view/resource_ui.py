@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'resource.ui'
 #
-# Created: Tue Feb 23 14:02:25 2016
+# Created: Wed Feb 24 18:04:47 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -104,6 +104,7 @@ class Ui_DetailsResource(object):
         DetailsResource.setTitle(_translate("DetailsResource", "GroupBox", None))
         self.edit_button.setText(_translate("DetailsResource", "Datei editieren", None))
         self.status_button.setText(_translate("DetailsResource", "Status prüfen", None))
+        self.browse_button.setToolTip(_translate("DetailsResource", "andere Quelldatei auswählen", None))
         self.browse_button.setText(_translate("DetailsResource", "...", None))
         self.label.setText(_translate("DetailsResource", "Quelle", None))
         self.label_2.setText(_translate("DetailsResource", "Projektdatei", None))
