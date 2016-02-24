@@ -37,8 +37,7 @@ def startmain():
             if isinstance(selected_item, OutputNode):
                 selected_run = selected_item.name
                 ret = 'selected run:{run}\n'.format(run=selected_run)
-                while not isinstance(selected_item, Scenario):
-                    selected_item = selected_item.parent
+                selected_item = selected_item.scenario
             scenario_name = selected_item.name
             ret += 'selected scenario:{sc}'.format(sc=scenario_name)
             mainwindow.validated = True
