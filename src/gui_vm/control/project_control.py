@@ -463,17 +463,16 @@ class VMProjectControl(ProjectTreeControl):
         path = scenario_node.path
         reply = QtGui.QMessageBox.question(
             None, _fromUtf8("Löschen"),
-            _fromUtf8("Soll das gesamte Szenario-Verzeichnis {}\n".format(
-                path) + "von der Festplatte entfernt werden?"),
-            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No, QtGui.QMessageBox.Cancel)
-        if reply == QtGui.QMessageBox.Cancel:
+            _fromUtf8('Soll das gesamte Szenario-Verzeichnis "{}"\n'.format(
+                path) + 'von der Festplatte entfernt werden?'),
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.No:
             return
-        if reply == QtGui.QMessageBox.Yes:
-            try:
-                rmtree(scenario_node.path)
-            except Exception, e:
-                QtGui.QMessageBox.about(
-                None, "Fehler", str(e))
+        try:
+            rmtree(scenario_node.path)
+        except Exception, e:
+            QtGui.QMessageBox.about(
+            None, "Fehler", str(e))
         self._remove_node(scenario_node)
 
 
@@ -525,7 +524,7 @@ class VMProjectControl(ProjectTreeControl):
                 msg += "\nAlle spezifischen Läufe werden ebenfalls gelöscht!"
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Löschen"), _fromUtf8(msg),
-                QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
+                QtGui.QMessageBox.Ok, QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.Ok:
                 cur_tmp = self.current_index
                 parent_idx = self.current_index.parent()
@@ -669,7 +668,7 @@ class VMProjectControl(ProjectTreeControl):
 
         # reset the locks
         new_scenario_node.locked = False
-        new_scenario_node.master_locked = False
+        new_scenario_node.admin_locked = False
 
         scenario_node.parent.add_child(new_scenario_node)
         path = new_scenario_node.path
@@ -730,6 +729,10 @@ class VMProjectControl(ProjectTreeControl):
                               .format(scenario_name)))
             else:
                 project.add_scenario(model=model_name, name=scenario_name)
+
+                scenario_node=project.get_child(scenario_name)
+                if not os.path.exists(scenario_node.path):
+                    os.mkdir(scenario_node.path)
                 if(len(config.settings['trafficmodels'][model_name]['default_folder']) > 0):
                     reply = QtGui.QMessageBox.question(
                         None, _fromUtf8("Neues Szenario erstellen"),
@@ -738,8 +741,7 @@ class VMProjectControl(ProjectTreeControl):
                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
                     do_copy = reply == QtGui.QMessageBox.Yes
                     if do_copy:
-                        self._reset_scenario(
-                            scenario_node=project.get_child(scenario_name))
+                        self._reset_scenario(scenario_node)
                 self.project_changed.emit()
 
     def add_primary_run(self, scenario=None, do_choose=False):
@@ -809,6 +811,13 @@ class VMProjectControl(ProjectTreeControl):
         if not scenario_node:
             scenario_node = self.selected_item
 
+        reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8("Zurücksetzen"),
+                    _fromUtf8('Soll das gesamte Szenario "{}" inklusive der Ein- und Ausgaben auf die Standardwerte zurückgesetzt werden?'.format(scenario_node.name)),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.No:
+            return
+
         success, message = scenario_node.reset_to_default()
 
         if not success:
@@ -844,6 +853,13 @@ class VMProjectControl(ProjectTreeControl):
 
     def _reset_resource(self):
         res_node = self.selected_item
+
+        reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8("Zurücksetzen"),
+                    _fromUtf8('Soll die Ressource "{}" auf die Standardwerte zurückgesetzt werden?'.format(res_node.name)),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.No:
+            return
 
         success, message = res_node.reset_to_default()
 
