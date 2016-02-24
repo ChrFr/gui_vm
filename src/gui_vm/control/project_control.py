@@ -511,6 +511,7 @@ class VMProjectControl(ProjectTreeControl):
             QtGui.QMessageBox.about(
             None, "Fehler", str(e))
         self._remove_node(scenario_node)
+        self.project_changed.emit()
 
 
     def remove_resource(self, resource_node=None, remove_node=False,
