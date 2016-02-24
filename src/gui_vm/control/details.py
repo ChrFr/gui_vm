@@ -365,4 +365,4 @@ class OutputDetails(QtGui.QGroupBox):
             scenario.project.emit()
 
     def run(self):
-        self.project_control.run(self.output.scenario, run_name=self.output.name)
+        self.project_control.run(self.output.scenario, run_name=self.output.name, options=self.output.options)

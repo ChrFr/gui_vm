@@ -38,6 +38,7 @@ class TreeNode(Observable):
         self.is_checked = False
         self.is_valid = True
         self._locked = False
+        self.admin_locked = False
 
     def remove(self):
         self.parent.remove_child(self.name)
@@ -407,6 +408,8 @@ class Scenario(TreeNode):
         String
         '''
         note = self.model.name
+        if self.locked:
+            note += ' (gesperrt)'
         return note
 
     @property
@@ -640,6 +643,7 @@ class Scenario(TreeNode):
         '''
         xml_element = super(Scenario, self).add_to_xml(parent)
         xml_element.attrib['locked'] = 'true' if self.locked else 'false'
+        xml_element.attrib['admin_locked'] = 'true' if self.admin_locked else 'false'
         tm = etree.Element('Verkehrsmodell')
         tm.text = self.model.name
         xml_element.insert(0, tm)
@@ -668,6 +672,12 @@ class Scenario(TreeNode):
             self._locked = True
         else:
             self._locked = False
+
+        if 'admin_locked' in element.attrib and element.attrib['admin_locked'] == 'true':
+            self.admin_locked = True
+            self._locked = True
+        else:
+            self.admin_locked = False
 
 
 class Project(TreeNode):

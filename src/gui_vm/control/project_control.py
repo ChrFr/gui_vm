@@ -25,6 +25,11 @@ class _Index(object):
         self.row = qmodelindex.row()
         self.column = qmodelindex.column()
 
+def disable_while_processing(function, parameter=None):
+    config.mainWindow.setEnabled(False)
+    config.mainWindow.repaint()
+    function()
+    config.mainWindow.setEnabled(True)
 
 
 class ProjectTreeControl(QtCore.QAbstractItemModel):
@@ -236,9 +241,6 @@ class VMProjectControl(ProjectTreeControl):
         self.reset_button.clicked.connect(lambda: self.start_function('reset'))
         #self.start_button.clicked.connect(self.project_control.execute)
 
-        # TODO: disable lock when not in admin_mode
-        if not config.admin_mode:
-            self.lock_button.setEnabled(False)
         self.lock_button.clicked.connect(lambda:
                                          self.start_function('switch_lock'))
 
@@ -298,7 +300,7 @@ class VMProjectControl(ProjectTreeControl):
         node = self.selected_item
         cls = node.__class__
         if cls in self.context_map[function_name]:
-            self.context_map[function_name][cls][0]()
+            disable_while_processing(self.context_map[function_name][cls][0])
         #self.project_changed.emit()
 
     def _map_buttons(self, node):
@@ -570,7 +572,7 @@ class VMProjectControl(ProjectTreeControl):
                 return
 
         if not options:
-            options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=True)
+            options, ok = RunOptionsDialog.getValues(scenario_node, is_primary=run_name==Scenario.PRIMARY_RUN)
             if not ok:
                 return
         dialog = ExecDialog(scenario_node, run_name,
@@ -580,7 +582,16 @@ class VMProjectControl(ProjectTreeControl):
     def _switch_lock(self, resource_node=None):
         if not resource_node:
             resource_node = self.selected_item
+        if resource_node.admin_locked and not config.admin_mode:
+            self.lock_button.setChecked(True)
+            msgBox = QtGui.QMessageBox()
+            msgBox.setWindowTitle(_fromUtf8('Warnung'))
+            msgBox.setText(_fromUtf8('Das Szenario wurde durch den Admin gesperrt und kann nur durch ihn entsperrt oder bearbeitet werden.'))
+            msgBox.exec_()
+            return
         resource_node.locked = not resource_node.locked
+        if config.admin_mode:
+            resource_node.admin_locked = resource_node.locked
         self.project_changed.emit()
 
     def _rename_node(self):

@@ -5,6 +5,7 @@ from gui_vm.view.main_window_ui import Ui_MainWindow
 from gui_vm.view.welcome_ui import Ui_Welcome
 from PyQt4 import QtGui, QtCore
 from gui_vm.control.project_control import VMProjectControl
+from gui_vm.control.project_control import disable_while_processing
 from gui_vm.model.project_tree import Project
 from gui_vm.control.dialogs import NewProjectDialog, SettingsDialog
 from gui_vm.config.config import Config
@@ -19,11 +20,6 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
-
-def disableWhileProcessing(function, parameter=None):
-    config.mainWindow.setEnabled(False)
-    function()
-    config.mainWindow.setEnabled(True)
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     project_changed = QtCore.pyqtSignal()
@@ -74,21 +70,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.recently_used_actions = []
 
         self.actionProjekt_ffnen.triggered.connect(
-            lambda: disableWhileProcessing(self.load_project))
+            lambda: disable_while_processing(self.load_project))
         self.open_button.clicked.connect(
-            lambda: disableWhileProcessing(self.load_project))
+            lambda: disable_while_processing(self.load_project))
 
         # connect the menubar
         self.actionNeues_Szenario.triggered.connect(
-            lambda: disableWhileProcessing(self.project_control.add_scenario))
+            lambda: disable_while_processing(self.project_control.add_scenario))
         self.actionNeues_Projekt.triggered.connect(
-            lambda: disableWhileProcessing(self.create_project))
+            lambda: disable_while_processing(self.create_project))
         self.actionEinstellungen.triggered.connect(
-            lambda: disableWhileProcessing(self.edit_settings))
+            lambda: disable_while_processing(self.edit_settings))
         self.actionInfo.triggered.connect(
-            lambda: disableWhileProcessing(self.show_info))
+            lambda: disable_while_processing(self.show_info))
         self.actionProjekt_schlie_en.triggered.connect(
-            lambda: disableWhileProcessing(self.project_control.close_project))
+            lambda: disable_while_processing(self.project_control.close_project))
 
         self.actionSzenario_duplizieren.triggered.connect(
             lambda: self.project_control.clone_scenario(do_choose=True))
