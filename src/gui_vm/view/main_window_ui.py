@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Wed Feb 24 15:51:20 2016
+# Created: Wed Feb 24 17:12:10 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -77,10 +77,11 @@ class Ui_MainWindow(object):
         self.gridLayout_4 = QtGui.QGridLayout()
         self.gridLayout_4.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.gridLayout_4.setObjectName(_fromUtf8("gridLayout_4"))
-        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_4.addItem(spacerItem, 0, 3, 1, 2)
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_4.addItem(spacerItem1, 0, 8, 1, 1)
+        self.scenario_choice_button = QtGui.QPushButton(self.layoutWidget)
+        self.scenario_choice_button.setMinimumSize(QtCore.QSize(100, 50))
+        self.scenario_choice_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.scenario_choice_button.setObjectName(_fromUtf8("scenario_choice_button"))
+        self.gridLayout_4.addWidget(self.scenario_choice_button, 0, 9, 1, 1)
         self.open_button = QtGui.QPushButton(self.layoutWidget)
         self.open_button.setMinimumSize(QtCore.QSize(0, 0))
         self.open_button.setMaximumSize(QtCore.QSize(30, 30))
@@ -91,6 +92,10 @@ class Ui_MainWindow(object):
         self.open_button.setIconSize(QtCore.QSize(28, 28))
         self.open_button.setObjectName(_fromUtf8("open_button"))
         self.gridLayout_4.addWidget(self.open_button, 0, 0, 1, 1)
+        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_4.addItem(spacerItem, 0, 3, 1, 2)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_4.addItem(spacerItem1, 0, 10, 1, 1)
         self.context_button_group = QtGui.QGroupBox(self.layoutWidget)
         self.context_button_group.setMinimumSize(QtCore.QSize(295, 45))
         self.context_button_group.setObjectName(_fromUtf8("context_button_group"))
@@ -163,6 +168,8 @@ class Ui_MainWindow(object):
         self.context_open_button.setIconSize(QtCore.QSize(20, 20))
         self.context_open_button.setObjectName(_fromUtf8("context_open_button"))
         self.gridLayout_4.addWidget(self.context_button_group, 0, 5, 1, 3)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_4.addItem(spacerItem2, 0, 8, 1, 1)
         self.verticalLayout_3.addLayout(self.gridLayout_4)
         self.qtreeview = QtGui.QTreeView(self.layoutWidget)
         self.qtreeview.setEnabled(True)
@@ -196,8 +203,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.label)
         self.details_layout = QtGui.QVBoxLayout()
         self.details_layout.setObjectName(_fromUtf8("details_layout"))
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.details_layout.addItem(spacerItem2)
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.details_layout.addItem(spacerItem3)
         self.horizontalLayout_2.addLayout(self.details_layout)
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -274,6 +281,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "GGR Verkehrsmodelle", None))
+        self.scenario_choice_button.setText(_translate("MainWindow", "angeklicktes\n"
+"Szenario wählen \n"
+" und schließen", None))
         self.open_button.setToolTip(_translate("MainWindow", "Projekt öffnen", None))
         self.context_button_group.setTitle(_translate("MainWindow", "Kontextmenü", None))
         self.plus_button.setToolTip(_translate("MainWindow", "Hinzufügen", None))

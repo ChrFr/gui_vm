@@ -30,6 +30,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         only
         """
         self = MainWindow(project_file, scenario_name)
+        self.scenario_choice_button.setVisible(True)
         scenario_node = self.project_control.project.get_child(scenario_name)
         if scenario_node:
             if scenario_node.is_valid:
@@ -95,6 +96,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             lambda: self.project_control.run(do_choose=True))
         self.actionSpezifischen_Lauf_anlegen.triggered.connect(
             lambda: self.project_control.add_special_run(do_choose=True))
+
+        self.scenario_choice_button.clicked.connect(QtGui.qApp.quit)
+        self.scenario_choice_button.setVisible(False)
 
         self.actionBeenden.triggered.connect(QtGui.qApp.quit)
 
