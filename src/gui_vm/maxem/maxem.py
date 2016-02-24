@@ -187,21 +187,19 @@ class SpecificModel(TrafficModel):
 
         return table_dict
 
-    def run(self, scenario_name, process, resources=None, output_file=None,
-            options=None, callback=None, modal_split=False, correction=False,
-            on_success=None, on_error=None, xml_file=None, run_name=None):
+    def run(self, scenario_name, process, callback=None,
+            on_success=None, xml_file=None, run_name=None):
         '''
         run the traffic model
 
         Parameters
         ----------
         scenario_name: String, name of the scenario
-        resources: list of ResourceNodes, contains the resources that will be
-                   given to the executable as parameters
-        modal_split, correction: bool, optional
-                                 do preprocessing (or don't)
-        callback: function,
-                  function to track the progress
+        process: a clean qtProcess to run the model in
+        callback: function to track the progress
+        on_success: is executed after successful running the model
+        run_name: name of the run inside the scenario
+        xml_file: absolute path th a xml-file containing the paths to the used resources and the settings for the scenario and run with the given names (gui_vm project-style)
         '''
         python_path = config.settings['trafficmodels'][self.name]['interpreter']
         #executable = config.settings['trafficmodels'][self.name]['executable']
