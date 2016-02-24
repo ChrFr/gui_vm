@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Tue Feb 23 14:02:25 2016
+# Created: Wed Feb 24 14:20:52 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_DetailsScenario(object):
     def setupUi(self, DetailsScenario):
         DetailsScenario.setObjectName(_fromUtf8("DetailsScenario"))
-        DetailsScenario.resize(682, 644)
+        DetailsScenario.resize(672, 630)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -64,8 +64,6 @@ class Ui_DetailsScenario(object):
         self.special_button.setObjectName(_fromUtf8("special_button"))
         self.horizontalLayout.addWidget(self.special_button)
         self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem, 0, 1, 1, 1)
         self.groupBox_2 = QtGui.QGroupBox(DetailsScenario)
         self.groupBox_2.setObjectName(_fromUtf8("groupBox_2"))
         self.verticalLayout = QtGui.QVBoxLayout(self.groupBox_2)
@@ -211,7 +209,7 @@ class Ui_DetailsScenario(object):
         self.scroll_data.setWidgetResizable(True)
         self.scroll_data.setObjectName(_fromUtf8("scroll_data"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 640, 479))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 630, 439))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
@@ -220,7 +218,11 @@ class Ui_DetailsScenario(object):
         self.verticalLayout_3.addLayout(self.data_form)
         self.scroll_data.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout.addWidget(self.scroll_data)
-        self.gridLayout.addWidget(self.groupBox_2, 2, 0, 1, 2)
+        self.gridLayout.addWidget(self.groupBox_2, 3, 0, 1, 2)
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem, 0, 1, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.gridLayout.addItem(spacerItem1, 2, 0, 1, 1)
 
         self.retranslateUi(DetailsScenario)
         QtCore.QMetaObject.connectSlotsByName(DetailsScenario)

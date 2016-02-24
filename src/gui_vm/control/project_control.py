@@ -666,6 +666,11 @@ class VMProjectControl(ProjectTreeControl):
             return
 
         new_scenario_node = scenario_node.clone(new_scenario_name)
+
+        # reset the locks
+        new_scenario_node.locked = False
+        new_scenario_node.master_locked = False
+
         scenario_node.parent.add_child(new_scenario_node)
         path = new_scenario_node.path
         if os.path.exists(new_scenario_node.path):
@@ -696,7 +701,6 @@ class VMProjectControl(ProjectTreeControl):
         dialog = CopyFilesDialog(filenames, destinations)
                                  #parent=self.tree_view)
         self.tree_view.setUpdatesEnabled(True)
-        scenario_node.update()
         self.project_changed.emit()
 
     def edit_resource(self, resource_node=None):
