@@ -191,15 +191,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 if self.project_has_changed:
                     do_continue = self.project_changed_message()
                 if do_continue:
-                    try:
-                        self.project_control.read_project(project_file)
-                    except:
-                        config.remove_from_history(os.path.split(project_file)[0])
-                        QtGui.QMessageBox.about(
-                            self, 'Fehler', 'Die Projektdatei "{}" konnte nicht geladen werden'.
-                            format(project_file))
-                        self.build_history()
-                        return False
+                    self.project_control.read_project(project_file)
                     config.add_to_history(os.path.split(project_file)[0])
                     self.project_has_changed = False
                     self.build_history()

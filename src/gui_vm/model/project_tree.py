@@ -394,9 +394,9 @@ class Scenario(TreeNode):
         project = self.project
         if project.project_folder is None:
             return None
-        return os.path.join(
+        return os.path.normpath(os.path.join(
             self.project.project_folder,
-            self.name)
+            self.name))
 
     @property
     def note(self):
@@ -465,7 +465,7 @@ class Scenario(TreeNode):
         if options:
             results_run.options = deepcopy(options)
         self.project.emit()
-        
+
         return results_run
 
     def validate(self):
@@ -538,11 +538,11 @@ class Scenario(TreeNode):
             for res_node in self.get_input_files():
                 default_node = default_map[res_node.name]
                 res_node.file_relative = default_node.file_relative
-                res_node.original_source = os.path.join(
+                res_node.original_source = os.path.normpath(os.path.join(
                     self.default_folder,
                     default_model.name,
                     default_node.subfolder,
-                    default_node.file_relative)
+                    default_node.file_relative))
         except Exception, e:
             return False, 'Die Default-Projektdatei ist fehlerhaft.\n"{}"'.format(str(e))
         return True, 'Szenario erfolgreich auf defaults zurückgesetzt'
@@ -690,7 +690,7 @@ class Project(TreeNode):
 
     def __init__(self, name, project_folder=None, parent=None):
         super(Project, self).__init__(name, parent=parent)
-        self.project_folder = project_folder  #os.getcwd()
+        self.project_folder = os.path.normpath(project_folder) if project_folder else None
         #all projects are stored in xmls with the same name
         self.meta = {}
         self.meta['Datum'] = time.strftime("%d.%m.%Y")
@@ -750,8 +750,6 @@ class Project(TreeNode):
     def add_scenario(self, model, name=None):
         if name is None:
             name = 'Szenario {}'.format(self.child_count)
-        #copytree(os.path.join(DEFAULT_FOLDER, 'Maxem'),
-                 #os.path.join(self.project_folder, name))
         new_run = Scenario(model, name, parent=self)
         self.add_child(new_run)
 
@@ -854,7 +852,7 @@ class ResourceNode(TreeNode):
             return None
         file_path = os.path.join(self.resource.subfolder,
                                  self.resource.filename)
-        return file_path
+        return os.path.normpath(file_path)
 
     @file_relative.setter
     def file_relative(self, file_path):
@@ -864,7 +862,9 @@ class ResourceNode(TreeNode):
         if self.resource is None:
             raise Exception('"{}" ist nicht definiert für das Verkehrsmodell'.format(self.name))
         if file_path is not None:
-            subfolder, filename = os.path.split(file_path.replace('\\','/'))
+            file_path = os.path.normpath(file_path)
+            #subfolder, filename = os.path.split(file_path.replace('\\','/'))
+            subfolder, filename = os.path.split(file_path)
         else:
             filename = None
             subfolder = None
@@ -881,7 +881,7 @@ class ResourceNode(TreeNode):
         if self.path is None or self.file_relative is None:
             return None
         file_absolute = os.path.join(self.path, self.file_relative)
-        return file_absolute
+        return os.path.normpath(file_absolute)
 
     @property
     def path(self):
@@ -891,7 +891,7 @@ class ResourceNode(TreeNode):
         scen_path = self.scenario.path
         if not scen_path:
             return None
-        return os.path.join(scen_path, self.subfolder)
+        return os.path.normpath(os.path.join(scen_path, self.subfolder))
 
     def update(self):
         self.resource.update(self.path)
@@ -920,10 +920,11 @@ class ResourceNode(TreeNode):
             return False, "Die Default-Projektdatei ist fehlerhaft."
         #rename source
         self.file_relative = res_default.file_relative
-        self.original_source = os.path.join(scenario.default_folder,
-                                            default_model.name,
-                                            Scenario.INPUT_NODES,
-                                            self.file_relative)
+        self.original_source = os.path.normpath(
+            os.path.join(scenario.default_folder,
+                         default_model.name,
+                         Scenario.INPUT_NODES,
+                         self.file_relative))
 
         return True, "Szenario erfolgreich auf defaults zurückgesetzt"
 

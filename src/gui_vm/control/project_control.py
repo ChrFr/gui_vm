@@ -305,15 +305,15 @@ class VMProjectControl(ProjectTreeControl):
         if index is not None:
             self.current_index = index
         self.dataChanged.emit(self.current_index, self.current_index)
-        
-    def select_node(self, node):      
+
+    def select_node(self, node):
         '''
         emulate clicking and selecting the given node inside the tree view
         '''
-        row = node.parent.get_row(node.name) if hasattr(node, 'parent') else 0             
+        row = node.parent.get_row(node.name) if hasattr(node, 'parent') else 0
         index = self.createIndex(row, 0, node)
         self.item_clicked(index)
-        self.tree_view.setCurrentIndex(index)        
+        self.tree_view.setCurrentIndex(index)
 
     def start_function(self, function_name):
         node = self.selected_item
@@ -791,12 +791,12 @@ class VMProjectControl(ProjectTreeControl):
                         self._reset_scenario(scenario_node, ask_overwrite=False)
                 self.project_changed.emit()
                 self.select_node(scenario_node)
-                
+
     def add_run(self, scenario=None, do_choose=False):
         '''
-        add a run to a scenario, 
+        add a run to a scenario,
         adds primary run, if none is existing yet, adds special run else
-    
+
         Parameter
         ---------
         scenario: scenario node, where run should be added
@@ -812,8 +812,8 @@ class VMProjectControl(ProjectTreeControl):
             scenario = self._choose_scenario(
                 _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
         if scenario is None:
-            return        
-        
+            return
+
         if scenario.get_output(Scenario.PRIMARY_RUN) is None:
             self.add_primary_run(scenario=scenario)
         else:
@@ -995,7 +995,6 @@ class VMProjectControl(ProjectTreeControl):
         except Exception, e:
             # reset to clean node
             self.model = TreeNode('root')
-            print filename
             raise e
         self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]

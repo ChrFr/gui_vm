@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created: Thu Feb 25 16:50:56 2016
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -86,6 +87,7 @@ class Ui_MainWindow(object):
         self.layoutWidget = QtGui.QWidget(self.splitter)
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.horizontalLayout_3 = QtGui.QHBoxLayout(self.layoutWidget)
+        self.horizontalLayout_3.setMargin(0)
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
@@ -122,9 +124,9 @@ class Ui_MainWindow(object):
         self.button_bar.setFrameShadow(QtGui.QFrame.Sunken)
         self.button_bar.setObjectName(_fromUtf8("button_bar"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.button_bar)
+        self.horizontalLayout.setSpacing(1)
         self.horizontalLayout.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.horizontalLayout.setContentsMargins(3, 0, 3, 0)
-        self.horizontalLayout.setSpacing(1)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.open_button = QtGui.QPushButton(self.button_bar)
         self.open_button.setMinimumSize(QtCore.QSize(0, 0))
@@ -270,13 +272,24 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addWidget(self.qtreeview)
         self.horizontalLayout_3.addLayout(self.verticalLayout_3)
         self.handle_left_arrow = QtGui.QLabel(self.layoutWidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.handle_left_arrow.sizePolicy().hasHeightForWidth())
+        self.handle_left_arrow.setSizePolicy(sizePolicy)
         self.handle_left_arrow.setObjectName(_fromUtf8("handle_left_arrow"))
         self.horizontalLayout_3.addWidget(self.handle_left_arrow)
         self.layoutWidget1 = QtGui.QWidget(self.splitter)
         self.layoutWidget1.setObjectName(_fromUtf8("layoutWidget1"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.layoutWidget1)
+        self.horizontalLayout_2.setMargin(0)
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.handle_right_arrow = QtGui.QLabel(self.layoutWidget1)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.handle_right_arrow.sizePolicy().hasHeightForWidth())
+        self.handle_right_arrow.setSizePolicy(sizePolicy)
         self.handle_right_arrow.setObjectName(_fromUtf8("handle_right_arrow"))
         self.horizontalLayout_2.addWidget(self.handle_right_arrow)
         self.details_layout = QtGui.QVBoxLayout()
