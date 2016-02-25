@@ -145,7 +145,6 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                     yes_to_all = reply == 1
                     cancel = reply == 3
                     if cancel:
-                        #self.cancelButton.setText('OK')
                         return
                 if do_copy or yes_to_all:
                     status_txt = 'Kopiere <b>{}</b> nach <b>{}</b> ...<br>'.format(

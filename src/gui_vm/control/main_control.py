@@ -70,12 +70,14 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.project_has_changed = False
         self.recently_used_actions = []
 
-        self.actionProjekt_ffnen.triggered.connect(
-            lambda: disable_while_processing(self.load_project))
         self.open_button.clicked.connect(
             lambda: disable_while_processing(self.load_project))
+        self.new_button.clicked.connect(
+            lambda: disable_while_processing(self.create_project))
 
         # connect the menubar
+        self.actionProjekt_ffnen.triggered.connect(
+            lambda: disable_while_processing(self.load_project))
         self.actionNeues_Szenario.triggered.connect(
             lambda: disable_while_processing(self.project_control.add_scenario))
         self.actionNeues_Projekt.triggered.connect(
