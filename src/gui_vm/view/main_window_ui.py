@@ -25,10 +25,11 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(987, 814)
+        MainWindow.resize(969, 793)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/favicon.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
+        MainWindow.setStyleSheet(_fromUtf8(""))
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.gridLayout = QtGui.QGridLayout(self.centralwidget)
@@ -59,6 +60,22 @@ class Ui_MainWindow(object):
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
         self.splitter.setPalette(palette)
+        self.splitter.setStyleSheet(_fromUtf8("QSplitter::handle {\n"
+"    background: rgb(175, 175, 175);\n"
+"}\n"
+"\n"
+"QSplitter::handle:hover {\n"
+"    background: rgb(106, 106, 106)\n"
+"}\n"
+"\n"
+"QSplitter::handle:pressed {\n"
+"    image: rgb(71, 255, 39);\n"
+"}\n"
+"\n"
+"#handle_left_arrow, #handle_right_arrow{\n"
+"    color: rgb(175, 175, 175);\n"
+"}\n"
+""))
         self.splitter.setFrameShape(QtGui.QFrame.NoFrame)
         self.splitter.setFrameShadow(QtGui.QFrame.Plain)
         self.splitter.setMidLineWidth(2)
@@ -72,15 +89,44 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.gridLayout_4 = QtGui.QGridLayout()
-        self.gridLayout_4.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
-        self.gridLayout_4.setObjectName(_fromUtf8("gridLayout_4"))
-        self.scenario_choice_button = QtGui.QPushButton(self.layoutWidget)
-        self.scenario_choice_button.setMinimumSize(QtCore.QSize(100, 50))
-        self.scenario_choice_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.scenario_choice_button.setObjectName(_fromUtf8("scenario_choice_button"))
-        self.gridLayout_4.addWidget(self.scenario_choice_button, 0, 9, 1, 1)
-        self.open_button = QtGui.QPushButton(self.layoutWidget)
+        self.button_bar = QtGui.QFrame(self.layoutWidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.button_bar.sizePolicy().hasHeightForWidth())
+        self.button_bar.setSizePolicy(sizePolicy)
+        self.button_bar.setMinimumSize(QtCore.QSize(0, 50))
+        self.button_bar.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.button_bar.setStyleSheet(_fromUtf8("#button_bar{\n"
+"    border: 1px solid grey;\n"
+"    border-radius: 2px; \n"
+"    background: rgb(225, 225, 225);\n"
+"}\n"
+"\n"
+"#context_button_group>QPushButton{\n"
+"    border: none;\n"
+"}\n"
+"\n"
+"#context_button_group{\n"
+"    border: 1px solid grey;\n"
+"    border-radius: 2px;\n"
+"    background: rgb(245, 245, 245);\n"
+"}\n"
+"\n"
+"#context_button_group>QPushButton:hover {\n"
+"    border: 1px;\n"
+"    border-radius: 4;\n"
+"    background: rgb(197, 204, 248);\n"
+"}"))
+        self.button_bar.setFrameShape(QtGui.QFrame.Box)
+        self.button_bar.setFrameShadow(QtGui.QFrame.Sunken)
+        self.button_bar.setObjectName(_fromUtf8("button_bar"))
+        self.horizontalLayout = QtGui.QHBoxLayout(self.button_bar)
+        self.horizontalLayout.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
+        self.horizontalLayout.setContentsMargins(3, 0, 3, 0)
+        self.horizontalLayout.setSpacing(1)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.open_button = QtGui.QPushButton(self.button_bar)
         self.open_button.setMinimumSize(QtCore.QSize(0, 0))
         self.open_button.setMaximumSize(QtCore.QSize(30, 30))
         self.open_button.setText(_fromUtf8(""))
@@ -89,16 +135,20 @@ class Ui_MainWindow(object):
         self.open_button.setIcon(icon1)
         self.open_button.setIconSize(QtCore.QSize(28, 28))
         self.open_button.setObjectName(_fromUtf8("open_button"))
-        self.gridLayout_4.addWidget(self.open_button, 0, 0, 1, 1)
+        self.horizontalLayout.addWidget(self.open_button)
         spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_4.addItem(spacerItem, 0, 3, 1, 2)
-        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_4.addItem(spacerItem1, 0, 10, 1, 1)
-        self.context_button_group = QtGui.QGroupBox(self.layoutWidget)
-        self.context_button_group.setMinimumSize(QtCore.QSize(295, 45))
+        self.horizontalLayout.addItem(spacerItem)
+        self.context_button_group = QtGui.QGroupBox(self.button_bar)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.context_button_group.sizePolicy().hasHeightForWidth())
+        self.context_button_group.setSizePolicy(sizePolicy)
+        self.context_button_group.setMinimumSize(QtCore.QSize(295, 35))
+        self.context_button_group.setTitle(_fromUtf8(""))
         self.context_button_group.setObjectName(_fromUtf8("context_button_group"))
-        self.plus_button = QtGui.QToolButton(self.context_button_group)
-        self.plus_button.setGeometry(QtCore.QRect(10, 14, 25, 25))
+        self.plus_button = QtGui.QPushButton(self.context_button_group)
+        self.plus_button.setGeometry(QtCore.QRect(10, 5, 25, 25))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -116,8 +166,8 @@ class Ui_MainWindow(object):
         self.plus_button.setIcon(icon2)
         self.plus_button.setIconSize(QtCore.QSize(21, 21))
         self.plus_button.setObjectName(_fromUtf8("plus_button"))
-        self.minus_button = QtGui.QToolButton(self.context_button_group)
-        self.minus_button.setGeometry(QtCore.QRect(70, 14, 25, 25))
+        self.minus_button = QtGui.QPushButton(self.context_button_group)
+        self.minus_button.setGeometry(QtCore.QRect(70, 5, 25, 25))
         self.minus_button.setText(_fromUtf8(""))
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/minus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -125,7 +175,7 @@ class Ui_MainWindow(object):
         self.minus_button.setIconSize(QtCore.QSize(21, 21))
         self.minus_button.setObjectName(_fromUtf8("minus_button"))
         self.edit_button = QtGui.QPushButton(self.context_button_group)
-        self.edit_button.setGeometry(QtCore.QRect(120, 14, 25, 25))
+        self.edit_button.setGeometry(QtCore.QRect(120, 5, 25, 25))
         self.edit_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.edit_button.setLocale(QtCore.QLocale(QtCore.QLocale.German, QtCore.QLocale.Germany))
         self.edit_button.setText(_fromUtf8(""))
@@ -135,7 +185,7 @@ class Ui_MainWindow(object):
         self.edit_button.setIconSize(QtCore.QSize(21, 21))
         self.edit_button.setObjectName(_fromUtf8("edit_button"))
         self.reset_button = QtGui.QPushButton(self.context_button_group)
-        self.reset_button.setGeometry(QtCore.QRect(180, 14, 25, 25))
+        self.reset_button.setGeometry(QtCore.QRect(180, 5, 25, 25))
         self.reset_button.setText(_fromUtf8(""))
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/reset.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -143,7 +193,7 @@ class Ui_MainWindow(object):
         self.reset_button.setIconSize(QtCore.QSize(21, 21))
         self.reset_button.setObjectName(_fromUtf8("reset_button"))
         self.lock_button = QtGui.QPushButton(self.context_button_group)
-        self.lock_button.setGeometry(QtCore.QRect(260, 14, 25, 25))
+        self.lock_button.setGeometry(QtCore.QRect(260, 5, 25, 25))
         self.lock_button.setText(_fromUtf8(""))
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/unlocked-yellow.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -153,7 +203,7 @@ class Ui_MainWindow(object):
         self.lock_button.setCheckable(True)
         self.lock_button.setObjectName(_fromUtf8("lock_button"))
         self.copy_button = QtGui.QPushButton(self.context_button_group)
-        self.copy_button.setGeometry(QtCore.QRect(40, 14, 25, 25))
+        self.copy_button.setGeometry(QtCore.QRect(40, 5, 25, 25))
         self.copy_button.setText(_fromUtf8(""))
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/copy.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -161,7 +211,7 @@ class Ui_MainWindow(object):
         self.copy_button.setIconSize(QtCore.QSize(21, 21))
         self.copy_button.setObjectName(_fromUtf8("copy_button"))
         self.clean_button = QtGui.QPushButton(self.context_button_group)
-        self.clean_button.setGeometry(QtCore.QRect(210, 14, 25, 25))
+        self.clean_button.setGeometry(QtCore.QRect(210, 5, 25, 25))
         self.clean_button.setText(_fromUtf8(""))
         icon8 = QtGui.QIcon()
         icon8.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/clean.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -169,17 +219,37 @@ class Ui_MainWindow(object):
         self.clean_button.setIconSize(QtCore.QSize(22, 21))
         self.clean_button.setObjectName(_fromUtf8("clean_button"))
         self.context_open_button = QtGui.QPushButton(self.context_button_group)
-        self.context_open_button.setGeometry(QtCore.QRect(150, 14, 25, 25))
+        self.context_open_button.setGeometry(QtCore.QRect(150, 5, 25, 25))
         self.context_open_button.setMinimumSize(QtCore.QSize(0, 0))
         self.context_open_button.setMaximumSize(QtCore.QSize(30, 30))
         self.context_open_button.setText(_fromUtf8(""))
         self.context_open_button.setIcon(icon1)
         self.context_open_button.setIconSize(QtCore.QSize(20, 20))
         self.context_open_button.setObjectName(_fromUtf8("context_open_button"))
-        self.gridLayout_4.addWidget(self.context_button_group, 0, 5, 1, 3)
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_4.addItem(spacerItem2, 0, 8, 1, 1)
-        self.verticalLayout_3.addLayout(self.gridLayout_4)
+        self.line = QtGui.QFrame(self.context_button_group)
+        self.line.setGeometry(QtCore.QRect(100, 0, 16, 33))
+        self.line.setFrameShape(QtGui.QFrame.VLine)
+        self.line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line.setObjectName(_fromUtf8("line"))
+        self.line_2 = QtGui.QFrame(self.context_button_group)
+        self.line_2.setGeometry(QtCore.QRect(240, 0, 16, 33))
+        self.line_2.setFrameShape(QtGui.QFrame.VLine)
+        self.line_2.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line_2.setObjectName(_fromUtf8("line_2"))
+        self.horizontalLayout.addWidget(self.context_button_group)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem1)
+        self.scenario_choice_button = QtGui.QPushButton(self.button_bar)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.scenario_choice_button.sizePolicy().hasHeightForWidth())
+        self.scenario_choice_button.setSizePolicy(sizePolicy)
+        self.scenario_choice_button.setMinimumSize(QtCore.QSize(100, 45))
+        self.scenario_choice_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.scenario_choice_button.setObjectName(_fromUtf8("scenario_choice_button"))
+        self.horizontalLayout.addWidget(self.scenario_choice_button)
+        self.verticalLayout_3.addWidget(self.button_bar)
         self.qtreeview = QtGui.QTreeView(self.layoutWidget)
         self.qtreeview.setEnabled(True)
         self.qtreeview.setMaximumSize(QtCore.QSize(16777215, 16777215))
@@ -199,25 +269,25 @@ class Ui_MainWindow(object):
         self.qtreeview.header().setMinimumSectionSize(50)
         self.verticalLayout_3.addWidget(self.qtreeview)
         self.horizontalLayout_3.addLayout(self.verticalLayout_3)
-        self.label_2 = QtGui.QLabel(self.layoutWidget)
-        self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.horizontalLayout_3.addWidget(self.label_2)
+        self.handle_left_arrow = QtGui.QLabel(self.layoutWidget)
+        self.handle_left_arrow.setObjectName(_fromUtf8("handle_left_arrow"))
+        self.horizontalLayout_3.addWidget(self.handle_left_arrow)
         self.layoutWidget1 = QtGui.QWidget(self.splitter)
         self.layoutWidget1.setObjectName(_fromUtf8("layoutWidget1"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.layoutWidget1)
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.label = QtGui.QLabel(self.layoutWidget1)
-        self.label.setObjectName(_fromUtf8("label"))
-        self.horizontalLayout_2.addWidget(self.label)
+        self.handle_right_arrow = QtGui.QLabel(self.layoutWidget1)
+        self.handle_right_arrow.setObjectName(_fromUtf8("handle_right_arrow"))
+        self.horizontalLayout_2.addWidget(self.handle_right_arrow)
         self.details_layout = QtGui.QVBoxLayout()
         self.details_layout.setObjectName(_fromUtf8("details_layout"))
-        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.details_layout.addItem(spacerItem3)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.details_layout.addItem(spacerItem2)
         self.horizontalLayout_2.addLayout(self.details_layout)
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 987, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 969, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuDatei = QtGui.QMenu(self.menubar)
         self.menuDatei.setObjectName(_fromUtf8("menuDatei"))
@@ -289,21 +359,20 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "GGR Verkehrsmodelle", None))
-        self.scenario_choice_button.setText(_translate("MainWindow", "angeklicktes\n"
-"Szenario wählen \n"
-" und schließen", None))
         self.open_button.setToolTip(_translate("MainWindow", "Projekt öffnen", None))
-        self.context_button_group.setTitle(_translate("MainWindow", "Kontextmenü", None))
         self.plus_button.setToolTip(_translate("MainWindow", "Hinzufügen", None))
         self.minus_button.setToolTip(_translate("MainWindow", "Entfernen", None))
         self.edit_button.setToolTip(_translate("MainWindow", "Umbenennen", None))
         self.reset_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))
-        self.lock_button.setToolTip(_translate("MainWindow", "Zurücksetzen", None))
+        self.lock_button.setToolTip(_translate("MainWindow", "Sperren", None))
         self.copy_button.setToolTip(_translate("MainWindow", "Kopieren", None))
         self.clean_button.setToolTip(_translate("MainWindow", "Aufräumen", None))
         self.context_open_button.setToolTip(_translate("MainWindow", "Öffnen", None))
-        self.label_2.setText(_translate("MainWindow", "< ", None))
-        self.label.setText(_translate("MainWindow", " >", None))
+        self.scenario_choice_button.setText(_translate("MainWindow", "angeklicktes\n"
+"Szenario wählen \n"
+" und schließen", None))
+        self.handle_left_arrow.setText(_translate("MainWindow", "< ", None))
+        self.handle_right_arrow.setText(_translate("MainWindow", " >", None))
         self.menuDatei.setTitle(_translate("MainWindow", "Datei", None))
         self.menuHilfe.setTitle(_translate("MainWindow", "Hilfe", None))
         self.menuProjekt.setTitle(_translate("MainWindow", "Projekt", None))
