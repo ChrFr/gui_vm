@@ -374,6 +374,7 @@ class RunOptionsDialog(QtGui.QDialog):
     def setupUi(self):
         self.setObjectName(_fromUtf8("RunOptions"))
         self.resize(372, 362)
+        self.setModal(True)
         self.gridLayout = QtGui.QGridLayout(self)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.horizontalLayout = QtGui.QHBoxLayout()
@@ -394,18 +395,17 @@ class RunOptionsDialog(QtGui.QDialog):
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
-        self.retranslateUi(self)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(self)
-
-    def retranslateUi(self, RunOptions):
-        RunOptions.setWindowTitle(_translate("RunOptions", "Optionen", None))
 
     @staticmethod
     def getValues(scenario_node, stored_options={}, is_primary = False):
         dialog = RunOptionsDialog(
             scenario_node, stored_options=stored_options,
             is_primary=is_primary)
+        run_type = 'Gesamtlauf' if is_primary else 'spezifischen Lauf'
+        title = _fromUtf8('Optionen für {} in "{}"'.format(run_type, scenario_node.name))
+        dialog.setWindowTitle(title)
         ok = dialog.exec_()
         accepted = ok == QtGui.QDialog.Accepted
         checks = dialog.option_checks

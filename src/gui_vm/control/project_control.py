@@ -258,7 +258,7 @@ class VMProjectControl(ProjectTreeControl):
         self.context_map = {
             'add': {
                 Project: [self.add_scenario, 'Szenario hinzufügen'],
-                Scenario: [self.add_scenario, 'Szenario hinzufügen'],
+                Scenario: [self.add_run, 'Lauf hinzufügen'],
                 OutputNode: [self.add_special_run, 'spezifischen Lauf hinzufügen']
             },
             'remove': {
@@ -305,6 +305,15 @@ class VMProjectControl(ProjectTreeControl):
         if index is not None:
             self.current_index = index
         self.dataChanged.emit(self.current_index, self.current_index)
+        
+    def select_node(self, node):      
+        '''
+        emulate clicking and selecting the given node inside the tree view
+        '''
+        row = node.parent.get_row(node.name) if hasattr(node, 'parent') else 0             
+        index = self.createIndex(row, 0, node)
+        self.item_clicked(index)
+        self.tree_view.setCurrentIndex(index)        
 
     def start_function(self, function_name):
         node = self.selected_item
@@ -779,13 +788,44 @@ class VMProjectControl(ProjectTreeControl):
                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
                     do_copy = reply == QtGui.QMessageBox.Yes
                     if do_copy:
-                        self._reset_scenario(scenario_node)
+                        self._reset_scenario(scenario_node, ask_overwrite=False)
                 self.project_changed.emit()
+                self.select_node(scenario_node)
+                
+    def add_run(self, scenario=None, do_choose=False):
+        '''
+        add a run to a scenario, 
+        adds primary run, if none is existing yet, adds special run else
+    
+        Parameter
+        ---------
+        scenario: scenario node, where run should be added
+        do_choose: open dialog to let user choose scenario manually
+        '''
+        if not scenario and not do_choose:
+            node = self.selected_item
+            if isinstance(node, Scenario):
+                scenario = node
+            else:
+                scenario = node.scenario
+        if do_choose:
+            scenario = self._choose_scenario(
+                _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
+        if scenario is None:
+            return        
+        
+        if scenario.get_output(Scenario.PRIMARY_RUN) is None:
+            self.add_primary_run(scenario=scenario)
+        else:
+            self.add_special_run(scenario=scenario)
 
     def add_primary_run(self, scenario=None, do_choose=False):
         if not scenario and not do_choose:
             node = self.selected_item
-            scenario = node.scenario
+            if isinstance(node, Scenario):
+                scenario = node
+            else:
+                scenario = node.scenario
         if do_choose:
             scenario = self._choose_scenario(
                 _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
@@ -802,13 +842,16 @@ class VMProjectControl(ProjectTreeControl):
         options, ok = RunOptionsDialog.getValues(scenario, is_primary=True)
         if not ok:
             return
-        scenario.add_run(Scenario.PRIMARY_RUN, options)
-
+        run_node = scenario.add_run(Scenario.PRIMARY_RUN, options)
+        self.select_node(run_node)
 
     def add_special_run(self, scenario=None, do_choose=False):
         if not scenario and not do_choose:
             node = self.selected_item
-            scenario = node.scenario
+            if isinstance(node, Scenario):
+                scenario = node
+            else:
+                scenario = node.scenario
         if do_choose:
             scenario = self._choose_scenario(
                 _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
@@ -840,7 +883,7 @@ class VMProjectControl(ProjectTreeControl):
             if ok:
                 scenario.add_run(run_name, options=options)
 
-    def _reset_scenario(self, scenario_node=None):
+    def _reset_scenario(self, scenario_node=None, ask_overwrite=True):
         '''
         set the simrun to default, copy all files from the default folder
         to the project/scenario folder and link the project tree to those
@@ -849,12 +892,13 @@ class VMProjectControl(ProjectTreeControl):
         if not scenario_node:
             scenario_node = self.selected_item
 
-        reply = QtGui.QMessageBox.question(
-                    None, _fromUtf8("Zurücksetzen"),
-                    _fromUtf8('Soll das gesamte Szenario "{}" inklusive der Ein- und Ausgaben auf die Standardwerte zurückgesetzt werden?'.format(scenario_node.name)),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.No:
-            return
+        if ask_overwrite:
+            reply = QtGui.QMessageBox.question(
+                        None, _fromUtf8("Zurücksetzen"),
+                        _fromUtf8('Soll das gesamte Szenario "{}" inklusive der Ein- und Ausgaben auf die Standardwerte zurückgesetzt werden?'.format(scenario_node.name)),
+                        QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            if reply == QtGui.QMessageBox.No:
+                return
 
         success, message = scenario_node.reset_to_default()
 
@@ -959,6 +1003,7 @@ class VMProjectControl(ProjectTreeControl):
         self.project_changed.emit()
         self.view_changed.emit()
         self.tree_view.resizeColumnToContents(0)
+        self.select_node(self.project)
 
     def remove_outputs(self, scenario):
         for output in scenario.get_output_files():

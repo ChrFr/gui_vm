@@ -465,6 +465,7 @@ class Scenario(TreeNode):
         if options:
             results_run.options = deepcopy(options)
         self.project.emit()
+        
         return results_run
 
     def validate(self):
