@@ -12,7 +12,7 @@
 ##------------------------------------------------------------------------------
 
 from PyQt4 import (QtCore, QtGui)
-from details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetails)
+from gui_vm.control.details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetails)
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
@@ -588,8 +588,8 @@ class VMProjectControl(ProjectTreeControl):
             if confirmation:
                 reply = QtGui.QMessageBox.question(
                     None, _fromUtf8("Löschen"),
-                    _fromUtf8("Soll die Datei {} \n".format(file_absolute) +
-                              "ebenfalls entfernt werden?"),
+                    _fromUtf8('Soll die verknüpfte Datei "{}" \n'.format(file_absolute) +
+                              'von der Festplatte entfernt werden?'),
                     QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
                 do_delete = reply == QtGui.QMessageBox.Yes
             if do_delete:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from gui_vm.model.traffic_model import TrafficModel
-from gui_vm.model.resources import Rule
+from gui_vm.model.rules import Rule
 from collections import OrderedDict
 import subprocess
 import os, imp

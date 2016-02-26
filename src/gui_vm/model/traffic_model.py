@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
-from resources import (H5Array, H5Table, H5Resource,
-                       CompareRule, H5TableColumn, Rule)
+
+##------------------------------------------------------------------------------
+## File:        traffic_model.py
+## Purpose:     base class for different types of traffic-models to run, load, 
+##              validate them etc.
+##
+## Author:      Christoph Franke
+##
+## Created:     
+## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
+##------------------------------------------------------------------------------
+
+from resources import (H5Array, H5Table, H5Resource, H5TableColumn)
+from gui_vm.model.rules import CompareRule, Rule
 from resource_dict import (TableDict, FileDict, ArrayDict, ColumnDict)
 from collections import OrderedDict
 import numpy as np
