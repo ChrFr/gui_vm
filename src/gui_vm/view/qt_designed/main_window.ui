@@ -803,7 +803,6 @@ Szenario wählen
     </property>
     <addaction name="actionGesamtlauf_starten"/>
     <addaction name="actionSpezifischen_Lauf_anlegen"/>
-    <addaction name="actionSpezifischen_Lauf_starten"/>
    </widget>
    <addaction name="menuDatei"/>
    <addaction name="menuProjekt"/>

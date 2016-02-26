@@ -2,12 +2,12 @@
 
 ##------------------------------------------------------------------------------
 ## File:        traffic_model.py
-## Purpose:     base class for different types of traffic-models to run, load, 
+## Purpose:     base class for different types of traffic-models to run, load,
 ##              validate them etc.
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -296,13 +296,6 @@ class TrafficModel(Observable):
             module = importlib.import_module(class_module)
 
             return module.SpecificModel()
-            ##complete relative paths
-            #if not os.path.isabs(config_filename):
-                #config_filename = os.path.join(main_path,
-                                               #config_filename)
-            #package_file = imp.find_module('')
-            #return (imp.load_source('SpecificModel', config_filename)
-                    #.SpecificModel())
         else:
             return None
 

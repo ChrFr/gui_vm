@@ -95,7 +95,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             lambda: self.project_control.remove_scenario(do_choose=True))
 
         self.actionGesamtlauf_starten.triggered.connect(
-            lambda: self.project_control.run(do_choose=True))
+            lambda: self.project_control.run(do_choose=True, run_name=Scenario.PRIMARY_RUN))
         self.actionSpezifischen_Lauf_anlegen.triggered.connect(
             lambda: self.project_control.add_special_run(do_choose=True))
 

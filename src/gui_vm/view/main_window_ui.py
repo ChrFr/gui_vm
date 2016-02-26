@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Thu Feb 25 18:01:38 2016
+# Created: Fri Feb 26 16:47:57 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -372,7 +372,6 @@ class Ui_MainWindow(object):
         self.menuSzenario.addAction(self.actionSzenario_l_schen)
         self.menuL_ufe.addAction(self.actionGesamtlauf_starten)
         self.menuL_ufe.addAction(self.actionSpezifischen_Lauf_anlegen)
-        self.menuL_ufe.addAction(self.actionSpezifischen_Lauf_starten)
         self.menubar.addAction(self.menuDatei.menuAction())
         self.menubar.addAction(self.menuProjekt.menuAction())
         self.menubar.addAction(self.menuSzenario.menuAction())

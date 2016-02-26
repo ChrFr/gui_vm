@@ -3,11 +3,11 @@
 ##------------------------------------------------------------------------------
 ## File:        project_control.py
 ## Purpose:     controls all project-related interactions and delegates their
-##              handling to the project-tree 
+##              handling to the project-tree
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -334,14 +334,14 @@ class VMProjectControl(ProjectTreeControl):
         if cls in self.context_map[function_name]:
             disable_while_processing(self.context_map[function_name][cls][0])
         #self.project_changed.emit()
-        
+
     def change_resource(self, input_node=None):
         '''
         let the user choose a resource file for the given input-node
         '''
         if not input_node:
             input_node = self.selected_item
-            
+
         #open a file browser to change the source of the resource file
         current_path = input_node.file_absolute
         if not current_path:
@@ -354,7 +354,7 @@ class VMProjectControl(ProjectTreeControl):
         #filename is '' if aborted
         if len(fileinput) == 0:
             return None
-        
+
         input_node.original_source = fileinput
         input_node.file_relative = os.path.join(
             input_node.parent.name, os.path.split(fileinput)[1])
@@ -384,7 +384,7 @@ class VMProjectControl(ProjectTreeControl):
                 tooltip = ''
             button.setToolTip(tooltip)
 
-        map_button(self.plus_button,'add')
+        map_button(self.plus_button,'add', depends_on_lock=True)
         map_button(self.minus_button, 'remove', depends_on_lock=True)
         condition = hasattr(node, "model") \
             and len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0
@@ -534,6 +534,27 @@ class VMProjectControl(ProjectTreeControl):
 
         return None
 
+    def _choose_run(self, scenario, text=""):
+        combo_model = QtGui.QComboBox()
+
+        run_names = [scen.name for scen in self.project.get_children()]
+
+        if len(run_names) == 0:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Keine spezifischen Läufe vorhanden!"))
+            return None
+
+        combo_model.addItems(scenario_names)
+
+        name, ok = QtGui.QInputDialog.getItem(
+                None, _fromUtf8('Szenario wählen'), text,
+                scenario_names)
+        if ok:
+            return self.project.get_child(name)
+
+        return None
+
     def remove_scenario(self, scenario_node=None, do_choose=False):
 
         if not scenario_node and not do_choose:
@@ -643,9 +664,15 @@ class VMProjectControl(ProjectTreeControl):
         if scenario_node is None:
             return
 
+        if scenario_node.locked:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Das Szenario und seine Läufe sind gesperrt."))
+            return
+
         dialog = QtGui.QMessageBox()
         if not scenario_node.is_valid:
-            msg = _fromUtf8("Das Szenario ist fehlerhaft (rot markierte Felder)."+
+            msg = _fromUtf8("Das Szenario ist fehlerhaft (rot markierte Felder)." +
                             "Der Lauf kann nicht gestartet werden.")
             dialog.setWindowTitle("Fehler")
             dialog.setText(msg)
@@ -877,6 +904,12 @@ class VMProjectControl(ProjectTreeControl):
         if scenario is None:
             return
 
+        if scenario.locked:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Es können keine Läufe zu gesperrten Szenarios hinzugefügt werden"))
+            return
+
         if scenario.get_output(Scenario.PRIMARY_RUN) is not None:
             msg = _fromUtf8('Es existiert bereits ein ' + Scenario.PRIMARY_RUN)
             msgBox = QtGui.QMessageBox()
@@ -901,6 +934,12 @@ class VMProjectControl(ProjectTreeControl):
             scenario = self._choose_scenario(
                 _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
         if scenario is None:
+            return
+
+        if scenario.locked:
+            QtGui.QMessageBox.about(
+                None, "Fehler",
+                _fromUtf8("Es können keine Läufe zu gesperrten Szenarios hinzugefügt werden"))
             return
 
         prime_run = scenario.primary_run

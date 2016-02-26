@@ -3,12 +3,12 @@
 ##------------------------------------------------------------------------------
 ## File:        project_tree.py
 ## Purpose:     all classes a project tree is build off from project to resource
-##              managing their resources, their dependancies to each other as 
+##              managing their resources, their dependancies to each other as
 ##              well as their xml-representation
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -450,7 +450,6 @@ class Scenario(TreeNode):
         #model defines run command etc.
         self.model.run(self.name,
                        process,
-                       options=options,
                        xml_file=project_xml,
                        run_name=run_name,
                        on_success=on_success,
