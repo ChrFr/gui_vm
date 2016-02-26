@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+
+##------------------------------------------------------------------------------
+## File:        project_control.py
+## Purpose:     controls the interactions with the detail-views
+##
+## Author:      Christoph Franke
+##
+## Created:     
+## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
+##------------------------------------------------------------------------------
+
 from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
@@ -162,7 +173,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             self.remove_button.setDisabled(True)
             self.browse_button.setDisabled(True)
         else:
-            self.browse_button.clicked.connect(self.browse_files)
+            self.browse_button.clicked.connect(self.change_source)
             self.edit_button.clicked.connect(
                 lambda: self.project_control.edit_resource(self.resource_node))
             self.remove_button.clicked.connect(
@@ -244,41 +255,14 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             build_tree(attr)
         self.resource_tree.resizeColumnToContents(0)
 
-    def browse_files(self):
+    def change_source(self):
         '''
         open a file browser to change the source of the resource file
         '''
-        current = self.resource_node.file_absolute
-        if not current:
-            current = config.settings['trafficmodels'][
-                self.resource_node.model.name]['default_folder'] + '/*.h5'
-        fileinput = str(
-            QtGui.QFileDialog.getOpenFileName(
-                self, _fromUtf8('Ressourcendatei öffnen'),
-                current))
-        #filename is '' if aborted
-        if len(fileinput) > 0:
-            self.file_edit.setText(fileinput)
-            self.update_source()
-
-    def update_source(self):
-        '''
-        change the resource, copy the file
-        '''
-        src_filename = str(self.file_edit.text())
-        self.resource_node.original_source = src_filename
-        self.resource_node.file_relative = os.path.join(
-            self.resource_node.parent.name, os.path.split(src_filename)[1])
-        dest_filename = self.resource_node.file_absolute
-        self.project_copy.setText(dest_filename)
-        #only try to copy file, if not the same file as before is selected
-        if os.path.normpath(src_filename) != os.path.normpath(dest_filename):
-            dialog = CopyFilesDialog(src_filename,
-                                     os.path.split(self.resource_node.file_absolute)[0])
-            dialog.exec_()
-        self.resource_node.update()
+        fileinput = self.project_control.change_resource(self.resource_node)
+        if not fileinput:
+            return
         self.value_changed.emit()
-        self.show_attributes()
 
     def get_status(self):
         '''

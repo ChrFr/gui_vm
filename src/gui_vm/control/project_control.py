@@ -1,4 +1,16 @@
 # -*- coding: utf-8 -*-
+
+##------------------------------------------------------------------------------
+## File:        project_control.py
+## Purpose:     controls all project-related interactions and delegates their
+##              handling to the project-tree 
+##
+## Author:      Christoph Franke
+##
+## Created:     
+## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
+##------------------------------------------------------------------------------
+
 from PyQt4 import (QtCore, QtGui)
 from details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetails)
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
@@ -280,6 +292,7 @@ class VMProjectControl(ProjectTreeControl):
             'edit': {
                 Scenario: [self._rename_scenario, 'Szenario umbenennen'],
                 Project: [self._rename_node, 'Projekt umbenennen'],
+                InputNode: [self.change_resource, 'Quelldatei ändern'],
                 OutputNode: [self._edit_options, 'Optionen editieren']
             },
             'execute': {
@@ -321,6 +334,38 @@ class VMProjectControl(ProjectTreeControl):
         if cls in self.context_map[function_name]:
             disable_while_processing(self.context_map[function_name][cls][0])
         #self.project_changed.emit()
+        
+    def change_resource(self, input_node=None):
+        '''
+        let the user choose a resource file for the given input-node
+        '''
+        if not input_node:
+            input_node = self.selected_item
+            
+        #open a file browser to change the source of the resource file
+        current_path = input_node.file_absolute
+        if not current_path:
+            current_path = config.settings['trafficmodels'][
+                input_node.model.name]['default_folder'] + '/*.h5'
+        fileinput = str(
+            QtGui.QFileDialog.getOpenFileName(
+                config.mainWindow, _fromUtf8('Ressourcendatei öffnen'),
+                current_path))
+        #filename is '' if aborted
+        if len(fileinput) == 0:
+            return None
+        
+        input_node.original_source = fileinput
+        input_node.file_relative = os.path.join(
+            input_node.parent.name, os.path.split(fileinput)[1])
+        dest_filename = input_node.file_absolute
+        #only try to copy file, if not the same file as before is selected
+        if os.path.normpath(fileinput) != os.path.normpath(dest_filename):
+            dialog = CopyFilesDialog(fileinput,
+                                     os.path.split(input_node.file_absolute)[0])
+            dialog.exec_()
+        input_node.update()
+        return fileinput
 
     def _map_buttons(self, node):
 

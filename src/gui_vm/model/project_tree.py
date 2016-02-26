@@ -1,4 +1,17 @@
 # -*- coding: utf-8 -*-
+
+##------------------------------------------------------------------------------
+## File:        project_tree.py
+## Purpose:     all classes a project tree is build off from project to resource
+##              managing their resources, their dependancies to each other as 
+##              well as their xml-representation
+##
+## Author:      Christoph Franke
+##
+## Created:     
+## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
+##------------------------------------------------------------------------------
+
 from copy import deepcopy
 import os
 import time
@@ -28,7 +41,7 @@ config = Config()
 
 class TreeNode(Observable):
     '''
-    Base class of nodes in the project tree
+    Base class of all nodes in the project tree
     '''
     def __init__(self, name, parent=None):
         super(TreeNode, self).__init__()
@@ -481,7 +494,7 @@ class Scenario(TreeNode):
             input_node.validate()
             if input_node.is_checked and not input_node.is_valid:
                 self.is_valid = False
-                # 'Eingaben' is is not valid (for colouring purposes)
+                # 'Eingaben' is not valid as well (for colouring purposes in gui)
                 inputs_parent_node.is_checked = True
                 inputs_parent_node.is_valid = False
                 # direct parent (e.g. 'OV') is not valid too

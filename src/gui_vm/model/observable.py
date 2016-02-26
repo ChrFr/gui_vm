@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+
+##------------------------------------------------------------------------------
+## File:        observable.py
+## Purpose:     class with observable attributes
+##
+## Author:      Christoph Franke
+##
+## Created:     
+## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
+##------------------------------------------------------------------------------
+
 class Observable(object):
     def __init__(self):
         # stores observed attributes and callbacks
