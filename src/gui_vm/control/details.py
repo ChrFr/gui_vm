@@ -6,7 +6,7 @@
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -319,6 +319,9 @@ class OutputDetails(QtGui.QGroupBox):
         self.formLayout.addRow(start_button, special_button)
         start_button.setText('Start')
         special_button.setText('Optionen')
+        if output_node.locked:
+            start_button.setEnabled(False)
+            special_button.setEnabled(False)
         self.formLayout.addRow(QtGui.QLabel(""))
         start_button.clicked.connect(self.run)
         special_button.clicked.connect(self.change_options)

@@ -267,46 +267,53 @@ class VMProjectControl(ProjectTreeControl):
         for button in self.button_group.children():
             button.setEnabled(False)
 
+        # map functions to defined actions
+        # structure: keys are action names -
+        #            values are dictionaries with class of node in context
+        #               and [function to execute, tooltip/context-menu text, depending_on_lock (only active when node is unlocked)] as values
         self.context_map = {
             'add': {
-                Project: [self.add_scenario, 'Szenario hinzufügen'],
-                Scenario: [self.add_run, 'Lauf hinzufügen'],
-                OutputNode: [self.add_special_run, 'spezifischen Lauf hinzufügen']
+                Project: [self.add_scenario, 'Szenario hinzufügen', True],
+                Scenario: [self.add_run, 'Lauf hinzufügen', True],
+                OutputNode: [self.add_special_run, 'spezifischen Lauf hinzufügen', True]
             },
             'remove': {
-                Scenario: [self.remove_scenario, 'Szenario entfernen'],
-                InputNode: [self.remove_resource, 'Eingabedaten entfernen'],
-                OutputNode: [self._remove_output, 'Ausgabedaten entfernen']
+                Scenario: [self.remove_scenario, 'Szenario entfernen', True],
+                InputNode: [self.remove_resource, 'Quelldatei entfernen', True],
+                OutputNode: [self._remove_output, 'Quelldatei entfernen', True]
             },
             'reset': {
-                Scenario: [self._reset_scenario, 'Szenario zurücksetzen'],
-                InputNode: [self._reset_resource, 'Eingabedaten zurücksetzen']
+                Scenario: [self._reset_scenario, 'Szenario zurücksetzen', True],
+                InputNode: [self._reset_resource, 'Eingabedaten zurücksetzen', True]
             },
             'open': {
-                Scenario: [self._open_explorer, 'in Windows-Explorer anzeigen'],
-                Project: [self._open_explorer, 'in Windows-Explorer anzeigen'],
-                OutputNode: [self._open_explorer, 'in Windows-Explorer anzeigen'],
-                InputNode: [self.edit_resource, 'Eingabedaten öffnen'],
-                OutputNode: [self.edit_resource, 'Ausgabedaten öffnen']
+                Scenario: [self._open_explorer, 'in Windows-Explorer anzeigen', False],
+                Project: [self._open_explorer, 'in Windows-Explorer anzeigen', False],
+                InputNode: [self.edit_resource, 'Quelldatei öffnen', True],
+                OutputNode: [self.edit_resource, 'Quelldatei öffnen', True]
             },
             'edit': {
-                Scenario: [self._rename_scenario, 'Szenario umbenennen'],
-                Project: [self._rename_node, 'Projekt umbenennen'],
-                InputNode: [self.change_resource, 'Quelldatei ändern'],
-                OutputNode: [self._edit_options, 'Optionen editieren']
+                Scenario: [self._rename_scenario, 'Szenario umbenennen', True],
+                Project: [self._rename_node, 'Projekt umbenennen', True],
+                InputNode: [self.change_resource, 'Quelldatei ändern', True],
+                OutputNode: [self._edit_options, 'Optionen editieren', True]
             },
             'execute': {
-                Scenario: [self.run, 'Szenario starten']
+                Scenario: [self.run, 'Gesamtlauf starten', True]
             },
             'switch_lock': {
-                Scenario: [self._switch_lock, 'Szenario sperren'],
+                Scenario: [self._switch_lock, 'Szenario sperren', True],
             },
             'copy': {
-                Scenario: [self.clone_scenario, 'Szenario klonen'],
-                OutputNode: [self._copy_special_run, 'spezifischen Lauf kopieren']
+                Scenario: [self.clone_scenario, 'Szenario klonen', False],
+                OutputNode: [self._copy_special_run, 'spezifischen Lauf kopieren', True]
             },
             'clean': {
 
+            },
+            'other': {
+                OutputNode: [self._open_explorer, 'in Windows-Explorer anzeigen', False],
+                InputNode: [self._open_explorer, 'in Windows-Explorer anzeigen', False]
             },
         }
 
@@ -342,6 +349,18 @@ class VMProjectControl(ProjectTreeControl):
         if not input_node:
             input_node = self.selected_item
 
+        scenario = input_node.scenario
+
+        if len(scenario.get_output_files()) > 0:
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Zurücksetzen"),
+                _fromUtf8('Wenn Sie die Ressource ändern, werden alle bestehenden Ausgaben ungültig und somit entfernt!'),
+                QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Cancel:
+                return
+
+        self.remove_outputs(scenario)
+
         #open a file browser to change the source of the resource file
         current_path = input_node.file_absolute
         if not current_path:
@@ -375,22 +394,24 @@ class VMProjectControl(ProjectTreeControl):
 
         def map_button(button, map_name, depends_on_lock=False, condition=True):
             enabled = is_in_map = cls in self.context_map[map_name] and condition
-            if depends_on_lock:
-                enabled = is_in_map and not locked
-            button.setEnabled(enabled)
+
             if is_in_map:
+                depends_on_lock = self.context_map[map_name][cls][2]
+                if depends_on_lock:
+                    enabled = not locked
                 tooltip = _fromUtf8(self.context_map[map_name][cls][1])
             else:
                 tooltip = ''
+            button.setEnabled(enabled)
             button.setToolTip(tooltip)
 
-        map_button(self.plus_button,'add', depends_on_lock=True)
-        map_button(self.minus_button, 'remove', depends_on_lock=True)
+        map_button(self.plus_button,'add')
+        map_button(self.minus_button, 'remove')
         condition = hasattr(node, "model") \
             and len(config.settings['trafficmodels'][node.model.name]['default_folder']) > 0
-        map_button(self.reset_button, 'reset', depends_on_lock=True, condition=condition)
-        map_button(self.edit_button, 'edit', depends_on_lock=True)
-        map_button(self.open_button, 'open', depends_on_lock=True)
+        map_button(self.reset_button, 'reset', condition=condition)
+        map_button(self.edit_button, 'edit')
+        map_button(self.open_button, 'open')
         #self.start_button.setEnabled(cls in self.context_map['execute'])
         map_button(self.lock_button, 'switch_lock')
         if node.locked:
@@ -399,21 +420,21 @@ class VMProjectControl(ProjectTreeControl):
             self.lock_button.setChecked(False)
 
         condition = not isinstance(node, OutputNode) or not node.is_primary
-        map_button(self.copy_button, 'copy', depends_on_lock=False, condition=condition)
+        map_button(self.copy_button, 'copy', condition=condition)
         map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
         #self.item_clicked(self.current_index)
         node = self.selected_item
-        if node.locked:
-            return
         cls = node.__class__
         context_menu = QtGui.QMenu()
         action_map = {}
         for key, value in self.context_map.iteritems():
             if cls in value:
-                action_map[context_menu.addAction(_fromUtf8(value[cls][1]))] = \
-                    value[cls][0]
+                depends_on_lock = value[cls][2]
+                if not depends_on_lock or not node.locked:
+                    action_map[context_menu.addAction(_fromUtf8(value[cls][1]))] = \
+                        value[cls][0]
         #shows double details if not hidden
         for i in reversed(range(self.details_view.count())):
             widget = self.details_view.itemAt(i).widget()
@@ -672,8 +693,8 @@ class VMProjectControl(ProjectTreeControl):
 
         dialog = QtGui.QMessageBox()
         if not scenario_node.is_valid:
-            msg = _fromUtf8("Das Szenario ist fehlerhaft (rot markierte Felder)." +
-                            "Der Lauf kann nicht gestartet werden.")
+            msg = _fromUtf8('Das Szenario ist fehlerhaft (rot markierte Felder).' +
+                            'Der Lauf kann nicht gestartet werden.')
             dialog.setWindowTitle("Fehler")
             dialog.setText(msg)
             dialog.exec_()
@@ -793,8 +814,8 @@ class VMProjectControl(ProjectTreeControl):
         path = new_scenario_node.path
         if os.path.exists(new_scenario_node.path):
             reply = QtGui.QMessageBox.question(
-                None, _fromUtf8("Fehler"),
-                _fromUtf8("Der Pfad '{}' existiert bereits. Fortsetzen?"
+                None, _fromUtf8('Fehler'),
+                _fromUtf8('Der Pfad "{}" existiert bereits. Wollen Sie trotzdem fortsetzen?'
                               .format(path)),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.No:
@@ -1020,12 +1041,21 @@ class VMProjectControl(ProjectTreeControl):
     def _reset_resource(self):
         res_node = self.selected_item
 
-        reply = QtGui.QMessageBox.question(
-                    None, _fromUtf8("Zurücksetzen"),
-                    _fromUtf8('Soll die Ressource "{}" auf die Standardwerte zurückgesetzt werden?'.format(res_node.name)),
-                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.No:
-            return
+        scenario = res_node.scenario
+        if len(scenario.get_output_files()) > 0:
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Zurücksetzen"),
+                _fromUtf8('Wenn Sie die Ressource zurücksetzen, werden alle bestehenden Ausgaben ungültig und somit entfernt!'),
+                QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Cancel:
+                return
+        else:
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Zurücksetzen"),
+                _fromUtf8('Soll die Ressource "{}" auf die Standardwerte zurückgesetzt werden?'.format(res_node.name)),
+                QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
+            if reply == QtGui.QMessageBox.Cancel:
+                return
 
         success, message = res_node.reset_to_default()
 

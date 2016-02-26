@@ -203,23 +203,23 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
                 msg = 'Das Szenario {} '.format(self.scenario.name) + \
                     'wurde bereits berechnet. \n\n' + \
                     'Wollen Sie trotzdem einen erneuten Gesamtlauf starten?\n\n' + \
-                    'Achtung! Die Ergebnisse der spezifischen LÃ¤ufe des Szenarios werden ebenfalls gelÃ¶scht!'
+                    'Achtung! Die Ergebnisse der spezifischen Läufe des Szenarios werden ebenfalls gelöscht!'
                 reply = dialog.question(
                     self, _fromUtf8("erneuter Gesamtlauf"), _fromUtf8(msg),
                     QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
                 cancel = reply == QtGui.QMessageBox.Cancel
-            if not cancel:
-                for output in self.scenario.get_output_files():
-                    try:
-                        rmtree(os.path.split(output.file_absolute)[0])
-                    except:
-                        pass
+            if cancel:
+                self.close()
+                return
+            for output in self.scenario.get_output_files():
+                try:
+                    rmtree(os.path.split(output.file_absolute)[0])
+                except:
                     pass
+                pass
 
-        if not cancel:
-            # run the process
-            self.scenario.run(self.process, self.run_name, options=self.options,
-                              callback=self.show_status)
+        self.scenario.run(self.process, self.run_name, options=self.options,
+                          callback=self.show_status)
 
     def running(self):
         self.progress_bar.setStyleSheet(DEFAULT_STYLE)
