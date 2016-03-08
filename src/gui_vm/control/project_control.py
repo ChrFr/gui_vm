@@ -1104,12 +1104,7 @@ class VMProjectControl(ProjectTreeControl):
 
     def read_project(self, filename):
         self.close_project()
-        try:
-            XMLParser.read_xml(self.model, filename)
-        except Exception, e:
-            # reset to clean node
-            self.model = TreeNode('root')
-            raise e
+        XMLParser.read_xml(self.model, filename)
         self.project.on_change(self.project_changed.emit)
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()

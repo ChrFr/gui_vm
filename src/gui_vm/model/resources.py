@@ -36,18 +36,16 @@ class Status(object):
         self.code = self.NOT_CHECKED
         self._flag_dict = {}
         self.name = name
-        self._pretty_names = {}
         
     @property
     def flags(self):
         return self._flag_dict.keys()
         
-    def add(self, flag, pretty_name = None):
+    def add(self, flag):
         if self._flag_dict.has_key(flag):
             print 'Warning: status already contains flag "{}". Addition is ignored.'.format(flag)
             return
         self._flag_dict[flag] = self.NOT_CHECKED, self.DEFAULT_MESSAGES[self.NOT_CHECKED]   
-        self._pretty_names[flag] = pretty_name
             
     def set(self, flag, value, message=None):
         if isinstance(value, Status):
@@ -71,11 +69,6 @@ class Status(object):
         if isinstance(value, Status):
             return value.code
         return self._flag_dict[flag][0]    
-    
-    def get_pretty_name(self, flag):
-        if self._pretty_names.has_key(flag):
-            return self._pretty_names[flag]
-        return flag     
             
     def merge(self):
         '''
@@ -136,16 +129,16 @@ class Resource(Observable):
         self.required = False
         self.dynamic = False
         #add status flags for the monitored attributes
-        self.status = Status(name)
+        self._status = Status(name)
         for key, value in self.monitored.items():
-            self.status.add(key, pretty_name=value)
+            self._status.add(key)
 
     def add_child(self, child):
         '''
         add a child resource
         '''
         self.children.append(child)
-        self.status.set(child.name, child.status)
+        self._status.set(child.name, child._status)
 
     def get_child(self, name):
         '''
@@ -171,18 +164,56 @@ class Resource(Observable):
         self.reset()
         for child in self.children:
             child.update(path)
-        self.status.merge()
+        self._status.merge()
+        
+        
+    @property
+    def status(self, overwrite=None):
+        '''
+        dictionary with pretty attributes as keys and a tuple as values
+        with the actual value, a message and a status flag
+        can be nested if there are child resources, their status will
+        appear instead of the message
+
+        Return
+        ------
+        attributes: dict,
+                    attribute names as keys, tuple (name of attribute, message
+                    or child status, statusflag) as values
+        '''
+
+        status_dict = OrderedDict()
+        attributes = OrderedDict()
+
+        #add the status of the monitored attributes
+        for i, attr in enumerate(self.monitored):
+            target = getattr(self, attr)
+            pretty_name = self.monitored[attr]
+            status_flag = self._status.get(attr)
+            if isinstance(status_flag, tuple):
+                message = status_flag[1]
+                status_flag = status_flag[0]
+            else:
+                message = Status.DEFAULT_MESSAGES[status_flag]
+            attr_tuple = (target, message, status_flag)
+            attributes[pretty_name] = attr_tuple
+        #add the status of the children
+        for child in self.children:
+            attributes.update(child.status)
+        status_dict[self.name] = (attributes, ', '.join(self._status.messages),
+                             self._status.code)
+        return status_dict    
 
     @property
     def is_checked(self):
-        if self.status.code > Status.NOT_NEEDED:
+        if self._status.code > Status.NOT_NEEDED:
             return True
         else:
             return False
 
     @property
     def is_valid(self):
-        if self.status.code == Status.CHECKED_AND_VALID:
+        if self._status.code == Status.CHECKED_AND_VALID:
             return True
         else:
             return False
@@ -196,9 +227,9 @@ class Resource(Observable):
         '''
         self.update(path)
         #only check rules if resource-file is found
-        if self.status.code != Status.NOT_FOUND:
+        if self._status.code != Status.NOT_FOUND:
             self._validate(path)
-        self.status.merge()
+        self._status.merge()
 
     def _validate(self, path):
         '''
@@ -208,9 +239,9 @@ class Resource(Observable):
         for rule in self.rules:
             is_valid, message = rule.check(self)
             if not is_valid:
-                self.status.set(rule.field_name, Status.MISMATCH, message)
+                self._status.set(rule.field_name, Status.MISMATCH, message)
             else:
-                self.status.set(rule.field_name, Status.CHECKED_AND_VALID,
+                self._status.set(rule.field_name, Status.CHECKED_AND_VALID,
                                                       message)
         for child in self.children:
             child._validate(path)
@@ -219,12 +250,12 @@ class Resource(Observable):
         '''
         reset the status flags of the resource and its children recursive
         '''
-        self.status.code = Status.NOT_CHECKED
+        self._status.code = Status.NOT_CHECKED
         for key, value in self.monitored.items():
-            self.status.set(key, Status.NOT_CHECKED)
+            self._status.set(key, Status.NOT_CHECKED)
         for child in self.children:
             child.reset_status()
-            self.status.set(child.name, child.status)
+            self._status.set(child.name, child._status)
 
     def remove_children(self):
         if len(self.children) > 0:
@@ -282,9 +313,9 @@ class ResourceFile(Resource):
                 t = time.strftime('%d-%m-%Y %H:%M:%S',
                                   time.localtime(stats.st_mtime))
                 self.file_modified = t
-                self.status.set('filename', Status.FOUND)
+                self._status.set('filename', Status.FOUND)
                 return
-        self.status.set('filename', Status.NOT_FOUND)
+        self._status.set('filename', Status.NOT_FOUND)
 
     @property
     def is_set(self):
@@ -346,12 +377,12 @@ class H5Resource(ResourceFile):
             h5_in, success = self.read(path)
         if path is None or not success:
             #set a flag for file not found
-            self.status.set('filename', Status.NOT_FOUND, 'keine gueltige HDF5 Datei')
+            self._status.set('filename', Status.NOT_FOUND, 'keine gueltige HDF5 Datei')
         for child in self.children:
             child.update(path, h5_in=h5_in)
         #close file
         del(h5_in)
-        self.status.merge()
+        self._status.merge()
         
 
 class H5Node(H5Resource):
@@ -398,21 +429,21 @@ class H5Node(H5Resource):
             return None
         table = self.read(path, h5_in=h5_in)
         if not table:
-            self.status.set('table_path', Status.NOT_FOUND)
+            self._status.set('table_path', Status.NOT_FOUND)
             self.shape = None
             return None
-        self.status.set('table_path', Status.FOUND)
+        self._status.set('table_path', Status.FOUND)
         table = table.read()
         self.shape = table.shape
         return table
 
     @property
-    def status_dict(self):
+    def status(self):
         '''
         adds a pretty representation of the dimension to the status gotten from
         the base class
         '''
-        status_dict = super(H5Node, self).status_dict
+        status_dict = super(H5Node, self).status
         #pretty print the dimension (instead of tuple (a, b, c) 'a x b x c')
         if self.shape is not None:
             dim = ''
@@ -565,7 +596,7 @@ class H5TableColumn(H5Resource):
         '''
         self.reset()
         if table is None or self.name not in table.dtype.names:
-            self.status.set('dtype', Status.NOT_FOUND)
+            self._status.set('dtype', Status.NOT_FOUND)
             self.max_value = None
             self.min_value = None
             self.dtype = None
@@ -573,9 +604,9 @@ class H5TableColumn(H5Resource):
         else:
             self.dtype = table.dtype[self.name]
             if self.required:
-                self.status.set('dtype', Status.FOUND)
+                self._status.set('dtype', Status.FOUND)
             else:
-                self.status.set('dtype', Status.NOT_NEEDED)
+                self._status.set('dtype', Status.NOT_NEEDED)
             content = table[self.name]
             # für Nicht-String-Variablen checke die Min- und Max-Grenzen
             if self.dtype.char != 'S':
@@ -587,7 +618,7 @@ class H5TableColumn(H5Resource):
             #check if all values are unique if primary key
             if self.primary_key and np.unique(content).size != content.size:
                 
-                self.status.set('primary_key', Status.MISMATCH, 'Werte nicht eindeutig')
+                self._status.set('primary_key', Status.MISMATCH, 'Werte nicht eindeutig')
             #if content of column is observed, set it
             if 'content' in self._observed:
                 self.set('content', list(content))
