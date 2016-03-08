@@ -20,6 +20,13 @@ from gui_vm.model.rules import DtypeCompareRule, CompareRule
 import copy
 
 class Status(object):
+    '''
+    class for managing status flags observing specific attributes (observation is not handled by Status-class)
+    and the relations between parent- and child-statuses, 
+    is organized as a dictionary, values can be Status-objects themselfes 
+    (parent-child relation is represented this way)
+    '''    
+    
     #status flags (with ascending priority)
     NOT_CHECKED = 0
     NOT_NEEDED = 1
@@ -31,23 +38,44 @@ class Status(object):
     DEFAULT_MESSAGES = ['', 'nicht benötigt', 'vorhanden', 'überprüft',
                         'nicht vorhanden', 'Fehler']
     
-    def __init__(self, name):
+    def __init__(self):
         self.messages = []
         self.code = self.NOT_CHECKED
         self._flag_dict = {}
-        self.name = name
         
     @property
     def flags(self):
+        '''
+        Return
+        ----------------
+        list of names of all contained flags
+        '''
         return self._flag_dict.keys()
         
     def add(self, flag):
+        '''
+        add a new flag, is initialized with 'unchecked'
+        
+        Parameter
+        ----------------
+        flag: name of the flag
+        '''
         if self._flag_dict.has_key(flag):
             print 'Warning: status already contains flag "{}". Addition is ignored.'.format(flag)
             return
         self._flag_dict[flag] = self.NOT_CHECKED, self.DEFAULT_MESSAGES[self.NOT_CHECKED]   
             
     def set(self, flag, value, message=None):
+        '''
+        set the status-code of a flag, is added if not exisiting, 
+        else values are overwritten
+        
+        Parameter
+        ----------------
+        flag: name of the flag
+        value: status-code (can be status-object as well, becomes child this way)
+        message: optional, message belonging to current status of this flag (default message is taken, if not given)
+        '''
         if isinstance(value, Status):
             self._flag_dict[flag] = value 
             return
@@ -56,15 +84,48 @@ class Status(object):
         self._flag_dict[flag] = value, message 
     
     def get(self, flag):
+        '''
+        get the currently set status of the flag
+        
+        Parameter
+        ----------------
+        flag: name of the flag
+        
+        Return
+        ----------------
+        tuple of (status_code, message)
+        '''
         return self._flag_dict[flag]      
     
     def get_flag_message(self, flag):
+        '''
+        get the currently set status-message of the flag
+        
+        Parameter
+        ----------------
+        flag: name of the flag
+        
+        Return
+        ----------------
+        string
+        '''
         value = self._flag_dict[flag]
         if isinstance(value, Status):
             return ', '.join(value.messages)
         return self._flag_dict[flag][1]         
     
     def get_flag_code(self, flag):
+        '''
+        get the currently set status-code of the flag
+        
+        Parameter
+        ----------------
+        flag: name of the flag
+        
+        Return
+        ----------------
+        int
+        '''
         value = self._flag_dict[flag]
         if isinstance(value, Status):
             return value.code
@@ -129,7 +190,7 @@ class Resource(Observable):
         self.required = False
         self.dynamic = False
         #add status flags for the monitored attributes
-        self._status = Status(name)
+        self._status = Status()
         for key, value in self.monitored.items():
             self._status.add(key)
 
@@ -171,9 +232,10 @@ class Resource(Observable):
     def status(self, overwrite=None):
         '''
         dictionary with pretty attributes as keys and a tuple as values
-        with the actual value, a message and a status flag
+        with the actual value, a message and a status flag (as int)
         can be nested if there are child resources, their status will
-        appear instead of the message
+        appear instead of the message 
+        (does not return the status-object!)
 
         Return
         ------
@@ -206,6 +268,13 @@ class Resource(Observable):
 
     @property
     def is_checked(self):
+        '''
+        returns, if the resource was already checked (doesn't state, if resource is valid or not!)
+
+        Return
+        ------
+        boolean - true, if resource is already checked, false else
+        '''
         if self._status.code > Status.NOT_NEEDED:
             return True
         else:
@@ -213,13 +282,17 @@ class Resource(Observable):
 
     @property
     def is_valid(self):
+        '''
+        returns, if the resource is valid (= marked as valid after checking without getting errors)
+        
+        Return
+        ------
+        boolean - true, if resource is valid, false else
+        '''
         if self._status.code == Status.CHECKED_AND_VALID:
             return True
         else:
             return False
-
-    def read(self, path):
-        return None, False
 
     def validate(self, path):
         '''
@@ -258,6 +331,9 @@ class Resource(Observable):
             self._status.set(child.name, child._status)
 
     def remove_children(self):
+        '''
+        remove all children ('subdivisions' of this resource)
+        '''
         if len(self.children) > 0:
             for i in xrange(len(self.children)):
                 self.children.pop(0).remove_children()
@@ -322,11 +398,17 @@ class ResourceFile(Resource):
         if self.filename is None:
             return False
 
-    #def merge_status(self):
-        ##don't show all child messages for resource files (confusing)
-        #super(ResourceFile, self).merge_status()
-        #status_flag = self.merged_status[0]
-        #self.merged_status = status_flag, [Status.DEFAULT_MESSAGES[status_flag]]
+    def read(self, path):
+        '''
+        read the resource from file at given path
+        When inheriting from Resource, method foo must be overridden.
+        
+        Return
+        ------------
+        tuple (file, boolean) - the opened file and true, if successfully opened
+        '''
+        raise NotImplementedError    
+        return None, None
 
 class H5Resource(ResourceFile):
     '''
@@ -348,19 +430,25 @@ class H5Resource(ResourceFile):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
             filename=filename)
-
+        
     def read(self, path):
+        '''
+        Override:
+        read the resource from H5-file at given path (subfolder and filename of resource will be added automatically)
+        
+        Parameters
+        ----------
+        path: the absolute path to the working directory of the resource (excl. subfolder and filename)
+        
+        Return
+        ----------
+        tuple (file, boolean) - the opened h5-file and true, if successfully opened
+        '''
         if self.filename is None:
             return None, False
         h5 = HDF5(os.path.join(path, self.subfolder, self.filename))
         successful = h5.read()
         return h5, successful
-
-    def get_content(self, path, content_path):
-        h5, success = self.read(path)
-        if not success:
-            return None
-        return h5.get_table(content_path).read()
 
     def update(self, path):
         '''
@@ -368,7 +456,7 @@ class H5Resource(ResourceFile):
 
         Parameter
         ---------
-        path: String, name of the working directory,
+        path: String, path of the working directory,
                       where the file is in (without subfolder)
         '''
         super(H5Resource, self).update(path)
