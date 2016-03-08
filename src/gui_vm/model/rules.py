@@ -193,7 +193,7 @@ class CompareRule(Rule):
 
     def compare(self, left, right):
         '''
-        compare two values (or lists of values)
+        compare two values (or lists of values elementwise)
         '''
         operator = self.mapping[self.operator]
         #make both values iterable

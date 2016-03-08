@@ -13,8 +13,7 @@
 from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
-from gui_vm.model.resources import (NOT_CHECKED, NOT_NEEDED, FOUND,
-                                    CHECKED_AND_VALID, NOT_FOUND, MISMATCH)
+from gui_vm.model.resources import Status
 from gui_vm.control.dialogs import (CopyFilesDialog, RunOptionsDialog,
                                     InputDialog, ExecDialog)
 from PyQt4 import QtGui, QtCore
@@ -205,54 +204,102 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             green = QtGui.QColor('green')
             red = QtGui.QColor('red')
             black = QtGui.QColor('black')
-            if status in [NOT_FOUND, MISMATCH]:
+            if status in [Status.NOT_FOUND, Status.MISMATCH]:
                 status_color = red
-            elif status in [FOUND, CHECKED_AND_VALID]:
+            elif status in [Status.FOUND, Status.CHECKED_AND_VALID]:
                 status_color = green
             else:
                 status_color = black
 
             return status_color
+        
+        
+            #@property
+            #def status_dict(self, overwrite=None):
+                #'''
+                #dictionary with pretty attributes as keys and a tuple as values
+                #with the actual value, a message and a status flag
+                #can be nested if there are child resources, their status will
+                #appear instead of the message
+        
+                #Return
+                #------
+                #attributes: dict,
+                            #attribute names as keys, tuple (name of attribute, message
+                            #or child status, statusflag) as values
+                #'''
+        
+                #status = OrderedDict()
+                #attributes = OrderedDict()
+        
+                ##add the status of the monitored attributes
+                #for i, attr in enumerate(self.monitored):
+                    #target = getattr(self, attr)
+                    #pretty_name = self.monitored[attr]
+                    #status_flag = self.status.get(attr)
+                    #if isinstance(status_flag, tuple):
+                        #message = status_flag[1]
+                        #status_flag = status_flag[0]
+                    #else:
+                        #message = Status.DEFAULT_MESSAGES[status_flag]
+                    #attr_tuple = (target, message, status_flag)
+                    #attributes[pretty_name] = attr_tuple
+                ##add the status of the children
+                #for child in self.children:
+                    #attributes.update(child.status_dict)
+                #status[self.name] = (attributes, ', '.join(self.status.messages),
+                                     #self.status.code)
+                #return status
+        
 
-        def build_tree(attr, level=0, parent=self.resource_tree):
+        def build_tree(status, level=0, parent=self.resource_tree):
             '''
             build a resource tree out of a nested dictionary and view it
             '''
-            normal = QtGui.QFont("Arial", 10-(level))
-            bold = QtGui.QFont("Arial", 10-(level), QtGui.QFont.Bold)
-            for key in attr:
-                value, message, status = attr[key]
-                status_color = get_status_color(status)
-
-                if isinstance(value, dict):
-                    val = ''
-                    font = bold
-                    has_subdict = True
-                else:
-                    val = value
-                    font = normal
-                    has_subdict = False
-
+            normal = QtGui.QFont("Arial", 10 - (level))
+            bold = QtGui.QFont("Arial", 10 - (level), QtGui.QFont.Bold)
+            font = bold
+            status_code = status.code
+            status_color = get_status_color(status_code)         
+            children = []
+            line = ('{name}'
+                    .format(name=_fromUtf8(status.name)))
+            item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(', '.join(status.messages))])
+            item.setFont(0, font)
+            status_color = get_status_color(status_code)
+            if status_code in [Status.CHECKED_AND_VALID, Status.NOT_FOUND, Status.MISMATCH]:
+                item.setTextColor(0, status_color)
+            item.setTextColor(1, status_color)
+            
+            if level == 0:
+                item.setExpanded(True)
+            
+            for flag in status.flags:
+                flag_value = status.get(flag)       
+                if isinstance(flag_value, Status):
+                    children.append(flag_value)
+                    continue
+                message = status.get_flag_message(flag)
+                status_code = status.get_flag_code(flag)       
+                font = normal
                 line = ('{name}: {value}'
-                        .format(name=key, value=val))
-                status_color = get_status_color(status)
-                item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(message)])
-                item.setFont(0, font)
-                if status in [CHECKED_AND_VALID, NOT_FOUND, MISMATCH]:
-                    item.setTextColor(0, status_color)
-                item.setTextColor(1, status_color)
-                if level == 0:
-                    item.setExpanded(True)
-                if has_subdict:
-                    #recursion if there are sub dictionaries
-                    build_tree(value, level+1, parent=item)
+                        .format(name=_fromUtf8(status.get_pretty_name(flag)), value='')) #TODO: value is missing!
+                status_color = get_status_color(status_code)
+                subitem = QtGui.QTreeWidgetItem(item, [line, _fromUtf8(message)])
+                subitem.setFont(0, font)
+                if status_code in [Status.CHECKED_AND_VALID, Status.NOT_FOUND, Status.MISMATCH]:
+                    subitem.setTextColor(0, status_color)
+                subitem.setTextColor(1, status_color)
+                
+            for child_status in children:                
+                #recursion if flag is a Status itself 
+                build_tree(child_status, level+1, parent=item)                  
 
         self.resource_tree.clear()
         header = QtGui.QTreeWidgetItem(['Ressourcenbrowser', 'Status'])
         self.resource_tree.setHeaderItem(header)
-        attr = self.resource_node.status
-        if attr:
-            build_tree(attr)
+        status = self.resource_node.status
+        build_tree(status)
         self.resource_tree.resizeColumnToContents(0)
 
     def change_source(self):
