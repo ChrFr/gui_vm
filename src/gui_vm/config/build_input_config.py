@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import os
 import numpy as np
-from gui_vm.model.resource_parser import (H5ConfigParser, FileDict,
+from gui_vm.model.resource_dict import (H5ConfigParser, FileDict,
                                           TableDictArrayDict, ArrayDict, ColumnDict,
                                           ResourceConfigParser)
 

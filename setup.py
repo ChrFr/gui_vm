@@ -26,7 +26,7 @@ setup(
     zip_safe=False,
     package_data={
         'gui_vm': ['*.csv',
-                   'default_config.xml'],
+                   'config_template.xml'],
     },
 
     # deactivated requirements to avoid vcvarsall.bat errors in wheel installer, have to be installed with conda/pip before

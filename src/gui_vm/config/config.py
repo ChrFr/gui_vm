@@ -2,6 +2,8 @@ from lxml import etree
 import os, sys
 import gui_vm
 
+CONFIG_FILE = "config.xml"
+CONFIG_TEMPLATE = "config_template.xml"
 
 class Singleton(type):
     '''
@@ -21,8 +23,8 @@ class Config():
 
     def __init__(self):
         main_p = os.path.dirname(gui_vm.__file__)
-        self.filename = os.path.join(main_p, "config.xml")
-        self.default_file = os.path.join(main_p, "default_config.xml")
+        self.filename = os.path.join(main_p, CONFIG_FILE)
+        self.default_file = os.path.join(main_p, CONFIG_TEMPLATE)
         self.mainWindow = None
         self.batch_mode = False
         self.admin_mode = False

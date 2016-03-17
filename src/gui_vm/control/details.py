@@ -211,7 +211,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             else:
                 status_color = black
 
-            return status_color        
+            return status_color
 
         def build_tree(attr, level=0, parent=self.resource_tree):
             '''

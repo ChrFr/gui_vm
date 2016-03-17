@@ -219,6 +219,9 @@ QSplitter::handle:pressed {
                <property name="toolTip">
                 <string>neues Projekt</string>
                </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string/>
                </property>

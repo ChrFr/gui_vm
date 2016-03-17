@@ -4,6 +4,8 @@ from gui_vm.view.new_project_ui import Ui_NewProject
 from gui_vm.view.new_scenario_ui import Ui_NewScenario
 from gui_vm.view.settings_ui import Ui_Settings
 from gui_vm.model.backend import hard_copy, get_free_space
+from gui_vm.model.project_tree import Project
+from gui_vm.model.traffic_model import TrafficModel
 from PyQt4 import QtGui, QtCore
 import sys, os, collections
 import re
@@ -25,6 +27,13 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
+XML_FILTER = 'XML-Dateien (*.xml)'
+ALL_FILES_FILTER = 'Alle Dateien (*.*)'
+H5_FILES_FILTER = 'HDF5-Dateien (*.h5)'
+CALLABLE_FILES_FILTER = 'Ausfuehrbare Dateien (*.exe)'
+PROJECT_FILE_FILTER = 'Projektdatei ({})'.format(Project.FILENAME_DEFAULT)
+TRAFFICMODEL_FILE_FILTER = 'Verkehrsmodell ({})'.format(Project.FILENAME_DEFAULT)
 
 DEFAULT_STYLE = """
 QProgressBar{
@@ -59,6 +68,49 @@ def remove_special_chars(text):
     removes Umlaute etc., keeps middle spaces, removes leading and trailing spaces
     '''
     return re.sub('[^A-Za-z0-9 ]+', '', text).strip()
+
+def browse_file(parent, directory=None, filters=None, selected_filter_idx=None):
+    if not filters:
+        filters=[ALL_FILES_FILTER]
+    if not selected_filter_idx:
+        selected_filter_idx = 0
+    filename = str(
+        QtGui.QFileDialog.getOpenFileName(
+            parent, _fromUtf8('Datei wählen'),
+            directory,
+            ';;'.join(filters),
+            filters[selected_filter_idx]
+        ))
+    return filename
+
+def set_file(parent, line_edit, directory=None, filters=None, selected_filter_idx=None, do_split=False):
+    '''
+    open a file browser to put a path to a file into the given line edit
+    '''
+    # set directory to directory of current entry if not given
+    if not directory:
+        try:
+            directory = os.path.split(str(line_edit.text()))[0]
+        except:
+            directory = ''
+
+    filename = browse_file(parent, directory=directory, filters=filters,
+                          selected_filter_idx=selected_filter_idx)
+
+    if do_split:
+        filename = os.path.split(filename)[0]
+
+    # filename is '' if canceled
+    if len(filename) > 0:
+        line_edit.setText(filename)
+
+def set_directory(parent, line_edit):
+    dirname = str(
+            QtGui.QFileDialog.getExistingDirectory(
+                parent, _fromUtf8('Zielverzeichnis wählen')))
+    # dirname is '' if canceled
+    if len(dirname) > 0:
+        line_edit.setText(dirname)
 
 class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
     '''
@@ -275,19 +327,8 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             recent = h[0]
         #default = config.settings['environment']['default_project_folder']
         self.folder_edit.setText(recent)
-        self.folder_browse_button.clicked.connect(self.browse_folder)
+        self.folder_browse_button.clicked.connect(lambda: browse_folder(self, self.folder_edit))
         self.show()
-
-    def browse_folder(self):
-        '''
-        open a file browser to set the project folder
-        '''
-        folder = str(
-            QtGui.QFileDialog.getExistingDirectory(
-                self, 'Projektverzeichnis wählen', directory=self.folder_edit.text()))
-        #filename is '' if canceled
-        if len(folder) > 0:
-            self.folder_edit.setText(folder)
 
     @staticmethod
     def getValues():
@@ -494,13 +535,26 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.setupUi(self)
 
         self.python_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.python_edit, 'python.exe'))
+            lambda: set_file(self, self.python_edit,
+                             filters=[ALL_FILES_FILTER, 'Python-Interpreter (python.exe)'],
+                             selected_filter_idx=1)
+        )
         self.hdf5_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.hdf5_edit, '*.exe'))
+            lambda: set_file(self, self.hdf5_edit,
+                             filters=[ALL_FILES_FILTER, CALLABLE_FILES_FILTER],
+                             selected_filter_idx=1)
+        )
         self.maxem_default_browse_button.clicked.connect(
-            lambda: self.set_file(self.maxem_default_edit, 'project.xml', True))
+            lambda: set_file(self, self.python_edit,
+                             filters=[ALL_FILES_FILTER, TRAFFICMODEL_FILE_FILTER],
+                             selected_filter_idx=1,
+                             do_split=True)
+        )
         self.maxem_exec_browse_button.clicked.connect(
-            lambda: self.set_file(self.maxem_exec_edit, '*.py'))
+            lambda: set_file(self, self.maxem_exec_edit,
+                             filters=[ALL_FILES_FILTER, 'Python-Skript (*.py)'],
+                             selected_filter_idx=1)
+        )
         self.verkmod_default_browse_button.setDisabled(True)
         self.verkmod_exec_browse_button.setDisabled(True)
         #self.verkmod_default_browse_button.clicked.connect(

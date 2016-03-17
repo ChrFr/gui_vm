@@ -22,6 +22,7 @@ from gui_vm.config.config import Config
 import os, subprocess
 from shutil import rmtree
 import subprocess
+from dialogs import browse_file, ALL_FILES_FILTER, H5_FILES_FILTER
 
 config = Config()
 
@@ -366,7 +367,8 @@ class VMProjectControl(ProjectTreeControl):
         if not current_path:
             current_path = config.settings['trafficmodels'][
                 input_node.model.name]['default_folder'] + '/*.h5'
-        fileinput = str(
+        fileinput = browse_file(config.mainWindow, directory=current_path, filters=None, selected_filter_idx=None)
+        str(
             QtGui.QFileDialog.getOpenFileName(
                 config.mainWindow, _fromUtf8('Ressourcendatei öffnen'),
                 current_path))
@@ -1077,7 +1079,7 @@ class VMProjectControl(ProjectTreeControl):
         XMLParser.write_xml(self.project, filename)
 
     def new_project(self, name, project_folder):
-        if os.path.exists(os.path.join(project_folder, "project.xml")):
+        if os.path.exists(os.path.join(project_folder, Project.FILENAME_DEFAULT)):
             QtGui.QMessageBox.about(
                 None, "Fehler",
                 _fromUtf8("Im Ordner ist bereits eine Projektdatei vorhanden! "

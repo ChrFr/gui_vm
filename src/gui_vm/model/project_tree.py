@@ -997,8 +997,8 @@ class OutputNode(ResourceNode):
     def validate(self):
         self.resource.validate(self.path)
         self.is_checked = True
-        #resource found is enough, no further validations needed here
-        self.is_valid = self.resource.merged_status[0] == FOUND
+        # TODO: closer validation
+        self.is_valid = self.resource.is_valid
 
     @property
     def is_primary(self):
