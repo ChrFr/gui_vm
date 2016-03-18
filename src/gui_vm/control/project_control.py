@@ -394,15 +394,17 @@ class VMProjectControl(ProjectTreeControl):
 
         def map_button(button, map_name, depends_on_lock=False, condition=True):
             enabled = is_in_map = cls in self.context_map[map_name] and condition
+            tooltip = ''
 
             if is_in_map:
                 depends_on_lock = self.context_map[map_name][cls][2]
+                tooltip = _fromUtf8(self.context_map[map_name][cls][1])
                 if depends_on_lock:
                     enabled = not locked
-                tooltip = _fromUtf8(self.context_map[map_name][cls][1])
-            else:
-                tooltip = ''
+
             button.setEnabled(enabled)
+            if not enabled:
+                tooltip = ''
             button.setToolTip(tooltip)
 
         map_button(self.plus_button,'add')
