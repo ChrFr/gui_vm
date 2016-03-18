@@ -64,13 +64,13 @@ def startmain():
         label2.setStyleSheet("QLabel { color : white; }");
         label1.setGeometry(
             (splash.width() - label1.sizeHint().width()) / 2,
-            (splash.height() - label1.sizeHint().height()) / 2 - 30,
+            (splash.height() - label1.sizeHint().height()) / 2 - 20,
             label1.sizeHint().width(),
             label1.sizeHint().height()
         )
         label2.setGeometry(
             (splash.width() - label2.sizeHint().width()) / 2,
-            (splash.height() - label2.sizeHint().height()) / 2 - 10,
+            (splash.height() - label2.sizeHint().height()) - 10,
             label2.sizeHint().width(),
             label2.sizeHint().height()
         )
