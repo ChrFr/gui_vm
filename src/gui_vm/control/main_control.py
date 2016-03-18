@@ -100,10 +100,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionSpezifischen_Lauf_anlegen.triggered.connect(
             lambda: self.project_control.add_special_run(do_choose=True))
 
-        self.scenario_choice_button.clicked.connect(QtGui.qApp.quit)
+        self.scenario_choice_button.clicked.connect(self.close)
         self.scenario_choice_button.setVisible(False)
 
-        self.actionBeenden.triggered.connect(QtGui.qApp.quit)
+        self.actionBeenden.triggered.connect(self.close)
 
         self.project_control.project_changed.connect(self.project_changed_handler)
         self.project_changed.connect(self.project_changed_handler)

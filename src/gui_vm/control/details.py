@@ -111,8 +111,6 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         self.setupUi(self)
         self.project_node = project_node
         self.setTitle(project_node.name)
-        label = QtGui.QLabel('\n\nMetadaten:\n')
-        self.meta_layout.addRow(label)
         for meta in project_node.meta:
             label = QtGui.QLabel(meta)
             edit = QtGui.QLineEdit(project_node.meta[meta])
@@ -125,6 +123,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         self.folder_edit.setText(str(self.project_node.project_folder))
         #self.folder_browse_button.clicked.connect(lambda: set_directory(self, self.folder_edit))
         self.folder_edit.textChanged.connect(self.update)
+        self.add_meta_button.clicked.connect(self.add_meta)
 
     def update(self):
         '''
@@ -132,6 +131,30 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         '''
         self.project_node.project_folder = (str(self.folder_edit.text()))
         #self.value_changed.emit()
+
+    def add_meta(self):
+        name, ok = QtGui.QInputDialog.getText(
+            None, 'Metadaten', _fromUtf8('Name des neuen Felds:'),
+            QtGui.QLineEdit.Normal, '')
+        if ok:
+            error_msg = ''
+            name = str(name)
+            if len(name) == 0:
+                error_msg = 'Sie haben keinen Namen für das Feld angegeben!'
+            if self.project_node.meta.has_key(name):
+                error_msg = 'Das Feld "{}" ist bereits vorhanden!'.format(name)
+            if error_msg:
+                QtGui.QMessageBox.about(None, "Fehler", _fromUtf8(error_msg))
+                return
+            label = QtGui.QLabel(name)
+            edit = QtGui.QLineEdit()
+            edit.setReadOnly(False)
+            self.project_node.set_meta(name, '')
+            edit.textChanged.connect(
+                partial((lambda key, value:
+                         self.project_node.set_meta(key, str(value))),
+                        name))
+            self.meta_layout.addRow(label, edit)
 
 
 class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
