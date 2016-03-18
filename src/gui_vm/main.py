@@ -2,7 +2,13 @@
 from argparse import ArgumentParser
 import sys
 from gui_vm.control.main_control import MainWindow
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
 
 def startmain():
     parser = ArgumentParser(description="GUI Verkehrsmodelle")
@@ -46,10 +52,38 @@ def startmain():
         print('Um ein Szenario ausführen zu können, muss eine Projektdatei angegeben werden')
         ret = -1
     else:
+        splash_pix = QtGui.QPixmap(":/buttons/icons/splash-screen.png")
+        splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        #info = QtGui.QTextEdit(splash)
+        #info.setStyleSheet("background: transparent") <-transparency doesn't work, use labels instead
+        label1 = QtGui.QLabel(splash)
+        label1.setText(_fromUtf8('Lade Oberfläche.'))
+        label2 = QtGui.QLabel(splash)
+        label2.setText(_fromUtf8('Bitte warten...'))
+        label1.setStyleSheet("QLabel { color : white; }");
+        label2.setStyleSheet("QLabel { color : white; }");
+        label1.setGeometry(
+            (splash.width() - label1.sizeHint().width()) / 2,
+            (splash.height() - label1.sizeHint().height()) / 2 - 30,
+            label1.sizeHint().width(),
+            label1.sizeHint().height()
+        )
+        label2.setGeometry(
+            (splash.width() - label2.sizeHint().width()) / 2,
+            (splash.height() - label2.sizeHint().height()) / 2 - 10,
+            label2.sizeHint().width(),
+            label2.sizeHint().height()
+        )
+
+        splash.show()
+        splash.setMask(splash_pix.mask())
+        splash.show()
         mainwindow = MainWindow(project_file=project_file,
                                 run_scenario=run_scenario,
                                 admin_mode=admin_mode)
         mainwindow.show()
+        splash.close()
+        # splash.hide()
         if run_scenario:
             # main window closes after closing run dialog, because not exec_()
             mainwindow.batch_run(scenario_name=run_scenario,

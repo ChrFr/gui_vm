@@ -1010,10 +1010,6 @@ class OutputNode(ResourceNode):
             return True
         return False
 
-    #@property
-    #def status(self):
-    #    return None
-
 
 class XMLParser(object):
     '''

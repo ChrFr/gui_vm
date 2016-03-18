@@ -288,8 +288,8 @@ class VMProjectControl(ProjectTreeControl):
                 InputNode: [self._reset_resource, 'Eingabedaten zurücksetzen', True]
             },
             'open': {
-                Scenario: [self._open_explorer, 'in Windows-Explorer anzeigen', False],
-                Project: [self._open_explorer, 'in Windows-Explorer anzeigen', False],
+                Scenario: [self._open_explorer, 'in Explorer anzeigen', False],
+                Project: [self._open_explorer, 'in Explorer anzeigen', False],
                 InputNode: [self.edit_resource, 'Quelldatei öffnen', True],
                 OutputNode: [self.edit_resource, 'Quelldatei öffnen', True]
             },
@@ -307,14 +307,14 @@ class VMProjectControl(ProjectTreeControl):
             },
             'copy': {
                 Scenario: [self.clone_scenario, 'Szenario klonen', False],
-                OutputNode: [self._copy_special_run, 'spezifischen Lauf kopieren', True]
+                OutputNode: [self._copy_special_run, 'Lauf kopieren', True]
             },
             'clean': {
 
             },
             'other': {
-                OutputNode: [self._open_explorer, 'in Windows-Explorer anzeigen', False],
-                InputNode: [self._open_explorer, 'in Windows-Explorer anzeigen', False]
+                OutputNode: [self._open_explorer, 'in Explorer anzeigen', False],
+                InputNode: [self._open_explorer, 'in Explorer anzeigen', False]
             },
         }
 
@@ -519,8 +519,13 @@ class VMProjectControl(ProjectTreeControl):
 
     def _open_explorer(self, path=None):
         if not path:
-            if hasattr(self.selected_item, 'path'):
+            # resources have file paths
+            if hasattr(self.selected_item, 'file_absolute'):
+                path = os.path.split(self.selected_item.file_absolute)[0]
+            # scenarios have paths
+            elif hasattr(self.selected_item, 'path'):
                 path = self.selected_item.path
+            # projects only specify the root folder
             elif hasattr(self.selected_item, 'project_folder'):
                 path = self.selected_item.project_folder
             else:
@@ -770,6 +775,11 @@ class VMProjectControl(ProjectTreeControl):
     def _copy_special_run(self, output_node=None):
         if not output_node:
             output_node = self.selected_item
+        if output_node.is_primary:
+            QtGui.QMessageBox.about(
+                None, 'Fehler',
+                _fromUtf8('Gesamtläufe können nicht kopiert werden.'))
+            return
         new_name, scenario_name, ok = CopySpecialRunDialog.getValues(output_node)
         if ok:
             scenario = self.project.get_child(scenario_name)
