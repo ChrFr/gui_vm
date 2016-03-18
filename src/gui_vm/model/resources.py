@@ -2,11 +2,11 @@
 
 ##------------------------------------------------------------------------------
 ## File:        resources.py
-## Purpose:     contains classes wrapping resource files (like h5 etc.)  
+## Purpose:     contains classes wrapping resource files (like h5 etc.)
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -22,11 +22,11 @@ import copy
 class Status(object):
     '''
     class for managing status flags observing specific attributes (observation is not handled by Status-class)
-    and the relations between parent- and child-statuses, 
-    is organized as a dictionary, values can be Status-objects themselfes 
+    and the relations between parent- and child-statuses,
+    is organized as a dictionary, values can be Status-objects themselfes
     (parent-child relation is represented this way)
-    '''    
-    
+    '''
+
     #status flags (with ascending priority)
     NOT_CHECKED = 0
     NOT_NEEDED = 1
@@ -34,15 +34,15 @@ class Status(object):
     CHECKED_AND_VALID = 3
     NOT_FOUND = 4
     MISMATCH = 5
-    
+
     DEFAULT_MESSAGES = ['', 'nicht benötigt', 'vorhanden', 'überprüft',
                         'nicht vorhanden', 'Fehler']
-    
+
     def __init__(self):
         self.messages = []
         self.code = self.NOT_CHECKED
         self._flag_dict = {}
-        
+
     @property
     def flags(self):
         '''
@@ -51,11 +51,11 @@ class Status(object):
         list of names of all contained flags
         '''
         return self._flag_dict.keys()
-        
+
     def add(self, flag):
         '''
         add a new flag, is initialized with 'unchecked'
-        
+
         Parameter
         ----------------
         flag: name of the flag
@@ -63,13 +63,13 @@ class Status(object):
         if self._flag_dict.has_key(flag):
             print 'Warning: status already contains flag "{}". Addition is ignored.'.format(flag)
             return
-        self._flag_dict[flag] = self.NOT_CHECKED, self.DEFAULT_MESSAGES[self.NOT_CHECKED]   
-            
+        self._flag_dict[flag] = self.NOT_CHECKED, self.DEFAULT_MESSAGES[self.NOT_CHECKED]
+
     def set(self, flag, value, message=None):
         '''
-        set the status-code of a flag, is added if not exisiting, 
+        set the status-code of a flag, is added if not exisiting,
         else values are overwritten
-        
+
         Parameter
         ----------------
         flag: name of the flag
@@ -77,34 +77,34 @@ class Status(object):
         message: optional, message belonging to current status of this flag (default message is taken, if not given)
         '''
         if isinstance(value, Status):
-            self._flag_dict[flag] = value 
+            self._flag_dict[flag] = value
             return
         if not message:
             message = self.DEFAULT_MESSAGES[value]
-        self._flag_dict[flag] = value, message 
-    
+        self._flag_dict[flag] = value, message
+
     def get(self, flag):
         '''
         get the currently set status of the flag
-        
+
         Parameter
         ----------------
         flag: name of the flag
-        
+
         Return
         ----------------
         tuple of (status_code, message)
         '''
-        return self._flag_dict[flag]      
-    
+        return self._flag_dict[flag]
+
     def get_flag_message(self, flag):
         '''
         get the currently set status-message of the flag
-        
+
         Parameter
         ----------------
         flag: name of the flag
-        
+
         Return
         ----------------
         string
@@ -112,16 +112,16 @@ class Status(object):
         value = self._flag_dict[flag]
         if isinstance(value, Status):
             return ', '.join(value.messages)
-        return self._flag_dict[flag][1]         
-    
+        return self._flag_dict[flag][1]
+
     def get_flag_code(self, flag):
         '''
         get the currently set status-code of the flag
-        
+
         Parameter
         ----------------
         flag: name of the flag
-        
+
         Return
         ----------------
         int
@@ -129,8 +129,8 @@ class Status(object):
         value = self._flag_dict[flag]
         if isinstance(value, Status):
             return value.code
-        return self._flag_dict[flag][0]    
-            
+        return self._flag_dict[flag][0]
+
     def merge(self):
         '''
         calculate and set the status of this resource by checking the
@@ -140,31 +140,31 @@ class Status(object):
         status_code = self.NOT_CHECKED
         messages = []
         for flag in self._flag_dict.values():
-            
+
             # flag is Status itself
             if isinstance(flag, Status):
                 flag.merge()
                 child_status = flag.code
-                child_msgs = flag.messages  
+                child_msgs = flag.messages
                 for child_msg in child_msgs:
                     if len(child_msg) > 0 and child_msg not in messages:
-                        messages.append(child_msg)              
+                        messages.append(child_msg)
                 if child_status > status_code:
-                    status_code = child_status    
+                    status_code = child_status
                 continue
-                
+
             if not isinstance(flag, tuple):
                 flag = (flag, self.DEFAULT_MESSAGES[flag])
-                
+
             msg = flag[1]
             if len(msg) > 0 and msg not in messages:
                 messages.append(msg)
             if flag[0] > status_code:
                 status_code = flag[0]
-                
+
         self.code = status_code
-        self.messages = messages    
-        
+        self.messages = messages
+
 
 class Resource(Observable):
     '''
@@ -177,8 +177,8 @@ class Resource(Observable):
     Parameter
     ---------
     name: String, the name this resource gets
-    '''    
-    
+    '''
+
     #dictionary for monitored attributes
     monitored = OrderedDict()
 
@@ -226,15 +226,15 @@ class Resource(Observable):
         for child in self.children:
             child.update(path)
         self._status.merge()
-        
-        
+
+
     @property
     def status(self, overwrite=None):
         '''
         dictionary with pretty attributes as keys and a tuple as values
         with the actual value, a message and a status flag (as int)
         can be nested if there are child resources, their status will
-        appear instead of the message 
+        appear instead of the message
         (does not return the status-object!)
 
         Return
@@ -264,7 +264,7 @@ class Resource(Observable):
             attributes.update(child.status)
         status_dict[self.name] = (attributes, ', '.join(self._status.messages),
                              self._status.code)
-        return status_dict    
+        return status_dict
 
     @property
     def is_checked(self):
@@ -284,12 +284,26 @@ class Resource(Observable):
     def is_valid(self):
         '''
         returns, if the resource is valid (= marked as valid after checking without getting errors)
-        
+
         Return
         ------
         boolean - true, if resource is valid, false else
         '''
         if self._status.code == Status.CHECKED_AND_VALID:
+            return True
+        else:
+            return False
+
+    @property
+    def is_found(self):
+        '''
+        returns, if the resource-file exists
+
+        Return
+        ------
+        boolean - true, if resource is found, false else
+        '''
+        if self._status.code == Status.FOUND:
             return True
         else:
             return False
@@ -402,12 +416,12 @@ class ResourceFile(Resource):
         '''
         read the resource from file at given path
         When inheriting from Resource, method foo must be overridden.
-        
+
         Return
         ------------
         tuple (file, boolean) - the opened file and true, if successfully opened
         '''
-        raise NotImplementedError    
+        raise NotImplementedError
         return None, None
 
 class H5Resource(ResourceFile):
@@ -430,16 +444,16 @@ class H5Resource(ResourceFile):
         super(H5Resource, self).__init__(
             name, subfolder=subfolder,
             filename=filename)
-        
+
     def read(self, path):
         '''
         Override:
         read the resource from H5-file at given path (subfolder and filename of resource will be added automatically)
-        
+
         Parameters
         ----------
         path: the absolute path to the working directory of the resource (excl. subfolder and filename)
-        
+
         Return
         ----------
         tuple (file, boolean) - the opened h5-file and true, if successfully opened
@@ -471,7 +485,7 @@ class H5Resource(ResourceFile):
         #close file
         del(h5_in)
         self._status.merge()
-        
+
 
 class H5Node(H5Resource):
     '''
@@ -705,7 +719,7 @@ class H5TableColumn(H5Resource):
                 content = np.char.decode(content, encoding='CP1252')
             #check if all values are unique if primary key
             if self.primary_key and np.unique(content).size != content.size:
-                
+
                 self._status.set('primary_key', Status.MISMATCH, 'Werte nicht eindeutig')
             #if content of column is observed, set it
             if 'content' in self._observed:

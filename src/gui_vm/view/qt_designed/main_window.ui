@@ -247,7 +247,7 @@ QPushButton:hover, #context_button_group&gt;QPushButton:hover{
               <widget class="QPushButton" name="open_button">
                <property name="minimumSize">
                 <size>
-                 <width>33</width>
+                 <width>28</width>
                  <height>0</height>
                 </size>
                </property>
@@ -269,8 +269,8 @@ QPushButton:hover, #context_button_group&gt;QPushButton:hover{
                </property>
                <property name="iconSize">
                 <size>
-                 <width>24</width>
-                 <height>24</height>
+                 <width>26</width>
+                 <height>19</height>
                 </size>
                </property>
               </widget>

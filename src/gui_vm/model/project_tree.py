@@ -997,8 +997,9 @@ class OutputNode(ResourceNode):
     def validate(self):
         self.resource.validate(self.path)
         self.is_checked = True
-        # TODO: closer validation
-        self.is_valid = self.resource.is_valid
+        # at the moment there is no closer validation
+        # needed for output-resources, file found is sufficient
+        self.is_valid = self.resource.is_found
 
     @property
     def is_primary(self):

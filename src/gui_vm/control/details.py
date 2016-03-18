@@ -167,7 +167,13 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             self.remove_button.clicked.connect(
                 lambda: self.project_control.remove_resource(self.resource_node))
         #self.file_edit.textChanged.connect(self.update)
-        self.status_button.clicked.connect(self.get_status)
+
+        # edit button disabled at the moment, many other ways to edit file via ui (try not to confuse the user)
+        self.edit_button.setVisible(False)
+
+        # status button not needed anymore, because status is frequently updated
+        #self.status_button.clicked.connect(self.get_status)
+        self.status_button.setVisible(False)
         self.setMinimumSize(500, 0)
         self.update()
 
