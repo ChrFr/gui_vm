@@ -30,8 +30,8 @@ except AttributeError:
 
 XML_FILTER = 'XML-Dateien (*.xml)'
 ALL_FILES_FILTER = 'Alle Dateien (*.*)'
-H5_FILES_FILTER = 'HDF5-Dateien (*.h5)'
-CALLABLE_FILES_FILTER = 'Ausfuehrbare Dateien (*.exe)'
+HDF5_FILES_FILTER = 'HDF5-Dateien (*.h5)'
+CALLABLE_FILES_FILTER = 'Ausführbare Dateien (*.exe)'
 PROJECT_FILE_FILTER = 'Projektdatei ({})'.format(Project.FILENAME_DEFAULT)
 TRAFFICMODEL_FILE_FILTER = 'Verkehrsmodell ({})'.format(Project.FILENAME_DEFAULT)
 
@@ -78,8 +78,8 @@ def browse_file(parent, directory=None, filters=None, selected_filter_idx=None):
         QtGui.QFileDialog.getOpenFileName(
             parent, _fromUtf8('Datei wählen'),
             directory,
-            ';;'.join(filters),
-            filters[selected_filter_idx]
+            _fromUtf8(';;'.join(filters)),
+            _fromUtf8(filters[selected_filter_idx])
         ))
     return filename
 
@@ -327,7 +327,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
             recent = h[0]
         #default = config.settings['environment']['default_project_folder']
         self.folder_edit.setText(recent)
-        self.folder_browse_button.clicked.connect(lambda: browse_folder(self, self.folder_edit))
+        self.folder_browse_button.clicked.connect(lambda: set_directory(self, self.folder_edit))
         self.show()
 
     @staticmethod
@@ -557,10 +557,6 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         )
         self.verkmod_default_browse_button.setDisabled(True)
         self.verkmod_exec_browse_button.setDisabled(True)
-        #self.verkmod_default_browse_button.clicked.connect(
-            #lambda: self.set_folder(self.verkmod_default_edit))
-        #self.verkmod_exec_browse_button.clicked.connect(
-            #lambda: self.set_file(self.verkmod_exec_edit, '*.exe'))
 
         self.OK_button.clicked.connect(self.write_config)
         self.reset_button.clicked.connect(self.reset)
@@ -606,36 +602,6 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         #verkmod = mod['VerkMod']
         #self.verkmod_default_edit.setText(verkmod['default_folder'])
         #self.verkmod_exec_edit.setText(verkmod['executable'])
-
-
-    def set_file(self, line_edit, extension, do_split=False):
-        '''
-        open a file browser to put a path to a file into the given line edit
-        '''
-        try:
-            current = os.path.split(str(line_edit.text()))[0]
-        except:
-            current = ''
-
-        filename = str(
-            QtGui.QFileDialog.getOpenFileName(
-                self, _fromUtf8('Datei wählen'), current+'/'+extension))
-        if do_split:
-            filename = os.path.split(filename)[0]
-        #filename is '' if canceled
-        if len(filename) > 0:
-            line_edit.setText(filename)
-
-    def set_folder(self, line_edit):
-        '''
-        open a file browser to put a directory into the given line edit
-        '''
-        folder = str(
-            QtGui.QFileDialog.getExistingDirectory(
-                self, 'Ordner wählen', directory=line_edit.text()))
-        #folder is '' if canceled
-        if len(folder) > 0:
-            line_edit.setText(folder)
 
     def write_config(self):
         env = config.settings['environment']

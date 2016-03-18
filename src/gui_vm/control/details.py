@@ -15,7 +15,7 @@ from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
 from gui_vm.model.resources import Status
 from gui_vm.control.dialogs import (CopyFilesDialog, RunOptionsDialog,
-                                    InputDialog, ExecDialog)
+                                    InputDialog, ExecDialog, set_directory)
 from PyQt4 import QtGui, QtCore
 from gui_vm.config.config import Config
 from functools import partial
@@ -123,7 +123,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
                         meta))
             self.meta_layout.addRow(label, edit)
         self.folder_edit.setText(str(self.project_node.project_folder))
-        #self.folder_browse_button.clicked.connect(self.browse_folder)
+        #self.folder_browse_button.clicked.connect(lambda: set_directory(self, self.folder_edit))
         self.folder_edit.textChanged.connect(self.update)
 
     def update(self):
@@ -132,17 +132,6 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         '''
         self.project_node.project_folder = (str(self.folder_edit.text()))
         #self.value_changed.emit()
-
-    def browse_folder(self):
-        '''
-        open a file browser to set the project folder
-        '''
-        folder = str(
-            QtGui.QFileDialog.getExistingDirectory(
-                self, 'Projektverzeichnis wählen', '.'))
-        #filename is '' if aborted
-        if len(folder) > 0:
-            self.folder_edit.setText(folder)
 
 
 class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):

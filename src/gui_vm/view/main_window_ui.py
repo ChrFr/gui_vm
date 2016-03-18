@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Fri Feb 26 16:47:57 2016
+# Created: Fri Mar 18 11:52:50 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -105,6 +105,12 @@ class Ui_MainWindow(object):
 "    background: rgb(225, 225, 225);\n"
 "}\n"
 "\n"
+"QPushButton{\n"
+"    border: 1px solid grey;\n"
+"    border-radius: 2px; \n"
+"    background: rgb(245, 245, 245);\n"
+"}\n"
+"\n"
 "#context_button_group>QPushButton{\n"
 "    border: none;\n"
 "}\n"
@@ -115,11 +121,11 @@ class Ui_MainWindow(object):
 "    background: rgb(245, 245, 245);\n"
 "}\n"
 "\n"
-"#context_button_group>QPushButton:hover {\n"
-"    border: 1px;\n"
-"    border-radius: 4;\n"
-"    background: rgb(197, 204, 248);\n"
-"}"))
+"QPushButton:hover, #context_button_group>QPushButton:hover{\n"
+"    border: 1px solid rgb(112, 111, 142);\n"
+"    background: rgb(235, 235, 250)\n"
+"}\n"
+""))
         self.button_bar.setFrameShape(QtGui.QFrame.Box)
         self.button_bar.setFrameShadow(QtGui.QFrame.Sunken)
         self.button_bar.setObjectName(_fromUtf8("button_bar"))
@@ -131,6 +137,7 @@ class Ui_MainWindow(object):
         self.new_button = QtGui.QPushButton(self.button_bar)
         self.new_button.setMinimumSize(QtCore.QSize(0, 0))
         self.new_button.setMaximumSize(QtCore.QSize(30, 30))
+        self.new_button.setAutoFillBackground(False)
         self.new_button.setText(_fromUtf8(""))
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/new.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -139,13 +146,13 @@ class Ui_MainWindow(object):
         self.new_button.setObjectName(_fromUtf8("new_button"))
         self.horizontalLayout.addWidget(self.new_button)
         self.open_button = QtGui.QPushButton(self.button_bar)
-        self.open_button.setMinimumSize(QtCore.QSize(0, 0))
+        self.open_button.setMinimumSize(QtCore.QSize(33, 0))
         self.open_button.setMaximumSize(QtCore.QSize(30, 30))
         self.open_button.setText(_fromUtf8(""))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/open.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.open_button.setIcon(icon2)
-        self.open_button.setIconSize(QtCore.QSize(28, 28))
+        self.open_button.setIconSize(QtCore.QSize(24, 24))
         self.open_button.setObjectName(_fromUtf8("open_button"))
         self.horizontalLayout.addWidget(self.open_button)
         spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
@@ -162,15 +169,33 @@ class Ui_MainWindow(object):
         self.plus_button = QtGui.QPushButton(self.context_button_group)
         self.plus_button.setGeometry(QtCore.QRect(10, 5, 25, 25))
         palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(202, 202, 202))
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
+        brush = QtGui.QBrush(QtGui.QColor(245, 245, 245))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
         self.plus_button.setPalette(palette)
         self.plus_button.setText(_fromUtf8(""))
         icon3 = QtGui.QIcon()

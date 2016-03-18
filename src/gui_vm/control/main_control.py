@@ -7,7 +7,8 @@ from PyQt4 import QtGui, QtCore
 from gui_vm.control.project_control import VMProjectControl
 from gui_vm.control.project_control import disable_while_processing
 from gui_vm.model.project_tree import Project
-from gui_vm.control.dialogs import NewProjectDialog, SettingsDialog
+from gui_vm.control.dialogs import (NewProjectDialog, SettingsDialog,
+                                    browse_file, PROJECT_FILE_FILTER)
 from gui_vm.config.config import Config
 from gui_vm.model.project_tree import TreeNode, Scenario
 
@@ -181,11 +182,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         else:
             recent = '.'
         if not project_file:
-            project_file = str(QtGui.QFileDialog.getOpenFileName(
-                self,
-                _fromUtf8('Projektdatei auswählen'),
-                recent,
-                Project.FILENAME_DEFAULT))
+            project_file = browse_file(self, directory=recent,
+                                       filters=[PROJECT_FILE_FILTER])
         project_folder = os.path.split(project_file)[0]
         if len(project_file) > 0:
             if os.path.isfile(project_file):

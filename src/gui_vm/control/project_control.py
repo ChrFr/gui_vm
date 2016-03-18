@@ -22,7 +22,7 @@ from gui_vm.config.config import Config
 import os, subprocess
 from shutil import rmtree
 import subprocess
-from dialogs import browse_file, ALL_FILES_FILTER, H5_FILES_FILTER
+from dialogs import browse_file, ALL_FILES_FILTER, HDF5_FILES_FILTER
 
 config = Config()
 
@@ -303,7 +303,7 @@ class VMProjectControl(ProjectTreeControl):
                 Scenario: [self.run, 'Gesamtlauf starten', True]
             },
             'switch_lock': {
-                Scenario: [self._switch_lock, 'Szenario sperren', True],
+                Scenario: [self._switch_lock, 'Szenario sperren', False],
             },
             'copy': {
                 Scenario: [self.clone_scenario, 'Szenario klonen', False],
@@ -366,12 +366,10 @@ class VMProjectControl(ProjectTreeControl):
         current_path = input_node.file_absolute
         if not current_path:
             current_path = config.settings['trafficmodels'][
-                input_node.model.name]['default_folder'] + '/*.h5'
-        fileinput = browse_file(config.mainWindow, directory=current_path, filters=None, selected_filter_idx=None)
-        str(
-            QtGui.QFileDialog.getOpenFileName(
-                config.mainWindow, _fromUtf8('Ressourcendatei öffnen'),
-                current_path))
+                input_node.model.name]['default_folder']
+        fileinput = browse_file(config.mainWindow, directory=current_path,
+                                filters=[ALL_FILES_FILTER, HDF5_FILES_FILTER],
+                                selected_filter_idx=1)
         #filename is '' if aborted
         if len(fileinput) == 0:
             return None
