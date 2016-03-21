@@ -29,6 +29,17 @@ except AttributeError:
     def _fromUtf8(s):
         return s
 
+def clear_layout(layout):
+    for i in reversed(range(layout.count())):
+        item = layout.itemAt(i)
+        # item has children -> is a layout itself, recursive call
+        if isinstance(item, QtGui.QLayout):
+            clear_layout(item)
+        widget = item.widget()
+        if widget:
+            widget.deleteLater()
+
+
 class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
     '''
     display the details of a simrun node in the given layout
@@ -36,8 +47,8 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
 
     Parameters
     ----------
-    node: SimRun,
-          node, that contains the
+    node: Scenario,
+          node, that contains the informations about a single scenario and it's resources
     layout: QVBoxLayout,
             the elements showing the details are added as children of this
             layout
@@ -111,19 +122,40 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         self.setupUi(self)
         self.project_node = project_node
         self.setTitle(project_node.name)
-        for meta in project_node.meta:
-            label = QtGui.QLabel(meta)
-            edit = QtGui.QLineEdit(project_node.meta[meta])
-            edit.setReadOnly(False)
-            edit.textChanged.connect(
-                partial((lambda key, value:
-                         self.project_node.set_meta(key, str(value))),
-                        meta))
-            self.meta_layout.addRow(label, edit)
         self.folder_edit.setText(str(self.project_node.project_folder))
         #self.folder_browse_button.clicked.connect(lambda: set_directory(self, self.folder_edit))
         self.folder_edit.textChanged.connect(self.update)
         self.add_meta_button.clicked.connect(self.add_meta)
+        self.reload_meta()
+
+    def reload_meta(self):
+        clear_layout(self.meta_layout)
+
+        for meta in self.project_node.meta:
+            self.add_meta_row(meta, self.project_node.meta[meta])
+
+    def add_meta_row(self, meta, meta_value):
+        label = QtGui.QLabel(meta)
+        edit = QtGui.QLineEdit(meta_value)
+        edit.setReadOnly(False)
+        edit.textChanged.connect(
+            partial((lambda key, value:
+                     self.project_node.set_meta(key, str(value))),
+                    meta))
+        self.meta_layout.addRow(label, edit)
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(edit)
+        # you should not edit or delete certain fields (ToDo: define it in project)
+        if meta == 'Uhrzeit' or meta == 'Datum':
+            edit.setReadOnly(True)
+        elif meta != 'Beschreibung' and meta != 'Autor':
+            minus_button = QtGui.QPushButton(self.gridLayoutWidget)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/minus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            minus_button.setIcon(icon)
+            layout.addWidget(minus_button)
+            minus_button.clicked.connect(partial(self.remove_meta, meta))
+        self.meta_layout.addRow(label, layout)
 
     def update(self):
         '''
@@ -133,29 +165,25 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         #self.value_changed.emit()
 
     def add_meta(self):
-        name, ok = QtGui.QInputDialog.getText(
+        meta, ok = QtGui.QInputDialog.getText(
             None, 'Metadaten', _fromUtf8('Name des neuen Felds:'),
             QtGui.QLineEdit.Normal, '')
         if ok:
             error_msg = ''
-            name = str(name)
-            if len(name) == 0:
+            meta = str(meta)
+            if len(meta) == 0:
                 error_msg = 'Sie haben keinen Namen für das Feld angegeben!'
-            if self.project_node.meta.has_key(name):
-                error_msg = 'Das Feld "{}" ist bereits vorhanden!'.format(name)
+            if self.project_node.meta.has_key(meta):
+                error_msg = 'Das Feld "{}" ist bereits vorhanden!'.format(meta)
             if error_msg:
                 QtGui.QMessageBox.about(None, "Fehler", _fromUtf8(error_msg))
                 return
-            label = QtGui.QLabel(name)
-            edit = QtGui.QLineEdit()
-            edit.setReadOnly(False)
-            self.project_node.set_meta(name, '')
-            edit.textChanged.connect(
-                partial((lambda key, value:
-                         self.project_node.set_meta(key, str(value))),
-                        name))
-            self.meta_layout.addRow(label, edit)
+            self.project_node.set_meta(meta, '')
+            self.add_meta_row(meta, '')
 
+    def remove_meta(self, meta):
+        self.project_node.remove_meta(meta)
+        self.reload_meta()
 
 class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
     '''

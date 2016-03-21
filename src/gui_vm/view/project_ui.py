@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Fri Mar 18 16:44:24 2016
+# Created: Mon Mar 21 13:21:34 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -39,10 +39,6 @@ class Ui_DetailsProject(object):
         self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setMargin(0)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.folder_edit = QtGui.QLineEdit(self.gridLayoutWidget)
-        self.folder_edit.setReadOnly(True)
-        self.folder_edit.setObjectName(_fromUtf8("folder_edit"))
-        self.gridLayout.addWidget(self.folder_edit, 0, 1, 1, 1)
         self.label = QtGui.QLabel(self.gridLayoutWidget)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
@@ -50,23 +46,24 @@ class Ui_DetailsProject(object):
         self.meta_layout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.meta_layout.setContentsMargins(-1, -1, 9, -1)
         self.meta_layout.setObjectName(_fromUtf8("meta_layout"))
+        self.gridLayout.addLayout(self.meta_layout, 3, 0, 1, 3)
+        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.gridLayout.addItem(spacerItem, 1, 0, 1, 1)
         self.label_2 = QtGui.QLabel(self.gridLayoutWidget)
         self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.meta_layout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_2)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
+        self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
         self.add_meta_button = QtGui.QPushButton(self.gridLayoutWidget)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/plus.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.add_meta_button.setIcon(icon)
         self.add_meta_button.setObjectName(_fromUtf8("add_meta_button"))
-        self.horizontalLayout.addWidget(self.add_meta_button)
-        self.meta_layout.setLayout(0, QtGui.QFormLayout.FieldRole, self.horizontalLayout)
-        self.gridLayout.addLayout(self.meta_layout, 3, 0, 1, 3)
-        spacerItem1 = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.gridLayout.addItem(spacerItem1, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.add_meta_button, 2, 2, 1, 1)
+        self.folder_edit = QtGui.QLineEdit(self.gridLayoutWidget)
+        self.folder_edit.setReadOnly(True)
+        self.folder_edit.setObjectName(_fromUtf8("folder_edit"))
+        self.gridLayout.addWidget(self.folder_edit, 0, 1, 1, 2)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem1, 2, 1, 1, 1)
 
         self.retranslateUi(DetailsProject)
         QtCore.QMetaObject.connectSlotsByName(DetailsProject)

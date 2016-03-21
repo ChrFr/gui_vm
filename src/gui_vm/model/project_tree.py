@@ -23,6 +23,7 @@ from gui_vm.model.resources import ResourceFile, H5Resource
 from gui_vm.model.traffic_model import TrafficModel
 from gui_vm.model.observable import Observable
 from gui_vm.model.backend import hard_copy
+from collections import OrderedDict
 
 #dictionary defines how classes are called when written to xml
 #also used while reading xml project config
@@ -702,13 +703,17 @@ class Project(TreeNode):
         super(Project, self).__init__(name, parent=parent)
         self.project_folder = os.path.normpath(project_folder) if project_folder else None
         #all projects are stored in xmls with the same name
-        self.meta = {}
+        self.meta = OrderedDict()
         self.meta['Datum'] = time.strftime("%d.%m.%Y")
         self.meta['Uhrzeit'] = time.strftime("%H:%M:%S")
+        self.meta['Beschreibung'] = 'erstellt am ' + self.meta['Datum']
         self.meta['Autor'] = ''
 
     def set_meta(self, key, value):
         self.meta[key] = value
+
+    def remove_meta(self, key):
+        self.meta.pop(key, None)
 
     @property
     def filename(self):
@@ -754,8 +759,9 @@ class Project(TreeNode):
         ------
         String
         '''
-        note = self.meta['Datum']
-        return note
+        if self.meta.has_key('Beschreibung'):
+            return self.meta['Beschreibung']
+        return ''
 
     def add_scenario(self, model, name=None):
         if name is None:
