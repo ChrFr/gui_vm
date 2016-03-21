@@ -88,8 +88,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             self.data_form.addRow(label, edit)
 
     def special_run(self):
-        prime_run = self.scenario.primary_run
-        self.project_control.add_special_run(self.scenario)
+        run_node = self.project_control.add_special_run(self.scenario)
 
     def changeModel(self, name):
         '''

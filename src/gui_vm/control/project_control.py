@@ -671,8 +671,8 @@ class VMProjectControl(ProjectTreeControl):
                 parent_idx = self.current_index.parent()
                 self.item_clicked(parent_idx.parent())
                 self.tree_view.setCurrentIndex(parent_idx.parent())
-                self.remove_row(parent_idx.row(), parent_idx.parent())
                 self.remove_outputs(scenario)
+                self.remove_row(parent_idx.row(), parent_idx.parent())
         else:
             self.remove_resource(remove_node=True, remove_outputs=False,
                                  confirmation=False)
@@ -948,6 +948,8 @@ class VMProjectControl(ProjectTreeControl):
             msgBox = QtGui.QMessageBox()
             msgBox.setText(msg)
             msgBox.exec_()
+            run_node = scenario.get_output(Scenario.PRIMARY_RUN)
+            self.select_node(run_node)
             return
 
         options, ok = RunOptionsDialog.getValues(scenario, is_primary=True)
@@ -955,6 +957,13 @@ class VMProjectControl(ProjectTreeControl):
             return
         run_node = scenario.add_run(Scenario.PRIMARY_RUN, options)
         self.select_node(run_node)
+        reply = QtGui.QMessageBox.question(
+            None, _fromUtf8('Ausführung'),
+            _fromUtf8('Soll der angelegte Gesamtlauf jetzt durchgeführt werden?'),
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
+        if reply == QtGui.QMessageBox.Yes:
+            self.run(scenario, run_name=run_node.name, options=run_node.options)
+        return run_node
 
     def add_special_run(self, scenario=None, do_choose=False):
         if not scenario and not do_choose:
@@ -991,14 +1000,23 @@ class VMProjectControl(ProjectTreeControl):
             msgBox.exec_()
             return
 
-        options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
+        default = 'spezifischer Lauf {}'.format(
+            len(scenario.get_output_files()) - 1)
+        run_name, ok = InputDialog.getValues(_fromUtf8(
+            'Name für den spezifischen Lauf'), default)
         if ok:
-            default = 'spezifischer Lauf {}'.format(
-                len(scenario.get_output_files()) - 1)
-            run_name, ok = InputDialog.getValues(_fromUtf8(
-                'Name für den spezifischen Lauf'), default)
+            options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
             if ok:
-                scenario.add_run(run_name, options=options)
+                run_node = scenario.add_run(run_name, options=options)
+                self.select_node(run_node)
+                reply = QtGui.QMessageBox.question(
+                    None, _fromUtf8('Ausführung'),
+                    _fromUtf8('Soll der angelegte Lauf jetzt durchgeführt werden?'),
+                    QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
+                if reply == QtGui.QMessageBox.Yes:
+                    self.run(scenario, run_name=run_node.name, options=run_node.options)
+                return run_node
+
 
     def _reset_scenario(self, scenario_node=None, ask_overwrite=True):
         '''
