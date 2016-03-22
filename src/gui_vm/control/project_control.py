@@ -867,12 +867,7 @@ class VMProjectControl(ProjectTreeControl):
                 None, _fromUtf8("Löschen"), _fromUtf8(msg),
                 QtGui.QMessageBox.Ok, QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.Ok:
-                cur_tmp = self.current_index
-                parent_idx = self.current_index.parent()
-                self.select_item(parent_idx.parent())
-                self.tree_view.setCurrentIndex(parent_idx.parent())
                 self.remove_outputs(scenario)
-                self.remove_row(parent_idx.row(), parent_idx.parent())
         else:
             self.remove_resource(remove_node=True, remove_outputs=False,
                                  confirmation=False)
@@ -1525,11 +1520,11 @@ class VMProjectControl(ProjectTreeControl):
         ---------
         scenario: the scenario, where the outputs shall be removed
         '''
-        for output in scenario.get_output_files():
+        for output_node in scenario.get_output_files():
             try:
-                rmtree(os.path.split(output.file_absolute)[0])
+                rmtree(os.path.split(output_node.file_absolute)[0])
             except:
                 pass
-        output = scenario.get_child(scenario.OUTPUT_NODES)
-        if output:
-            output.remove_all_children()
+        output_parent = scenario.get_child(scenario.OUTPUT_NODES)
+        if output_parent:
+            self._remove_node(output_parent)
