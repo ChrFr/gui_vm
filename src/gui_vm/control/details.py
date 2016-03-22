@@ -139,7 +139,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
         edit.setReadOnly(False)
         edit.textChanged.connect(
             partial((lambda key, value:
-                     self.project_node.set_meta(key, str(value))),
+                     self.project_node.set_meta(key, unicode(value.toUtf8(), encoding="UTF-8"))),
                     meta))
         self.meta_layout.addRow(label, edit)
         layout = QtGui.QHBoxLayout()
