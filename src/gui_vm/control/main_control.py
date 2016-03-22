@@ -62,7 +62,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             details_view=self.details_layout)
         self.qtreeview.setModel(self.project_control)
         self.qtreeview.clicked[QtCore.QModelIndex].connect(
-            self.project_control.item_clicked)
+            self.project_control.select_item)
 
         self.qtreeview.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.qtreeview.customContextMenuRequested.connect(

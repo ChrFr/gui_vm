@@ -310,6 +310,9 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         pass
 
     def _insert_node(self, row, column, node, parentIndex):
+        '''
+        insert node at row, column relative to parentIndex
+        '''
         new_index = self.createIndex(row, column, node)
         self.beginInsertRows(parentIndex, row, column)
         self.insertRow(row, parentIndex)
@@ -335,17 +338,17 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
             prev_idx = parent_idx
         else:
             prev_idx = self.createIndex(row-1, 0, node.parent.children[row-1])
-        self.item_clicked(prev_idx)
+        self.select_item(prev_idx)
         self.tree_view.setCurrentIndex(prev_idx)
 
         self.remove_row(index.row(),
                         parent_idx)
         node.remove_all_children()
 
-    def item_clicked(self, index=None):
+    def select_item(self, index=None):
         '''
-        simulate a click on an item with the given index (or current index)
-        inside the tree-view
+        select an index (or current index) inside the tree-view and update
+        the view
 
         Parameter
         ---------
@@ -357,8 +360,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
     def select_node(self, node):
         '''
-        the node will be selected and highlighted inside the project-tree-view
-
+        select and highlight a node inside the project-tree-view
 
         Parameter
         ---------
@@ -366,7 +368,7 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         '''
         row = node.parent.get_row(node.name) if hasattr(node, 'parent') else 0
         index = self.createIndex(row, 0, node)
-        self.item_clicked(index)
+        self.select_item(index)
         self.tree_view.setCurrentIndex(index)
 
 
@@ -422,7 +424,7 @@ class VMProjectControl(ProjectTreeControl):
 
         self.copy_button.clicked.connect(lambda: self.context_function('copy'))
 
-        self.project_changed.connect(self.item_clicked)
+        self.project_changed.connect(self.select_item)
 
         for button in self.button_group.children():
             button.setEnabled(False)
@@ -597,8 +599,7 @@ class VMProjectControl(ProjectTreeControl):
 
     def pop_context_menu(self, pos):
         '''
-        update the view on the project-tree and the details of the currently
-        selected tree-item
+        pop a context menu, content depends on currently selected node
 
         Parameter
         ---------
@@ -615,10 +616,6 @@ class VMProjectControl(ProjectTreeControl):
                 if not depends_on_lock or not node.locked:
                     action_map[context_menu.addAction(_fromUtf8(value[cls][1]))] = \
                         value[cls][0]
-        #shows double details if not hidden
-        for i in reversed(range(self.details_view.count())):
-            widget = self.details_view.itemAt(i).widget()
-            if widget: widget.hide()
 
         action = context_menu.exec_(self.tree_view.mapToGlobal(pos))
         context_menu.close()
@@ -642,6 +639,10 @@ class VMProjectControl(ProjectTreeControl):
             widget = self.details_view.itemAt(i).widget()
             if widget:
                 widget.deleteLater()
+                # hide the widget, because deleteLater is lazy and causes
+                # double widgets, if same node is selected again (e.g. when
+                # popping context menu)
+                widget.hide()
 
         #get new details depending on type of node
         node = self.selected_item
@@ -868,7 +869,7 @@ class VMProjectControl(ProjectTreeControl):
             if reply == QtGui.QMessageBox.Ok:
                 cur_tmp = self.current_index
                 parent_idx = self.current_index.parent()
-                self.item_clicked(parent_idx.parent())
+                self.select_item(parent_idx.parent())
                 self.tree_view.setCurrentIndex(parent_idx.parent())
                 self.remove_outputs(scenario)
                 self.remove_row(parent_idx.row(), parent_idx.parent())
@@ -1483,7 +1484,7 @@ class VMProjectControl(ProjectTreeControl):
         self.model.add_child(Project(name, project_folder=project_folder))
         self.project.on_change(self.project_changed.emit)
         index = self.createIndex(0, 0, self.project)
-        self.item_clicked(index)
+        self.select_item(index)
         self.tree_view.setCurrentIndex(index)
         return True
 
