@@ -141,7 +141,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         QtGui.QMessageBox.about(
             self, 'Info', _fromUtf8('Oberfläche für Verkehrsmodelle. \n' +
             'Copyright: Gertz Gutsche Rümenapp, 2015\n' +
-            'Version: 0.5'))
+            'Version: 0.74'))
 
     def create_project(self):
         '''

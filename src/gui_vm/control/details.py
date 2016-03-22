@@ -213,7 +213,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         else:
             self.browse_button.clicked.connect(self.change_source)
             self.edit_button.clicked.connect(
-                lambda: self.project_control.edit_resource(self.resource_node))
+                lambda: self.project_control.open_resource(self.resource_node))
             self.remove_button.clicked.connect(
                 lambda: self.project_control.remove_resource(self.resource_node))
         #self.file_edit.textChanged.connect(self.update)

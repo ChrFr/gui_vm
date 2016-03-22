@@ -12,7 +12,8 @@
 ##------------------------------------------------------------------------------
 
 from PyQt4 import (QtCore, QtGui)
-from gui_vm.control.details import (ScenarioDetails, ProjectDetails, InputDetails, OutputDetails)
+from gui_vm.control.details import (ScenarioDetails, ProjectDetails,
+                                    InputDetails, OutputDetails)
 from gui_vm.model.project_tree import (Project, TreeNode, Scenario,
                                        InputNode, XMLParser, OutputNode)
 from gui_vm.control.dialogs import (CopyFilesDialog, ExecDialog,
@@ -33,13 +34,22 @@ except AttributeError:
         return s
 
 class _Index(object):
-    """representation of an index"""
+    '''
+    representation of an index
+    '''
     def __init__(self, qmodelindex):
         self.parent = qmodelindex.parent()
         self.row = qmodelindex.row()
         self.column = qmodelindex.column()
 
-def disable_while_processing(function, parameter=None):
+def disable_while_processing(function):
+    '''
+    disable the main-window while executing given function
+
+    Parameter
+    ---------
+    function: executable function
+    '''
     config.mainWindow.setEnabled(False)
     config.mainWindow.repaint()
     function()
@@ -48,14 +58,12 @@ def disable_while_processing(function, parameter=None):
 
 class ProjectTreeControl(QtCore.QAbstractItemModel):
     '''
-    view on the project, holds the project itself and communicates with it,
-    decides how to act on user input,
-    also serves as an itemmodel to make the nodes showable in a qtreeview
-    via indexing
+    view on the project-tree, controls insertion and deletion of nodes,
+    serves as an itemmodel to render the nodes in a qtreeview via indexing
 
     Parameter
     ---------
-    parent: the window, where the dialogs will be shown in
+    view: the window, where the dialogs will be shown in
     '''
 
     project_changed = QtCore.pyqtSignal()
@@ -78,27 +86,35 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
     @current_index.setter
     def current_index(self, value):
+        '''
+        get the index of the currently selected item
+        '''
         self._current_index = _Index(value)
 
     @property
     def selected_item(self):
+        '''
+        get the currently selected node
+        '''
         if self.current_index is None:
             return None
         return self.nodeFromIndex(self.current_index)
 
-    @property
-    def project(self):
-        return self.model.child_at_row(0)
-
     ##### overrides for viewing in qtreeview #####
 
     def headerData(self, section, orientation, role):
+        '''
+        get the data of the header, depending on role and column
+        '''
         if (orientation == QtCore.Qt.Horizontal and
             role == QtCore.Qt.DisplayRole):
             return QtCore.QVariant(self.header[section])
         return QtCore.QVariant()
 
     def index(self, row, column, parent_index):
+        '''
+        get an index at given row and column relative to a parent index
+        '''
         node = self.nodeFromIndex(parent_index)
         if row >= 0 and len(node.children) > row:
             return self.createIndex(row, column, node.child_at_row(row))
@@ -108,7 +124,11 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
 
     def data(self, index, role):
         '''
-        return data to the tableview depending on the requested role
+        return data to the table-view depending on the requested role at
+        given index (= style and content of nodes at index), not meant to
+        be called manually, is called by table-view only
+
+        the returned QVariant defines the "style" and content used for the role
         '''
         node = self.nodeFromIndex(index)
         if node is None:
@@ -161,15 +181,36 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
             return QtCore.QVariant()
 
     def columnCount(self, parent):
+        '''
+        get number of columns
+
+        Parameter
+        ---------
+        parent: is obsolete, just taken in account here because of override)
+        '''
         return len(self.header)
 
-    def rowCount(self, parent):
-        node = self.nodeFromIndex(parent)
+    def rowCount(self, index):
+        '''
+        get the number of child-nodes of node at given index
+
+        Parameter
+        ---------
+        index: QModelIndex, index of the node
+        '''
+        node = self.nodeFromIndex(index)
         if node is None:
             return 0
         return node.child_count
 
     def parent(self, child_idx):
+        '''
+        get the parent index
+
+        Parameter
+        ---------
+        child_idx: QModelIndex, index of the child
+        '''
         if not child_idx.isValid():
             return QtCore.QModelIndex()
 
@@ -199,20 +240,61 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         return self.createIndex(row, 0, parent)
 
     def nodeFromIndex(self, index):
+        '''
+        get a node at the given index
+
+        Parameter
+        ---------
+        index: QModelIndex, index of the node
+        '''
         return index.internalPointer() if index.isValid() else self.model
 
     def insertRow(self, row, parent):
+        '''
+        insert single row
+
+        Parameter
+        ---------
+        row:         number of the row where it is inserted
+        parentindex: QModelIndex, index of parent node
+        '''
         return self.insertRows(row, 1, parent)
 
     def insertRows(self, row, count, parent):
+        '''
+        insert multiple rows
+
+        Parameter
+        ---------
+        row:         number of the row in relation to parent
+        count:       number of rows to be inserted after given row
+        parentindex: QModelIndex, index of parent node
+        '''
         self.beginInsertRows(parent, row, (row + (count - 1)))
         self.endInsertRows()
         return True
 
     def remove_row(self, row, parentIndex):
+        '''
+        remove a row from the tree-view
+
+        Parameter
+        ---------
+        row:         number of the row in relation to parent
+        parentindex: QModelIndex, index of parent node
+        '''
         return self.removeRows(row, 1, parentIndex)
 
     def removeRows(self, row, count, parentIndex):
+        '''
+        remove multiple rows from the tree-view
+
+        Parameter
+        ---------
+        row:         number of the row in relation to parent
+        count:       number of rows to be removed starting from given row
+        parentindex: QModelIndex, index of parent node
+        '''
         self.beginRemoveRows(parentIndex, row, row)
         node = self.nodeFromIndex(parentIndex)
         if node is not None and len(node.children) > row:
@@ -222,11 +304,88 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         return True
 
     def pop_context_menu(self, pos):
+        '''
+        override this one, if you want to enable context menu
+        '''
         pass
+
+    def _insert_node(self, row, column, node, parentIndex):
+        new_index = self.createIndex(row, column, node)
+        self.beginInsertRows(parentIndex, row, column)
+        self.insertRow(row, parentIndex)
+        self.endInsertRows()
+
+    def _remove_node(self, node=None):
+        '''
+        remove a tree-node from the tree, removes all
+        of it's child-nodes as well
+
+        Parameter
+        ---------
+        node: optional, the node to be removed from the tree (if not given
+              currently selected node is taken)
+        '''
+        if not node:
+            node = self.selected_item
+        row = node.parent.get_row(node.name)
+        index = self.createIndex(row, 0, node)
+        parent_idx = self.parent(index)
+
+        if row == 0:
+            prev_idx = parent_idx
+        else:
+            prev_idx = self.createIndex(row-1, 0, node.parent.children[row-1])
+        self.item_clicked(prev_idx)
+        self.tree_view.setCurrentIndex(prev_idx)
+
+        self.remove_row(index.row(),
+                        parent_idx)
+        node.remove_all_children()
+
+    def item_clicked(self, index=None):
+        '''
+        simulate a click on an item with the given index (or current index)
+        inside the tree-view
+
+        Parameter
+        ---------
+        index: optional, index of the tree-item (if not given, current index is taken)
+        '''
+        if index is not None:
+            self.current_index = index
+        self.dataChanged.emit(self.current_index, self.current_index)
+
+    def select_node(self, node):
+        '''
+        the node will be selected and highlighted inside the project-tree-view
+
+
+        Parameter
+        ---------
+        node: the tree-node to be selected
+        '''
+        row = node.parent.get_row(node.name) if hasattr(node, 'parent') else 0
+        index = self.createIndex(row, 0, node)
+        self.item_clicked(index)
+        self.tree_view.setCurrentIndex(index)
 
 
 class VMProjectControl(ProjectTreeControl):
-    def __init__(self, view=None, details_view=None, button_group=None):
+    '''
+    extends the view on the project tree with contextual functions for scenario-
+    and resource-management specific to the traffic-model. Is also specifically
+    adapted to the qt-designed main-window with it's context buttons and layout
+    to show the details of a selected node.
+
+    Parameter
+    ---------
+    view:         a QTreeView where the project-tree is rendered in
+    details_view: a QLayout where the details of a node are rendered in
+    button_group: a QGroupBox containing buttons that will be mapped on functions
+                  to interact with the project-tree (depending on the selected node)
+    '''
+
+    def __init__(self, view, details_view, button_group):
         super(VMProjectControl, self).__init__(view)
         self.details_view = details_view
         self.button_group = button_group
@@ -251,17 +410,17 @@ class VMProjectControl(ProjectTreeControl):
         self.dataChanged.connect(self.update_view)
 
         # connect the context buttons with the defined actions
-        self.plus_button.clicked.connect(lambda: self.start_function('add'))
-        self.minus_button.clicked.connect(lambda: self.start_function('remove'))
-        self.edit_button.clicked.connect(lambda: self.start_function('edit'))
-        self.open_button.clicked.connect(lambda: self.start_function('open'))
-        self.reset_button.clicked.connect(lambda: self.start_function('reset'))
+        self.plus_button.clicked.connect(lambda: self.context_function('add'))
+        self.minus_button.clicked.connect(lambda: self.context_function('remove'))
+        self.edit_button.clicked.connect(lambda: self.context_function('edit'))
+        self.open_button.clicked.connect(lambda: self.context_function('open'))
+        self.reset_button.clicked.connect(lambda: self.context_function('reset'))
         #self.start_button.clicked.connect(self.project_control.execute)
 
         self.lock_button.clicked.connect(lambda:
-                                         self.start_function('switch_lock'))
+                                         self.context_function('switch_lock'))
 
-        self.copy_button.clicked.connect(lambda: self.start_function('copy'))
+        self.copy_button.clicked.connect(lambda: self.context_function('copy'))
 
         self.project_changed.connect(self.item_clicked)
 
@@ -290,8 +449,8 @@ class VMProjectControl(ProjectTreeControl):
             'open': {
                 Scenario: [self._open_explorer, 'in Explorer anzeigen', False],
                 Project: [self._open_explorer, 'in Explorer anzeigen', False],
-                InputNode: [self.edit_resource, 'Quelldatei öffnen', True],
-                OutputNode: [self.edit_resource, 'Quelldatei öffnen', True]
+                InputNode: [self.open_resource, 'Quelldatei öffnen', True],
+                OutputNode: [self.open_resource, 'Quelldatei öffnen', True]
             },
             'edit': {
                 Scenario: [self._rename_scenario, 'Szenario umbenennen', True],
@@ -303,7 +462,7 @@ class VMProjectControl(ProjectTreeControl):
                 Scenario: [self.run, 'Gesamtlauf starten', True]
             },
             'switch_lock': {
-                Scenario: [self._switch_lock, 'Szenario sperren', False],
+                Scenario: [self._switch_lock, 'Szenario sperren/entsperren', False],
             },
             'copy': {
                 Scenario: [self.clone_scenario, 'Szenario klonen', False],
@@ -318,25 +477,22 @@ class VMProjectControl(ProjectTreeControl):
             },
         }
 
-    def item_clicked(self, index=None):
+    @property
+    def project(self):
         '''
-        show details when row of project tree is clicked
-        details shown depend on type of node that is behind the clicked row
+        get the project-node (node in first row)
         '''
-        if index is not None:
-            self.current_index = index
-        self.dataChanged.emit(self.current_index, self.current_index)
+        return self.model.child_at_row(0)
 
-    def select_node(self, node):
+    def context_function(self, function_name):
         '''
-        emulate clicking and selecting the given node inside the tree view
-        '''
-        row = node.parent.get_row(node.name) if hasattr(node, 'parent') else 0
-        index = self.createIndex(row, 0, node)
-        self.item_clicked(index)
-        self.tree_view.setCurrentIndex(index)
+        map a the name of a function to an assigned function in the context_map
+        depending on the currently selected node
 
-    def start_function(self, function_name):
+        Parameter
+        ---------
+        fucntion_name: the name of the function (key of context_map)
+        '''
         node = self.selected_item
         cls = node.__class__
         if cls in self.context_map[function_name]:
@@ -345,7 +501,13 @@ class VMProjectControl(ProjectTreeControl):
 
     def change_resource(self, input_node=None):
         '''
-        let the user choose a resource file for the given input-node
+        let the user choose a resource file for the given input-node, removes
+        all outputs, because they depend on the inputs
+
+        Parameter
+        ---------
+        input_node: optional, input-node, the resource of which will be changed
+                   (if not given the currently selected item inside the project-tree is taken)
         '''
         if not input_node:
             input_node = self.selected_item
@@ -387,6 +549,14 @@ class VMProjectControl(ProjectTreeControl):
         return fileinput
 
     def _map_buttons(self, node):
+        '''
+        map a node to a buttons, meaning connect buttons to contextual functions
+        allocated with the context_map, enable/disable them and set the tooltips
+
+        Parameter
+        ---------
+        node: the tree-node, the button-functions are allocated to
+        '''
 
         # emit signal flags for context
         locked = node.locked
@@ -426,6 +596,14 @@ class VMProjectControl(ProjectTreeControl):
         map_button(self.clean_button, 'clean')
 
     def pop_context_menu(self, pos):
+        '''
+        update the view on the project-tree and the details of the currently
+        selected tree-item
+
+        Parameter
+        ---------
+        pos: QPoint, position where the context-menu is drawn on the screen
+        '''
         #self.item_clicked(self.current_index)
         node = self.selected_item
         cls = node.__class__
@@ -448,8 +626,12 @@ class VMProjectControl(ProjectTreeControl):
             action_map[action]()
 
     def update_view(self):
-        #workaround: added nodes are not shown because not added the right way via insertRow(buggy)
-        #-> collapse and expand project node (insert_row doesn't work)
+        '''
+        update the view on the project-tree and the details of the currently
+        selected tree-item
+        '''
+        # workaround: added nodes are not shown because not added the correct way
+        # via insertRow(buggy) -> collapse and expand project node
         if self.project:
             index = self.createIndex(0, 0, self.project)
             self.tree_view.collapse(index)
@@ -487,6 +669,14 @@ class VMProjectControl(ProjectTreeControl):
         self._map_buttons(node)
 
     def _edit_options(self, output_node=None):
+        '''
+        change the options of an output-node (= run-options)
+
+        Parameter
+        ---------
+        output_node: optional, the output_node (if not given the currently
+                     selected item inside the project-tree is taken)
+        '''
         if not output_node:
             output_node = self.selected_item
         scenario_node = output_node.scenario
@@ -495,31 +685,15 @@ class VMProjectControl(ProjectTreeControl):
             output_node.options = options
             self.project_changed.emit()
 
-    def _insert_node(self, row, column, node, parentIndex):
-        new_index = self.createIndex(row, column, node)
-        self.beginInsertRows(parentIndex, row, column)
-        self.insertRow(row, parentIndex)
-        self.endInsertRows()
-
-    def _remove_node(self, node):
-        if not node:
-            node = self.selected_item
-        row = node.parent.get_row(node.name)
-        index = self.createIndex(row, 0, node)
-        parent_idx = self.parent(index)
-
-        if row == 0:
-            prev_idx = parent_idx
-        else:
-            prev_idx = self.createIndex(row-1, 0, node.parent.children[row-1])
-        self.item_clicked(prev_idx)
-        self.tree_view.setCurrentIndex(prev_idx)
-
-        self.remove_row(index.row(),
-                        parent_idx)
-        node.remove_all_children()
-
     def _open_explorer(self, path=None):
+        '''
+        open a path with the windows-explorer
+
+        Parameter
+        ---------
+        path: optional, the path to be shown with the explorer (if not given
+              the path to the currently selected node is taken)
+        '''
         if not path:
             # resources have file paths
             if hasattr(self.selected_item, 'file_absolute'):
@@ -542,6 +716,19 @@ class VMProjectControl(ProjectTreeControl):
         subprocess.Popen(r'explorer "{}"'.format(os.path.normpath(path)))
 
     def _choose_scenario(self, text=""):
+        '''
+        open a dialog to let the user select a scenario out of all scenarios
+        of the currently opened project
+
+        Parameter
+        ---------
+        text: optional, Text inside the dialog for choosing a scenario
+
+        Return
+        ---------
+        the selected scenario-node,
+        None, if no scenario was selected
+        '''
         combo_model = QtGui.QComboBox()
 
         scenario_names = [scen.name for scen in self.project.get_children()]
@@ -562,29 +749,17 @@ class VMProjectControl(ProjectTreeControl):
 
         return None
 
-    def _choose_run(self, scenario, text=""):
-        combo_model = QtGui.QComboBox()
-
-        run_names = [scen.name for scen in self.project.get_children()]
-
-        if len(run_names) == 0:
-            QtGui.QMessageBox.about(
-                None, "Fehler",
-                _fromUtf8("Keine spezifischen Läufe vorhanden!"))
-            return None
-
-        combo_model.addItems(scenario_names)
-
-        name, ok = QtGui.QInputDialog.getItem(
-                None, _fromUtf8('Szenario wählen'), text,
-                scenario_names)
-        if ok:
-            return self.project.get_child(name)
-
-        return None
-
     def remove_scenario(self, scenario_node=None, do_choose=False):
+        '''
+        remove a scenarion from currently opened project. Removes it's
+        folder containing the resource-files from disk as well.
 
+        Parameter
+        ---------
+        scenario: optional, scenario node, that will be removed(if not given
+                  the currently selected item inside the project-tree is taken)
+        do_choose: optional, open dialog to let user choose scenario manually
+        '''
         if not scenario_node and not do_choose:
             scenario_node = self.selected_item
         if do_choose:
@@ -603,8 +778,10 @@ class VMProjectControl(ProjectTreeControl):
         path = scenario_node.path
         reply = QtGui.QMessageBox.question(
             None, _fromUtf8("Löschen"),
-            _fromUtf8('Soll das gesamte Szenario-Verzeichnis "{}"\n'.format(
-                path) + 'von der Festplatte entfernt werden?'),
+            _fromUtf8('Soll das Szenario "{}" entfernt werden?\n'
+                      .format(scenario_node.name) +
+                      'Achtung: das Verzeichnis "{}" '.format(path) +
+                      'wird dabei ebenfalls von der Festplatte entfernt!'),
             QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
         if reply == QtGui.QMessageBox.No:
             return
@@ -620,8 +797,21 @@ class VMProjectControl(ProjectTreeControl):
     def remove_resource(self, resource_node=None, remove_node=False,
                         confirmation=True, remove_outputs=True):
         '''
-        remove the source of the resource node and optionally remove it from
-        the disk
+        remove the source-link of a resource node. ask the user if the
+        linked file should be removed from disk as well. resource nodes may
+        represent inputs and outputs.
+
+        Parameter
+        ---------
+        resource_node:  optional, the resource-node whose resource shall be removed
+                        (if not given the currently selected item inside the
+                        project-tree is taken)
+        confirmation:   optional, if True, asks the user if to delete the file,
+                        deletes without asking else (default True)
+        remove_node:    optional, if True, removes the node from project-tree (default False)
+        remove_outputs: optional, if True, all output-nodes are removed from the parent
+                        scenario, because the ouputs depend on the inputs (default True)
+
         '''
         if not resource_node:
             resource_node = self.selected_item
@@ -654,12 +844,21 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_outputs(scenario)
         self.project_changed.emit()
 
-    def _remove_output(self, resource_node=None):
-        if not resource_node:
-            resource_node = self.selected_item
+    def _remove_output(self, output_node=None):
+        '''
+        remove an output-node from the project-tree and
+        remove it's linked file from disk
 
-        scenario = resource_node.scenario
-        if resource_node.is_primary:
+        Parameter
+        ---------
+        output_node: optional, the output_node that shall be removed (if not given the
+                     currently selected item inside the project-tree is taken)
+        '''
+        if not output_node:
+            output_node = self.selected_item
+
+        scenario = output_node.scenario
+        if output_node.is_primary:
             msg = "Soll der Gesamtlauf wirklich entfernt werden?"
             if len(scenario.get_output_files()) > 1:
                 msg += "\nAlle spezifischen Läufe werden ebenfalls gelöscht!"
@@ -677,12 +876,18 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_resource(remove_node=True, remove_outputs=False,
                                  confirmation=False)
 
-    def run(self, scenario_node=None, do_choose=False, run_name=Scenario.PRIMARY_RUN, options=None):
+    def run(self, scenario_node=None, do_choose=False,
+            run_name=Scenario.PRIMARY_RUN, options=None):
         '''
+        execute a child-run of the given scenario
+
         Parameter
         ---------
-        do_choose: opens a dialog to choose the scenario, where to execute the run
-        scenario_node: if not given, try to select
+        do_choose:     optional, opens a dialog to choose the scenario, where to execute the run
+        scenario_node: optional, if not given, takes the selected node of the project-tree
+        run_name:      optional, the name of the run to be executed (defaults to the primary run)
+        options:       optional, the options the run will be executed with (usually command-line options),
+                       if not given a dialog is opened to let the user select the options
         '''
         if not scenario_node and not do_choose:
             scenario_node = self.selected_item
@@ -725,23 +930,43 @@ class VMProjectControl(ProjectTreeControl):
                             parent=self.tree_view, options=options)
         dialog.exec_()
 
-    def _switch_lock(self, resource_node=None):
-        if not resource_node:
-            resource_node = self.selected_item
-        if resource_node.admin_locked and not config.admin_mode:
+    def _switch_lock(self, scenario_node=None):
+        '''
+        locks unlocked scenarios and unlocks locked scenarios. locked scenarios
+        can not be edited in any way (only cloning is allowed)
+
+        Parameter
+        ---------
+        node: optional, the scenario to be locked/unlocked (if not given the currently
+              selected item inside the project-tree is taken)
+        '''
+        if not scenario_node:
+            scenario_node = self.selected_item
+        if scenario_node.admin_locked and not config.admin_mode:
             self.lock_button.setChecked(True)
             msgBox = QtGui.QMessageBox()
             msgBox.setWindowTitle(_fromUtf8('Warnung'))
-            msgBox.setText(_fromUtf8('Das Szenario wurde durch den Admin gesperrt und kann nur durch ihn entsperrt oder bearbeitet werden.'))
+            msgBox.setText(_fromUtf8('Das Szenario wurde durch den Admin ' +
+                                     'gesperrt und kann nur durch ihn ' +
+                                     'entsperrt oder bearbeitet werden.'))
             msgBox.exec_()
             return
-        resource_node.locked = not resource_node.locked
+        scenario_node.locked = not scenario_node.locked
         if config.admin_mode:
-            resource_node.admin_locked = resource_node.locked
+            scenario_node.admin_locked = scenario_node.locked
         self.project_changed.emit()
 
-    def _rename_node(self):
-        node = self.selected_item
+    def _rename_node(self, node=None):
+        '''
+        rename a node of the project-tree, opens a dialog to ask for a new name
+
+        Parameter
+        ---------
+        node: optional, the node to be renamed (if not given the currently
+              selected item inside the project-tree is taken)
+        '''
+        if not node:
+            node = self.selected_item
         name, ok = QtGui.QInputDialog.getText(
             None, 'Umbenennen', 'Neuen Namen eingeben:',
             QtGui.QLineEdit.Normal, node.name)
@@ -750,6 +975,15 @@ class VMProjectControl(ProjectTreeControl):
             self.project_changed.emit()
 
     def _rename_scenario(self, scenario_node=None):
+        '''
+        rename the scenario by asking the user for a new name.
+        tries to rename the path as well.
+
+        Parameter
+        ---------
+        scenario_node: optional, the scenario to be renamed (if not given the currently
+                       selected item inside the project-tree is taken)
+        '''
         if not scenario_node:
             scenario_node = self.selected_item
         while True:
@@ -764,17 +998,32 @@ class VMProjectControl(ProjectTreeControl):
                         .format(name)))
                     continue
                 old_path = scenario_node.path
+                old_name = scenario_node.name
                 scenario_node.name = str(name)
                 try:
                     os.rename(old_path, scenario_node.path)
-                except:
-                    pass
+                except Exception, e:
+                    scenario_node.name = old_name
+                    QtGui.QMessageBox.about(
+                        None, 'Fehler',
+                        _fromUtf8('Das Szenario konnte nicht umbenannt werden: \n'+
+                                  str(e)))
                 self.project_changed.emit()
                 break
             else:
                 break
 
     def _copy_special_run(self, output_node=None):
+        '''
+        copy an output-node (representing a special run) to another (or even the
+        same) scenario. Opens dialog to ask for the new name of the clone and the
+        target-scenario
+
+        Parameter
+        ---------
+        output_node: optional, the node to be copied (if not given the currently selected
+                     item inside the project-tree is taken)
+        '''
         if not output_node:
             output_node = self.selected_item
         if output_node.is_primary:
@@ -787,7 +1036,22 @@ class VMProjectControl(ProjectTreeControl):
             scenario = self.project.get_child(scenario_name)
             new_run = scenario.add_run(new_name, output_node.options)
 
-    def clone_scenario(self, scenario_node=None, do_choose=False, new_scenario_name=None):
+    def clone_scenario(self, scenario_node=None, do_choose=False,
+                       new_scenario_name=None):
+        '''
+        clone a scenario including all of it's resources. the resources will be
+        hard copied to a new scenario-folder inside project-folder (progress
+        is shown in seperate dialog)
+
+        Parameter
+        ---------
+        scenario_node:     optional, the node of the scenario to be cloned(if not given
+                           the currently selected item inside the project-tree
+                           is taken)
+        do_choose:         optional, if True, user has to select scenario in a dialog
+        new_scenario_name: optional, the name the clone will get (opens dialog to ask
+                           user for it, if not given)
+        '''
         if not scenario_node and not do_choose:
             scenario_node = self.selected_item
 
@@ -827,8 +1091,8 @@ class VMProjectControl(ProjectTreeControl):
         if os.path.exists(new_scenario_node.path):
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8('Fehler'),
-                _fromUtf8('Der Pfad "{}" existiert bereits. Wollen Sie trotzdem fortsetzen?'
-                              .format(path)),
+                _fromUtf8('Der Pfad "{}" existiert bereits. '.format(path) +
+                          'Wollen Sie trotzdem fortsetzen?'),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.No:
                 return
@@ -854,7 +1118,15 @@ class VMProjectControl(ProjectTreeControl):
         self.tree_view.setUpdatesEnabled(True)
         self.project_changed.emit()
 
-    def edit_resource(self, resource_node=None):
+    def open_resource(self, resource_node=None):
+        '''
+        open the a resource-file with hdf5-viewer defined in configuration
+
+        Parameter
+        ---------
+        resource_node: optional, the node linking the resource to be opened(if not given
+                       the currently selected item inside the project-tree is taken)
+        '''
         if not resource_node:
             resource_node = self.selected_item
         node = self.selected_item
@@ -868,6 +1140,10 @@ class VMProjectControl(ProjectTreeControl):
                 _fromUtf8("In den Einstellungen ist kein HDF5-Editor angegeben."))
 
     def add_scenario(self):
+        '''
+        add a new scenario to the currently opened project, opens dialogs to
+        ask for a name and if defaults shall be used
+        '''
         project = self.project
         if (not project):
             return
@@ -899,13 +1175,20 @@ class VMProjectControl(ProjectTreeControl):
 
     def add_run(self, scenario=None, do_choose=False):
         '''
-        add a run to a scenario,
-        adds primary run, if none is existing yet, adds special run else
+        add a run to a scenario.
+        adds primary run, if none is existing yet, adds special run else.
+        calls dialogs to choose options, name and asks to start run right away
 
         Parameter
         ---------
-        scenario: scenario node, where run should be added
-        do_choose: open dialog to let user choose scenario manually
+        scenario: optional, scenario node, where run should be added(if not given
+                  the currently selected item inside the project-tree is taken)
+        do_choose: optional, open dialog to let user choose scenario manually
+
+        Return
+        ---------
+        run-node, that was added,
+        None, if no run could be created
         '''
         if not scenario and not do_choose:
             node = self.selected_item
@@ -920,11 +1203,26 @@ class VMProjectControl(ProjectTreeControl):
             return
 
         if scenario.get_output(Scenario.PRIMARY_RUN) is None:
-            self.add_primary_run(scenario=scenario)
+            return self.add_primary_run(scenario=scenario)
         else:
-            self.add_special_run(scenario=scenario)
+            return self.add_special_run(scenario=scenario)
 
     def add_primary_run(self, scenario=None, do_choose=False):
+        '''
+        add a primary run to a scenario. calls dialogs to choose options, name
+        and asks to start run right away
+
+        Parameter
+        ---------
+        scenario: optional, scenario node, where primary run should be added(if not given
+                  the currently selected item inside the project-tree is taken)
+        do_choose: optional, open dialog to let user choose scenario manually
+
+        Return
+        ---------
+        run-node, that was added,
+        None, if no run could be created
+        '''
         if not scenario and not do_choose:
             node = self.selected_item
             if isinstance(node, Scenario):
@@ -966,12 +1264,28 @@ class VMProjectControl(ProjectTreeControl):
         return run_node
 
     def add_special_run(self, scenario=None, do_choose=False):
+        '''
+        add a special run to a scenario. calls dialogs to choose options, name
+        and asks to start run right away
+
+        Parameter
+        ---------
+        scenario: optional, scenario node, where special run should be added (if not given
+                  the currently selected item inside the project-tree is taken)
+        do_choose: optional, open dialog to let user choose scenario manually
+
+        Return
+        ---------
+        run-node, that was added,
+        None, if no run could be created
+        '''
         if not scenario and not do_choose:
             node = self.selected_item
             if isinstance(node, Scenario):
                 scenario = node
             else:
                 scenario = node.scenario
+
         if do_choose:
             scenario = self._choose_scenario(
                 _fromUtf8('Zu welchem Szenario soll der Lauf hinzugefügt werden?'))
@@ -1020,9 +1334,16 @@ class VMProjectControl(ProjectTreeControl):
 
     def _reset_scenario(self, scenario_node=None, ask_overwrite=True):
         '''
-        set the simrun to default, copy all files from the default folder
-        to the project/scenario folder and link the project tree to those
-        files
+        reset all resources of a scenario to their defaults by copying all
+        files from the default folder to the project/scenario folder and
+        link the project-tree to those files
+
+        Parameter
+        ---------
+        scenario:      optional, scenario node, that shall be reset(if not given the
+                       currently selected item inside the project-tree is taken)
+        ask_overwrite: optional, if True, existing files are overwritten without
+                       asking for permission
         '''
         if not scenario_node:
             scenario_node = self.selected_item
@@ -1030,7 +1351,10 @@ class VMProjectControl(ProjectTreeControl):
         if ask_overwrite:
             reply = QtGui.QMessageBox.question(
                         None, _fromUtf8("Zurücksetzen"),
-                        _fromUtf8('Soll das gesamte Szenario "{}" inklusive der Ein- und Ausgaben auf die Standardwerte zurückgesetzt werden?'.format(scenario_node.name)),
+                        _fromUtf8('Soll das gesamte Szenario "{}" '
+                                  .format(scenario_node.name) +
+                                  'inklusive der Ein- und Ausgaben auf die ' +
+                                  'Standardwerte zurückgesetzt werden?'),
                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             if reply == QtGui.QMessageBox.No:
                 return
@@ -1061,6 +1385,9 @@ class VMProjectControl(ProjectTreeControl):
         self.project_changed.emit()
 
     def validate_project(self):
+        '''
+        validate the active project and it's scenarios
+        '''
         scenarios = self.project.find_all_by_class(Scenario)
         #for scen in scenarios:
             #scen.update()
@@ -1068,14 +1395,25 @@ class VMProjectControl(ProjectTreeControl):
             scen.validate()
         self.view_changed.emit()
 
-    def _reset_resource(self):
-        res_node = self.selected_item
+    def _reset_resource(self, res_node=None):
+        '''
+        reset a resource node to it's default by copying the file from the
+        default folder to the resource-folder and linking this file
+
+        Parameter
+        ---------
+        res_node: optional, the node linking the resource to be reset, if not given, the
+                  currently selected item inside the project-tree is taken
+        '''
+        if not res_node:
+            res_node = self.selected_item
 
         scenario = res_node.scenario
         if len(scenario.get_output_files()) > 0:
             reply = QtGui.QMessageBox.question(
                 None, _fromUtf8("Zurücksetzen"),
-                _fromUtf8('Wenn Sie die Ressource zurücksetzen, werden alle bestehenden Ausgaben ungültig und somit entfernt!'),
+                _fromUtf8('Wenn Sie die Ressource zurücksetzen, werden alle ' +
+                          'bestehenden Ausgaben ungültig und somit entfernt!'),
                 QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
             if reply == QtGui.QMessageBox.Cancel:
                 return
@@ -1104,9 +1442,32 @@ class VMProjectControl(ProjectTreeControl):
             self.project_changed.emit()
 
     def write_project(self, filename):
+        '''
+        write the current state of the opened project to disk (containing
+        structure of project-tree and links to resource-files)
+
+        Parameter
+        ---------
+        filename: the xml-file that the project will be stored in
+        '''
         XMLParser.write_xml(self.project, filename)
 
     def new_project(self, name, project_folder):
+        '''
+        write the current state of the opened project to disk (containing
+        structure of project-tree and links to resource-files)
+
+        Parameter
+        ---------
+        name:           the name of the project to be created
+        project_folder: the folder, the project-file will be created in
+                       (all resources will be stored in subfolders of this
+                        folder!)
+
+        Return
+        ---------
+        boolean: True, if project was successfully created, else False
+        '''
         if os.path.exists(os.path.join(project_folder, Project.FILENAME_DEFAULT)):
             QtGui.QMessageBox.about(
                 None, "Fehler",
@@ -1127,12 +1488,23 @@ class VMProjectControl(ProjectTreeControl):
         return True
 
     def close_project(self):
+        '''
+        close the currently opened project
+        '''
         self.current_index = self.createIndex(0, 0, self.project)
         if self.project:
             self._remove_node(self.project)
         self.view_changed.emit()
 
     def read_project(self, filename):
+        '''
+        read a project from an xml-file
+
+        Parameter
+        ---------
+        filename: the project-file (xml) that the contains the structure of
+        the project-tree and the links to the resource-files
+        '''
         self.close_project()
         XMLParser.read_xml(self.model, filename)
         self.project.on_change(self.project_changed.emit)
@@ -1144,6 +1516,14 @@ class VMProjectControl(ProjectTreeControl):
         self.select_node(self.project)
 
     def remove_outputs(self, scenario):
+        '''
+        remove all output-nodes of the scenario from the project-tree and
+        remove the linked files from disk
+
+        Parameter
+        ---------
+        scenario: the scenario, where the outputs shall be removed
+        '''
         for output in scenario.get_output_files():
             try:
                 rmtree(os.path.split(output.file_absolute)[0])
