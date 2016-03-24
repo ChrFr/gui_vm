@@ -2,8 +2,8 @@ from argparse import ArgumentParser
 import os
 import numpy as np
 from gui_vm.model.resource_dict import (H5ConfigParser, FileDict,
-                                          TableDictArrayDict, ArrayDict, ColumnDict,
-                                          ResourceConfigParser)
+                                        TableDict, ArrayDict, ColumnDict,
+                                        ResourceConfigParser)
 
 
 def main(folder, model):
@@ -17,7 +17,7 @@ def main(folder, model):
     filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(folder)) for f in fn]
     input_table = FileDict()
-    tables = TableDictArrayDict()
+    tables = TableDict()
     arrays = ArrayDict()
     columns = ColumnDict()
 
@@ -31,6 +31,9 @@ def main(folder, model):
             columns += c
         else:
             i = ResourceConfigParser(filename).parse()
+        # the category is the path of the folder the file is in relative to the base folder (=subfolder)
+        category = os.path.split(os.path.relpath(filename, folder))[0]
+        i['category'] = category
         input_table += i
 
     #write tables to csv
@@ -39,13 +42,13 @@ def main(folder, model):
     arrays_out = '{}_arrays.csv'.format(model)
     columns_out = '{}_columns.csv'.format(model)
     if input_table.row_count > 0:
-        input_table.to_csv(input_out)
+        input_table.to_csv(os.path.join(folder, input_out))
     if tables.row_count > 0:
-        tables.to_csv(tables_out)
+        tables.to_csv(os.path.join(folder, tables_out))
     if arrays.row_count > 0:
-        arrays.to_csv(arrays_out)
+        arrays.to_csv(os.path.join(folder, arrays_out))
     if columns.row_count > 0:
-        columns.to_csv(columns_out)
+        columns.to_csv(os.path.join(folder, columns_out))
 
 if __name__ == "__main__":
     #    usage = """usage: python simulation_run.py [options] """

@@ -1,7 +1,9 @@
 from collections import OrderedDict
 import csv
 import numpy as np
+import os
 from copy import deepcopy
+from backend import HDF5
 
 INPUT_HEADER = ['resource_name', 'subdivision', 'category', 'type']
 TABLE_HEADER = ['resource_name', 'subdivision', 'n_rows']
@@ -317,15 +319,15 @@ class H5ConfigParser(ResourceConfigParser):
 
         Return
         ------
-        input_table: InputTable,
+        input_table: FileDict,
                      contains one row with the file information
-        tables: TableTable,
+        tables: TableDict,
                 contains all tables found in the file and additional
                 informations
-        arrays: ArrayTable,
+        arrays: ArrayDict,
                 contains all arrays found in the file and additional
                 informations
-        columns: ColumnTable,
+        columns: ColumnDict,
                  contains all columns and additional info
         '''
         directory, fname = os.path.split(self.filename)
