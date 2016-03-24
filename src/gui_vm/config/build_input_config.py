@@ -3,7 +3,8 @@ import os
 import numpy as np
 from gui_vm.model.resource_dict import (H5ConfigParser, FileDict,
                                         TableDict, ArrayDict, ColumnDict,
-                                        ResourceConfigParser)
+                                        ResourceConfigParser,
+                                        XMLResourceDict)
 
 
 def main(folder, model):
@@ -16,7 +17,7 @@ def main(folder, model):
     """
     filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(folder)) for f in fn]
-    input_table = FileDict()
+    inputs = FileDict()
     tables = TableDict()
     arrays = ArrayDict()
     columns = ColumnDict()
@@ -34,15 +35,19 @@ def main(folder, model):
         # the category is the path of the folder the file is in relative to the base folder (=subfolder)
         category = os.path.split(os.path.relpath(filename, folder))[0]
         i['category'] = category
-        input_table += i
+        inputs += i
 
     #write tables to csv
     input_out = '{}_input.csv'.format(model)
     tables_out = '{}_tables.csv'.format(model)
     arrays_out = '{}_arrays.csv'.format(model)
     columns_out = '{}_columns.csv'.format(model)
-    if input_table.row_count > 0:
-        input_table.to_csv(os.path.join(folder, input_out))
+
+    #xml_convert = XMLResourceDict()
+    #xml_convert.join(inputs, tables, arrays, columns)
+
+    if inputs.row_count > 0:
+        inputs.to_csv(os.path.join(folder, input_out))
     if tables.row_count > 0:
         tables.to_csv(os.path.join(folder, tables_out))
     if arrays.row_count > 0:

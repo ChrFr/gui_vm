@@ -4,6 +4,7 @@ import numpy as np
 import os
 from copy import deepcopy
 from backend import HDF5
+from lxml import etree
 
 INPUT_HEADER = ['resource_name', 'subdivision', 'category', 'type']
 TABLE_HEADER = ['resource_name', 'subdivision', 'n_rows']
@@ -373,3 +374,34 @@ class H5ConfigParser(ResourceConfigParser):
                 continue
             self.input_table += in_table
         return self.input_table, self.tables, self.arrays, self.columns
+
+
+class XMLResourceDict(object):
+
+    def __init__(self):
+        self.root = etree.Element('Resources')
+
+    def join(self, inputs, tables, arrays, columns):
+        self.root.clear()
+        unique_resources = np.unique(inputs['resource_name'])
+        for res_name in unique_resources:
+            res_xml = etree.SubElement(self.root, res_name)
+            res_table = inputs.get_rows_by_entries(resource_name=res_name)
+            # resource has exactly one category (same for all subdivisions, so take first one)
+            res_xml.attrib['category'] = res_table['category'][0]
+
+            node_names = res_table['subdivision']
+            node_types = res_table['type']
+            for i, node_name in enumerate(node_names):
+                node_type = node_types[i]
+
+
+
+    def write(self, filename):
+        pass
+
+    def read(self, filename):
+        pass
+
+    def split_resources(self):
+        pass
