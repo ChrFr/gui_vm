@@ -4,19 +4,12 @@ import numpy as np
 from gui_vm.model.resource_dict import (H5ConfigParser, FileDict,
                                         TableDict, ArrayDict, ColumnDict,
                                         ResourceConfigParser,
-                                        XMLResourceDict)
+                                        ResourceConfigXMLParser)
 
-
-def main(folder, model):
-    """
-
-    Parameters
-    ----------
-    folder: String, name of the folder containing the
-            input data (h5 files etc.)
-    """
+def file_struct_to_csv(folder, model):
     filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(folder)) for f in fn]
+
     inputs = FileDict()
     tables = TableDict()
     arrays = ArrayDict()
@@ -43,9 +36,6 @@ def main(folder, model):
     arrays_out = '{}_arrays.csv'.format(model)
     columns_out = '{}_columns.csv'.format(model)
 
-    #xml_convert = XMLResourceDict()
-    #xml_convert.join(inputs, tables, arrays, columns)
-
     if inputs.row_count > 0:
         inputs.to_csv(os.path.join(folder, input_out))
     if tables.row_count > 0:
@@ -54,6 +44,36 @@ def main(folder, model):
         arrays.to_csv(os.path.join(folder, arrays_out))
     if columns.row_count > 0:
         columns.to_csv(os.path.join(folder, columns_out))
+
+def file_struct_to_xml(folder, model):
+
+    filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+        os.path.expanduser(folder)) for f in fn]
+
+    parser = ResourceConfigXMLParser()
+
+    for filename in filenames:
+        # the category is the path of the folder the file is in relative to the base folder (=subfolder)
+        category = os.path.split(os.path.relpath(filename, folder))[0]
+
+        if filename.endswith('.h5'):
+            parser.add_h5_resource(filename, category=category)
+
+    out = '{}_inputs.xml'.format(model)
+    parser.write(os.path.join(folder, out))
+
+
+def main(folder, model):
+    """
+
+    Parameters
+    ----------
+    folder: String, name of the folder containing the
+            input data (h5 files etc.)
+    """
+
+    file_struct_to_csv(folder, model)
+    file_struct_to_xml(folder, model)
 
 if __name__ == "__main__":
     #    usage = """usage: python simulation_run.py [options] """
