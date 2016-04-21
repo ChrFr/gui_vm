@@ -13,7 +13,8 @@
 
 from resources import (H5Array, H5Table, H5Resource, H5TableColumn)
 from gui_vm.model.rules import CompareRule, Rule
-from resource_dict import (TableDict, FileDict, ArrayDict, ColumnDict)
+from resource_dict import (TableDict, FileDict, ArrayDict, ColumnDict,
+                           ResourceConfigXMLParser)
 from collections import OrderedDict
 import numpy as np
 import os, imp, sys
@@ -100,7 +101,7 @@ class TrafficModel(Observable):
                 return self.resources[res_name]
         return None
 
-    def add_resources(self, *args):
+    def add_resource(self, resource):
         '''
         add a resource to the traffic model
 
@@ -108,12 +109,22 @@ class TrafficModel(Observable):
         ----------
         resource: Resource
         '''
+        if resource.name in self.resources.keys():
+            raise Exception("Resource '{}' defined more than once, "
+                            .format(resource.name) +
+                            'but the names have to be unique!')
+        self.resources[resource.name] = resource
+
+    def add_resources(self, *args):
+        '''
+        add multiple resource to the traffic model
+
+        Parameters
+        ----------
+        args: resources
+        '''
         for resource in args:
-            if resource.name in self.resources.keys():
-                raise Exception("Resource '{}' defined more than once, "
-                                .format(resource.name) +
-                                'but the names have to be unique!')
-            self.resources[resource.name] = resource
+            self.add_resource(resource)
 
     def validate(self, path):
         '''
@@ -123,7 +134,30 @@ class TrafficModel(Observable):
         for resource in self.resources:
             resource.validate()
 
-    def read_resource_config(self):
+    def resource_config_from_xml(self, filename):
+        parser = ResourceConfigXMLParser()
+        parser.read(filename)
+
+        # READ AND ADD H5 RESOURCES
+        for h5res_node in parser.root.findall('H5Resource'):
+            category = h5res_node.attrib['category']
+            h5resource = H5Resource(h5res_node.attrib['name'],
+                                    subfolder=category,
+                                    filename='')
+            for sub_node in h5res_node:
+                if sub_node.tag == 'H5Table':
+                    table = H5Table(sub_node.attrib['subdivision'])
+                    table.from_xml(sub_node, reference=self)
+                    h5resource.add_child(table)
+
+                elif sub_node.tag == 'H5Array':
+                    array = H5Array(sub_node.attrib['subdivision'])
+                    array.from_xml(sub_node, reference=self)
+                    h5resource.add_child(array)
+            self.add_resource(h5resource)
+
+
+    def resource_config_from_csv(self):
         '''
         build the resource tree with according rules out of the csv definitions
         '''

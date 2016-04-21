@@ -25,6 +25,8 @@ class SpecificModel(TrafficModel):
     ARRAYS_CONFIG_FILE = 'Maxem_arrays.csv'
     COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
 
+    RESOURCES_XML = 'Maxem.xml'
+
     #names of the fields that can be displayed outside the model
     #can be adressed in the csv as fields of the table
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
@@ -57,7 +59,10 @@ class SpecificModel(TrafficModel):
         self.groups_generation = None
         self.area_types = None
 
-        self.read_resource_config()
+        #self.resource_config_from_csv()
+
+        resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
+        self.resource_config_from_xml(resource_xml_file)
 
         ####observe columns####
         activities = self.resources['Params'].get_child(

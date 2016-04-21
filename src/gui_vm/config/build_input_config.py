@@ -59,7 +59,7 @@ def file_struct_to_xml(folder, model):
         if filename.endswith('.h5'):
             parser.add_h5_resource(filename, category=category)
 
-    out = '{}_inputs.xml'.format(model)
+    out = '{}.xml'.format(model)
     parser.write(os.path.join(folder, out))
 
 

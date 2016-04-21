@@ -876,7 +876,7 @@ class ResourceNode(TreeNode):
         sets the relative path of the resource to file_path
         '''
         if self.resource is None:
-            raise Exception('"{}" ist nicht definiert für das Verkehrsmodell'.format(self.name))
+            raise Exception(u'"{}" ist nicht definiert für das Verkehrsmodell'.format(self.name))
         if file_path is not None:
             file_path = os.path.normpath(file_path)
             #subfolder, filename = os.path.split(file_path.replace('\\','/'))

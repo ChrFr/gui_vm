@@ -43,7 +43,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self,
                  project_file=None,
                  run_scenario=None,
-                 admin_mode=False):
+                 admin_mode=False,
+                 save_disabled=False):
         """
         """
         QtGui.QMainWindow.__init__(self)
@@ -53,6 +54,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         config.mainWindow = self
         # global access to admin mode
         config.admin_mode = admin_mode
+
+        config.save_disabled = save_disabled
 
         # define the view on the project and connect to the qtreeview in
         # the main window
@@ -211,6 +214,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         save the project
         return True if project was saved
         '''
+        if config.save_disabled:
+            return
         if not filename:
             dialog_opened = True
             filename = str(QtGui.QFileDialog.getSaveFileName(

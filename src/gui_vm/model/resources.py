@@ -620,6 +620,60 @@ class H5Table(H5Node):
             column_names.append(col.name)
         return column_names
 
+    def from_xml(self, element, reference=None):
+        '''
+        read and add attributes of the H5 Table from an etree xml element
+        including columns and rules
+
+        reference:  object, optional
+                    a referenced object, created rules are (e.g. min with fieldname)
+                    referenced to this object
+        '''
+        n_rows = element.attrib['n_rows']
+        if len(n_rows) > 0:
+            dim_rule = CompareRule('shape', '==',
+                                   n_rows, reference=reference,
+                                   error_msg='falsche Dimension',
+                                   success_msg='Dimension überprüft')
+            self.add_rule(dim_rule)
+        for column_node in element.findall('column'):
+            column = H5TableColumn(column_node.attrib['name'], required=True)
+            column.from_xml(column_node, reference=reference)
+            self.add_child(column)
+
+        #tables = []
+        #ignored = []
+        #node_names = table_dict['subdivision']
+        #resource_names = table_dict['resource_name']
+        #for row in xrange(table_dict.row_count):
+            #node_name = node_names[row]
+            #res_name = resource_names[row]
+            #h5table = H5Table(node_name)
+            #table = table_dict.get_rows_by_entries(
+                #resource_name=res_name, subdivision=node_name)
+            #if table.row_count > 0:
+                #if table.row_count > 1:
+                    #raise Exception('{}{} defined more than once'
+                                    #.format(res_name, node_name))
+                #n_rows = table['n_rows'][0]
+                #if n_rows != '':
+                    #dim_rule = CompareRule('shape', '==',
+                                           #n_rows, reference=reference,
+                                           #error_msg='falsche Dimension',
+                                           #success_msg='Dimension überprüft')
+                    #h5table.add_rule(dim_rule)
+
+                ##add columns required by the model to table (defined in csv)
+                #table_cols = column_dict.get_rows_by_entries(
+                    #resource_name=res_name, subdivision=node_name)
+                #columns, ign = column_dict_to_h5column(table_cols,
+                                                       #reference=reference)
+                #ignored.extend(ign)
+                #for column in columns:
+                    #h5table.add_child(column)
+                #tables.append(h5table)
+        #return tables, ignored
+
 
 class H5TableColumn(H5Resource):
     '''
@@ -643,11 +697,11 @@ class H5TableColumn(H5Resource):
                     determines, if the column is required by the traffic model
     '''
     monitored = OrderedDict([('dtype', 'dtype'),
-                             ('primary_key', 'Primaerschluessel'),
+                             ('is_primary_key', 'Primaerschluessel'),
                              ('max_value', 'Maximum'),
                              ('min_value', 'Minimum')])
 
-    def __init__(self, name, primary_key=False, exp_dtype=None,
+    def __init__(self, name, exp_dtype=None,
                    exp_minimum=None, exp_maximum=None,
                    is_primary_key=False, reference=None,
                    required=False):
@@ -658,7 +712,10 @@ class H5TableColumn(H5Resource):
         self.dtype = None
         self.content = None
         self.required = required
-        self.primary_key = primary_key
+        self.is_primary_key = is_primary_key
+        #self._set_rules(exp_dtype, exp_minimum, exp_maximum, reference)
+
+    def _set_rules(self, exp_dtype=None, exp_minimum=None, exp_maximum=None, reference=None):
 
         if exp_minimum:
             if is_number(exp_minimum):
@@ -718,12 +775,76 @@ class H5TableColumn(H5Resource):
             else:
                 content = np.char.decode(content, encoding='CP1252')
             #check if all values are unique if primary key
-            if self.primary_key and np.unique(content).size != content.size:
+            if self.is_primary_key and np.unique(content).size != content.size:
 
-                self._status.set('primary_key', Status.MISMATCH, 'Werte nicht eindeutig')
+                self._status.set('is_primary_key', Status.MISMATCH, 'Werte nicht eindeutig')
             #if content of column is observed, set it
             if 'content' in self._observed:
                 self.set('content', list(content))
+
+    def from_xml(self, element, reference=None):
+        '''
+        read and add attributes of the H5 Table from an etree xml element
+        including columns and rules
+
+        reference:  object, optional
+                    a referenced object, created rules are (e.g. min with fieldname)
+                    referenced to this object
+        '''
+
+        dtype = element.attrib['type']
+        minimum = element.attrib['minimum']
+        maximum = element.attrib['maximum']
+        primary = element.attrib['is_primary_key']
+
+        if primary == '1' or primary == 'True':
+            self.is_primary_key = True
+        else:
+            self.is_primary_key = False
+
+        self._set_rules(dtype, minimum, maximum, reference)
+
+        #if '?' in col_name or '*' in col_name:
+
+            #def add_dynamic_cols(c):
+                #field_name = c['joker'][0]
+                #replace = self.get(field_name)
+                #resource = self.resources[c['resource_name'][0]]
+                #h5table = resource.get_child(c['subdivision'][0])
+                #tmp = []
+                ## remove old dynamic columns
+                ## WARNING: removes all dynamic columns, so there can only
+                ## be one pattern for dynamic cols per table
+                #for i in xrange(len(h5table.children)):
+                    #col = h5table.children.pop(0)
+                    #if col.dynamic:
+                        #col.remove_children()
+                    #else:
+                        #tmp.append(col)
+                #h5table.children = tmp
+                #if not replace:
+                    #return
+                #c_n = c['column_name'][0]
+                #c1 = c.clone()
+                #c2 = c.clone()
+                #c1.clear()
+                ## build a column dict with the new column names
+                #for r in replace:
+                    #new_col_name = c_n.replace('?', r).replace('*', r)
+                    #c2['column_name'] = new_col_name
+                    #c1.merge_table(c2)
+                ##create h5 columns
+                #columns = column_dict_to_h5column(c1, reference=self)[0]
+                #for col in columns:
+                    #col.dynamic = True
+                    #h5table.add_child(col)
+
+            ## on change of the field the joker is referenced to,
+            ## the dynamic cols will be be added
+            #self.bind(joker, partial((lambda d, value:
+                      #add_dynamic_cols(d)), d_col))
+
+
 
 
 class H5Array(H5Node):
@@ -762,3 +883,87 @@ class H5Array(H5Node):
         else:
             self.max_value = None
             self.min_value = None
+
+    def from_xml(self, element, reference=None):
+
+        minimum = element.attrib['minimum']
+        maximum = element.attrib['maximum']
+        dimension = tuple(element.attrib['dimension'].split(' x '))
+        if minimum != '':
+            if is_number(minimum):
+                ref_min = None
+            else:
+                ref_min = reference
+            min_rule = CompareRule('min_value', '>=', minimum,
+                                   reference=ref_min,
+                                   error_msg='Minimum unterschritten',
+                                   success_msg='Minimum überprüft')
+            self.add_rule(min_rule)
+        if maximum != '':
+            if is_number(maximum):
+                ref_max = None
+            else:
+                ref_max = reference
+            max_rule = CompareRule('max_value', '<=', maximum,
+                                   reference=ref_max,
+                                   error_msg='Maximum überschritten',
+                                   success_msg='Maximum überprüft')
+            self.add_rule(max_rule)
+        if (np.array(dimension) != '').any():
+            if len(dimension) == 1:
+                dimension = dimension[0]
+            dim_rule = CompareRule('shape', '==', dimension,
+                                   reference=reference,
+                                   error_msg='falsche Dimension',
+                                   success_msg='Dimension überprüft')
+            self.add_rule(dim_rule)
+        #node = H5Array(node_name)
+                #if self.array_dict.row_count > 0:
+                    #rows = self.array_dict.get_rows_by_entries(
+                        #resource_name=res_name, subdivision=node_name)
+                    #if rows.row_count > 1:
+                        #raise Exception('{}{} defined more than once in {}'.format(
+                            #res_name, node_name, self.arrays_config_file))
+                    #if rows.row_count > 0:
+                        #minimum = rows['minimum'][0]
+                        #maximum = rows['maximum'][0]
+                        #dimension = tuple(rows['dimension'][0].split(' x '))
+                        #if minimum != '':
+                            #if is_number(minimum):
+                                #reference = None
+                            #else:
+                                #reference = self
+                            #min_rule = CompareRule('min_value', '>=', minimum,
+                                                   #reference=reference,
+                                                   #error_msg='Minimum unterschritten',
+                                                   #success_msg='Minimum überprüft')
+                            #node.add_rule(min_rule)
+                        #if maximum != '':
+                            #if is_number(maximum):
+                                #reference = None
+                            #else:
+                                #reference = self
+                            #max_rule = CompareRule('max_value', '<=', maximum,
+                                                   #reference=reference,
+                                                   #error_msg='Maximum überschritten',
+                                                   #success_msg='Maximum überprüft')
+                            #node.add_rule(max_rule)
+                        #if (np.array(dimension) != '').any():
+                            #if len(dimension) == 1:
+                                #dimension = dimension[0]
+                            #dim_rule = CompareRule('shape', '==', dimension,
+                                                   #reference=self,
+                                                   #error_msg='falsche Dimension',
+                                                   #success_msg='Dimension überprüft')
+                            #node.add_rule(dim_rule)
+                #return node
+
+def is_number(s):
+    '''
+    check if String represents a number
+    '''
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False

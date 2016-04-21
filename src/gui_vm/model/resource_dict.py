@@ -399,14 +399,18 @@ class ResourceConfigXMLParser(object):
                 table_xml = etree.SubElement(res_xml, table_type)
                 table_xml.attrib['subdivision'] = table._v_pathname
                 table_xml.attrib['n_rows'] = str(table.nrows)
-                col_xml = etree.SubElement(table_xml, 'column')
                 table_data = table.read()
                 columns = table_data.dtype
                 for col in columns.names:
-                    col_xml.attrib['column_name'] = col
-                    col_xml.attrib['joker'] = ''
+                    col_xml = etree.SubElement(table_xml, 'column')
+                    col_xml.attrib['name'] = col
                     col_xml.attrib['type'] = str(columns[col])
+
+                    # following attributes have to be set manually!
+                    col_xml.attrib['minimum'] = ''
+                    col_xml.attrib['maximum'] = ''
                     col_xml.attrib['is_primary_key'] = '0'
+
             elif table._c_classId == 'ARRAY':
                 table_xml = etree.SubElement(res_xml, table_type)
                 table_xml.attrib['subdivision'] = table._v_pathname
@@ -416,8 +420,15 @@ class ResourceConfigXMLParser(object):
                     dim += '{} x '.format(d)
                 dim = dim[:-3]
                 table_xml.attrib['dimension'] = dim
+
+                # following attributes have to be set manually!
+                table_xml.attrib['minimum'] = ''
+                table_xml.attrib['maximum'] = ''
             else:
                 continue
 
     def write(self, filename):
         etree.ElementTree(self.root).write(str(filename), pretty_print=True)
+
+    def read(self, filename):
+        self.root = etree.parse(filename)

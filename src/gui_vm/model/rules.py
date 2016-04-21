@@ -6,7 +6,7 @@
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -35,6 +35,9 @@ class Rule(object):
                a referenced object, if set all strings in target with a
                field name will be taken from this referenced object
     '''
+    # strings indicating beginning/end of a field-name, that shall be the basis of the rule instead of a number
+    replace_indicators = ['{', '}']
+    # wildcards will be ignored while checking the rule
     wildcards = ['*', '']
 
     def __init__(self, field_name, target_value,
@@ -57,34 +60,37 @@ class Rule(object):
         if referenced: strings in target representing a referenced field name
         will be replaced by the actual values of the field
         '''
-        #copy needed (otherwise side effect is caused)
+        # copy needed (otherwise side effect is caused)
         target = copy.copy(self._target)
         ref_target = []
         former_type = target.__class__
         cast = False
-        #look if value is iterable (like lists, arrays, tuples)
+        # look if value is iterable (like lists, arrays, tuples)
         if not hasattr(target, '__iter__'):
             target = [target]
-        #iterate over the values
+        # iterate over the values
         for i, val in enumerate(target):
             #ignore wildcards
             if val not in self.wildcards:
-                #strings may be references to a field
-                #(if there is a reference at all)
-                if self.reference is not None and isinstance(val, str):
-                    #look if the referenced object has a field with this name
-                    #and get the referenced value
-                    if (self.reference is not None) and \
-                       hasattr(self.reference, val):
+                # strings may be references to a field
+                # (if there is a reference at all)
+                if self.reference is not None and not is_number(val):
+                    # find fieldname in between indicating brackets
+                    val = val[val.find(self.replace_indicators[0]) +
+                              1:val.find(self.replace_indicators[1])]
+
+                    # look if the referenced object has a field with this name
+                    # and get the referenced value
+                    if hasattr(self.reference, val):
                         field = getattr(self.reference, val)
                         val = field
-                #cast to number if string wraps a number
+                # cast to number if string wraps a number
                 if is_number(val):
                     val = float(val)
                     if val % 1 == 0:
                         val = int(val)
             ref_target.append(val)
-        #cast back if list is unnecessary
+        # cast back if list is unnecessary
         if len(ref_target) == 1:
             ref_target = ref_target[0]
         return ref_target

@@ -28,6 +28,7 @@ class Config():
         self.mainWindow = None
         self.batch_mode = False
         self.admin_mode = False
+        self.save_disabled = False
         self.settings = {
             'environment': {
                 'hdf5_viewer': ''

@@ -22,20 +22,23 @@ def startmain():
                         dest="project_file", default=None)
 
     parser.add_argument("--scenario", "-s", action="store",
-                        help="angegebenes Szenario ausführen",
+                        help=u"angegebenes Szenario ausführen",
                         dest="scenario_name", default=None)
 
     parser.add_argument("--run-specific", "-r", action="store",
-                        help="Lauf ausführen",
+                        help=u"Lauf ausführen",
                         dest="run_name", default="Gesamtlauf")
     parser.add_argument("--calibrate", "-c", action="store_true",
-                        help="Kalibrierung durchführen (gilt nur für Gesamtlauf)",
+                        help=u"Kalibrierung durchführen (gilt nur für Gesamtlauf)",
                         dest="calibrate", default=False)
 
     parser.add_argument("--balancing", action="store_false",
                         help="Randsummenabgleich deaktivieren (gilt nur für Gesamtlauf)",
                         dest="do_balancing", default=True)
 
+    parser.add_argument("--nosave", action="store_true",
+                        help=u"Speicherung von Änderungen an Projekten deaktivieren",
+                        dest="nosave", default=False)
 
     arguments = parser.parse_args()
 
@@ -46,6 +49,7 @@ def startmain():
     run_name = arguments.run_name
     calibrate = arguments.calibrate
     do_balancing = arguments.do_balancing
+    save_disabled = arguments.nosave
     ret = -1
 
     if run_scenario and not project_file:
@@ -80,7 +84,8 @@ def startmain():
         splash.show()
         mainwindow = MainWindow(project_file=project_file,
                                 run_scenario=run_scenario,
-                                admin_mode=admin_mode)
+                                admin_mode=admin_mode,
+                                save_disabled=save_disabled)
         mainwindow.show()
         splash.close()
         # splash.hide()
