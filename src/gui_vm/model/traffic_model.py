@@ -448,6 +448,6 @@ def column_dict_to_h5column(column_dict, reference=None, ignore_jokers=True):
                                exp_maximum=maximum,
                                is_primary_key=is_primary_key,
                                reference=reference,
-                               required=True)
+                               is_required=True)
         columns.append(column)
     return columns, ignored

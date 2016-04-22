@@ -16,7 +16,7 @@ import numpy as np
 import time
 from collections import OrderedDict
 from gui_vm.model.observable import Observable
-from gui_vm.model.rules import DtypeCompareRule, CompareRule
+from gui_vm.model.rules import DtypeCompareRule, CompareRule, Rule
 import copy
 
 class Status(object):
@@ -187,7 +187,7 @@ class Resource(Observable):
         self.name = name
         self.children = []
         self.rules = []
-        self.required = False
+        self.is_required = False
         self.dynamic = False
         #add status flags for the monitored attributes
         self._status = Status()
@@ -591,7 +591,7 @@ class H5Table(H5Node):
         tmp = []
         for i in xrange(len(self.children)):
             child = self.children.pop(0)
-            if not child.required:
+            if not child.is_required:
                 child.remove_children()
             else:
                 child.reset()
@@ -620,11 +620,38 @@ class H5Table(H5Node):
             column_names.append(col.name)
         return column_names
 
+    def multiply_placeholder(self, placeholder_column, field_name, replacement_list):
+        pattern = placeholder_column.name
+
+        # remove all temporary columns TODO: only remove matching pattern
+        tmp = []
+        for i in xrange(len(self.children)):
+            column = self.children.pop(0)
+            if column.dynamic:
+                column.remove_children()
+            else:
+                tmp.append(column)
+        self.children = tmp
+        if not replacement_list:
+            return
+        for replacement in replacement_list:
+            new_col_name = pattern.replace(
+                Rule.replace_indicators[0] + field_name + Rule.replace_indicators[1],
+                replacement)
+            dynamic_column = copy.deepcopy(placeholder_column)
+            dynamic_column.name = new_col_name
+            dynamic_column.dynamic = True
+            dynamic_column.is_required = True
+            self.add_child(dynamic_column)
+
     def from_xml(self, element, reference=None):
         '''
         read and add attributes of the H5 Table from an etree xml element
         including columns and rules
 
+        Parameters
+        ----------
+        element:    the etree xml element representing a H5Table
         reference:  object, optional
                     a referenced object, created rules are (e.g. min with fieldname)
                     referenced to this object
@@ -637,43 +664,24 @@ class H5Table(H5Node):
                                    success_msg='Dimension überprüft')
             self.add_rule(dim_rule)
         for column_node in element.findall('column'):
-            column = H5TableColumn(column_node.attrib['name'], required=True)
+            col_name = column_node.attrib['name']
+            column = H5TableColumn(col_name, is_required=True)
             column.from_xml(column_node, reference=reference)
-            self.add_child(column)
 
-        #tables = []
-        #ignored = []
-        #node_names = table_dict['subdivision']
-        #resource_names = table_dict['resource_name']
-        #for row in xrange(table_dict.row_count):
-            #node_name = node_names[row]
-            #res_name = resource_names[row]
-            #h5table = H5Table(node_name)
-            #table = table_dict.get_rows_by_entries(
-                #resource_name=res_name, subdivision=node_name)
-            #if table.row_count > 0:
-                #if table.row_count > 1:
-                    #raise Exception('{}{} defined more than once'
-                                    #.format(res_name, node_name))
-                #n_rows = table['n_rows'][0]
-                #if n_rows != '':
-                    #dim_rule = CompareRule('shape', '==',
-                                           #n_rows, reference=reference,
-                                           #error_msg='falsche Dimension',
-                                           #success_msg='Dimension überprüft')
-                    #h5table.add_rule(dim_rule)
-
-                ##add columns required by the model to table (defined in csv)
-                #table_cols = column_dict.get_rows_by_entries(
-                    #resource_name=res_name, subdivision=node_name)
-                #columns, ign = column_dict_to_h5column(table_cols,
-                                                       #reference=reference)
-                #ignored.extend(ign)
-                #for column in columns:
-                    #h5table.add_child(column)
-                #tables.append(h5table)
-        #return tables, ignored
-
+            # if name of column shows replacable pattern create placeholder
+            do_replace = Rule.replace_indicators[0] in col_name
+            if do_replace:
+                field_name = col_name[col_name.find(Rule.replace_indicators[0]) +
+                                      1:col_name.find(Rule.replace_indicators[1])]
+                # on change of the referenced field the dynamic cols will be be
+                # cloned from of the placeholder column
+                reference.bind(field_name,
+                               lambda value: self.multiply_placeholder(column,
+                                                                       field_name,
+                                                                       value))
+            else:
+                # only add columns, that don't act as placeholders
+                self.add_child(column)
 
 class H5TableColumn(H5Resource):
     '''
@@ -693,7 +701,7 @@ class H5TableColumn(H5Resource):
     reference:      object, optional
                     a referenced object, by name referenced minima or maxima are
                     are taken from this object
-    required:       bool, optional
+    is_required:    bool, optional
                     determines, if the column is required by the traffic model
     '''
     monitored = OrderedDict([('dtype', 'dtype'),
@@ -704,14 +712,14 @@ class H5TableColumn(H5Resource):
     def __init__(self, name, exp_dtype=None,
                    exp_minimum=None, exp_maximum=None,
                    is_primary_key=False, reference=None,
-                   required=False):
+                   is_required=False):
         super(H5TableColumn, self).__init__(name)
 
         self.max_value = None
         self.min_value = None
         self.dtype = None
         self.content = None
-        self.required = required
+        self.is_required = is_required
         self.is_primary_key = is_primary_key
         #self._set_rules(exp_dtype, exp_minimum, exp_maximum, reference)
 
@@ -753,8 +761,9 @@ class H5TableColumn(H5Resource):
         by the dtype flag
         check for uniqueness of primary keys
         '''
-        self.reset()
+
         if table is None or self.name not in table.dtype.names:
+            self.reset()
             self._status.set('dtype', Status.NOT_FOUND)
             self.max_value = None
             self.min_value = None
@@ -762,7 +771,7 @@ class H5TableColumn(H5Resource):
             self.content = None
         else:
             self.dtype = table.dtype[self.name]
-            if self.required:
+            if self.is_required:
                 self._status.set('dtype', Status.FOUND)
             else:
                 self._status.set('dtype', Status.NOT_NEEDED)
@@ -782,11 +791,15 @@ class H5TableColumn(H5Resource):
             if 'content' in self._observed:
                 self.set('content', list(content))
 
+
     def from_xml(self, element, reference=None):
         '''
-        read and add attributes of the H5 Table from an etree xml element
-        including columns and rules
+        read and add attributes of the H5 Column from an etree xml element
+        including rules
 
+        Parameters
+        ----------
+        element:    the etree xml element representing the column
         reference:  object, optional
                     a referenced object, created rules are (e.g. min with fieldname)
                     referenced to this object
@@ -803,48 +816,6 @@ class H5TableColumn(H5Resource):
             self.is_primary_key = False
 
         self._set_rules(dtype, minimum, maximum, reference)
-
-        #if '?' in col_name or '*' in col_name:
-
-            #def add_dynamic_cols(c):
-                #field_name = c['joker'][0]
-                #replace = self.get(field_name)
-                #resource = self.resources[c['resource_name'][0]]
-                #h5table = resource.get_child(c['subdivision'][0])
-                #tmp = []
-                ## remove old dynamic columns
-                ## WARNING: removes all dynamic columns, so there can only
-                ## be one pattern for dynamic cols per table
-                #for i in xrange(len(h5table.children)):
-                    #col = h5table.children.pop(0)
-                    #if col.dynamic:
-                        #col.remove_children()
-                    #else:
-                        #tmp.append(col)
-                #h5table.children = tmp
-                #if not replace:
-                    #return
-                #c_n = c['column_name'][0]
-                #c1 = c.clone()
-                #c2 = c.clone()
-                #c1.clear()
-                ## build a column dict with the new column names
-                #for r in replace:
-                    #new_col_name = c_n.replace('?', r).replace('*', r)
-                    #c2['column_name'] = new_col_name
-                    #c1.merge_table(c2)
-                ##create h5 columns
-                #columns = column_dict_to_h5column(c1, reference=self)[0]
-                #for col in columns:
-                    #col.dynamic = True
-                    #h5table.add_child(col)
-
-            ## on change of the field the joker is referenced to,
-            ## the dynamic cols will be be added
-            #self.bind(joker, partial((lambda d, value:
-                      #add_dynamic_cols(d)), d_col))
-
-
 
 
 class H5Array(H5Node):
