@@ -86,6 +86,9 @@ class Config():
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
 
     def reset(self, reset_filename=None, reset_from_filename=None):
+        '''
+        reset the config to the values in another config file, keeps the old history
+        '''
         if not reset_filename:
             reset_filename = self.filename
         if not reset_from_filename:

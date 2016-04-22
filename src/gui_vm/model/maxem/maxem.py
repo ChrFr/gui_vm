@@ -18,13 +18,8 @@ class SpecificModel(TrafficModel):
     Maxem traffic model
     '''
 
-    #names of the config files containing the target status of all input data
-    #relative to the directory this file is in
-    INPUT_CONFIG_FILE = 'Maxem_input.csv'
-    TABLES_CONFIG_FILE = 'Maxem_tables.csv'
-    ARRAYS_CONFIG_FILE = 'Maxem_arrays.csv'
-    COLUMNS_CONFIG_FILE = 'Maxem_columns.csv'
-
+    # name of the config file containing the target status of all input data
+    # relative to the directory this file is in
     RESOURCES_XML = 'Maxem.xml'
 
     #names of the fields that can be displayed outside the model
@@ -38,29 +33,14 @@ class SpecificModel(TrafficModel):
                              ('groups_generation', 'Personengruppen')])
 
     def __init__(self, path=None):
-        maxem_path = os.path.dirname(__file__)
-        input_config_file = os.path.join(maxem_path,
-                                         self.INPUT_CONFIG_FILE)
-        tables_config_file = os.path.join(maxem_path,
-                                          self.TABLES_CONFIG_FILE)
-        arrays_config_file = os.path.join(maxem_path,
-                                          self.ARRAYS_CONFIG_FILE)
-        columns_config_file = os.path.join(maxem_path,
-                                           self.COLUMNS_CONFIG_FILE)
-        super(SpecificModel, self).__init__(
-            'Maxem',
-            input_config_file=input_config_file,
-            tables_config_file=tables_config_file,
-            arrays_config_file=arrays_config_file,
-            columns_config_file=columns_config_file)
+        super(SpecificModel, self).__init__('Maxem')
 
         self.activity_codes = None
         self.activity_names = None
         self.groups_generation = None
         self.area_types = None
 
-        #self.resource_config_from_csv()
-
+        maxem_path = os.path.dirname(__file__)
         resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
         self.resource_config_from_xml(resource_xml_file)
 

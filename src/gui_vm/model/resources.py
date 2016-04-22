@@ -721,39 +721,6 @@ class H5TableColumn(H5Resource):
         self.content = None
         self.is_required = is_required
         self.is_primary_key = is_primary_key
-        #self._set_rules(exp_dtype, exp_minimum, exp_maximum, reference)
-
-    def _set_rules(self, exp_dtype=None, exp_minimum=None, exp_maximum=None, reference=None):
-
-        if exp_minimum:
-            if is_number(exp_minimum):
-                ref = None
-            else:
-                ref = reference
-            min_rule = CompareRule('min_value', '>=', exp_minimum,
-                                   reference=ref,
-                                   error_msg='Minimum von '
-                                   + exp_minimum + ' unterschritten',
-                                   success_msg='Minimum überprüft')
-            self.add_rule(min_rule)
-
-        if exp_maximum:
-            if is_number(exp_maximum):
-                ref = None
-            else:
-                ref = reference
-            max_rule = CompareRule('max_value', '<=', exp_maximum,
-                                   reference=ref,
-                                   error_msg='Maximum von '
-                                   + exp_maximum + ' überschritten',
-                                   success_msg='Maximum überprüft')
-            self.add_rule(max_rule)
-
-        if exp_dtype:
-            type_rule = DtypeCompareRule('dtype', '==', exp_dtype,
-                                    error_msg='falscher dtype',
-                                    success_msg='dtype überprüft')
-            self.add_rule(type_rule)
 
     def update(self, table):
         '''
@@ -815,7 +782,35 @@ class H5TableColumn(H5Resource):
         else:
             self.is_primary_key = False
 
-        self._set_rules(dtype, minimum, maximum, reference)
+        if minimum:
+            if is_number(minimum):
+                ref = None
+            else:
+                ref = reference
+            min_rule = CompareRule('min_value', '>=', minimum,
+                                   reference=ref,
+                                   error_msg='Minimum von '
+                                   + minimum + ' unterschritten',
+                                   success_msg='Minimum überprüft')
+            self.add_rule(min_rule)
+
+        if maximum:
+            if is_number(maximum):
+                ref = None
+            else:
+                ref = reference
+            max_rule = CompareRule('max_value', '<=', maximum,
+                                   reference=ref,
+                                   error_msg='Maximum von '
+                                   + maximum + ' überschritten',
+                                   success_msg='Maximum überprüft')
+            self.add_rule(max_rule)
+
+        if dtype:
+            type_rule = DtypeCompareRule('dtype', '==', dtype,
+                                         error_msg='falscher dtype',
+                                         success_msg='dtype überprüft')
+            self.add_rule(type_rule)
 
 
 class H5Array(H5Node):
