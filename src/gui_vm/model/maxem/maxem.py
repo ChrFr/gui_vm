@@ -7,16 +7,18 @@ import os, imp
 import sys
 import csv
 import numpy as np
-from gui_vm.config.config import Config
+from gui_vm.config.config import Config, Singleton
 import gui_vm
 
 config = Config()
 config.read()
 
-class SpecificModel(TrafficModel):
+class Maxem(TrafficModel):
     '''
     Maxem traffic model
     '''
+    #__metaclass__ = Singleton
+    # singleton won't work because of resource paths, TODO: clone in TrafficModel to avoid multiple readings
 
     # name of the config file containing the target status of all input data
     # relative to the directory this file is in
@@ -25,52 +27,14 @@ class SpecificModel(TrafficModel):
     #names of the fields that can be displayed outside the model
     #can be adressed in the csv as fields of the table
     monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
-                             ('area_types', 'Gebietstypen'),
                              ('n_time_series', 'Anzahl Zeitscheiben'),
-                             ('n_activity_pairs', 'Aktivitätenpaare'),
-                             ('activity_names', 'Aktivitäten'),
-                             ('activity_codes', 'Aktivitätencodes'),
-                             ('groups_generation', 'Personengruppen')])
+                             ('n_activity_pairs', 'Aktivitätenpaare')])
 
-    def __init__(self, path=None):
-        super(SpecificModel, self).__init__('Maxem')
-
-        self.activity_codes = None
-        self.activity_names = None
-        self.groups_generation = None
-        self.area_types = None
-
+    def __init__(self):
+        super(Maxem, self).__init__('Maxem')
         maxem_path = os.path.dirname(__file__)
         resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
         self.resource_config_from_xml(resource_xml_file)
-
-        ####observe columns####
-        activities = self.resources['Params'].get_child(
-            '/activities/activities')
-        #observe activity codes
-        code_column = activities.get_child('code')
-        code_column.bind('content',
-                         lambda value: self.set('activity_codes', value))
-        #observe activity names
-        name_column = activities.get_child('name')
-        name_column.bind('content',
-                         lambda value: self.set('activity_names', value))
-        #observe area_types
-        zones = self.resources['Zonen'].get_child('/zones/area_types')
-        area_column = zones.get_child('areatype_name')
-        area_column.bind('content',
-                         lambda value: self.set('area_types', value))
-
-        groups = self.resources['Params'].get_child(
-            '/groups/groups_generation')
-        #observe group destination modes
-        grp_column = groups.get_child('code')
-        grp_column.bind('content',
-                         lambda value: self.set('groups_generation',
-                                                value))
-
-        if path is not None:
-            self.update()
 
     @property
     def options(self):
@@ -139,9 +103,6 @@ class SpecificModel(TrafficModel):
             return None
         else:
             return int(shape[0])
-
-    def update(self, path):
-        super(SpecificModel, self).update(path)
 
     def evaluate (self, file_path, overwrite=False):
         '''

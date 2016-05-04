@@ -35,7 +35,7 @@ class Status(object):
     NOT_FOUND = 4
     MISMATCH = 5
 
-    DEFAULT_MESSAGES = ['', 'nicht benötigt', 'vorhanden', 'überprüft',
+    DEFAULT_MESSAGES = ['', 'nicht explizit benötigt', 'vorhanden', 'überprüft',
                         'nicht vorhanden', 'Fehler']
 
     def __init__(self):
@@ -883,46 +883,6 @@ class H5Array(H5Node):
                                    error_msg='falsche Dimension',
                                    success_msg='Dimension überprüft')
             self.add_rule(dim_rule)
-        #node = H5Array(node_name)
-                #if self.array_dict.row_count > 0:
-                    #rows = self.array_dict.get_rows_by_entries(
-                        #resource_name=res_name, subdivision=node_name)
-                    #if rows.row_count > 1:
-                        #raise Exception('{}{} defined more than once in {}'.format(
-                            #res_name, node_name, self.arrays_config_file))
-                    #if rows.row_count > 0:
-                        #minimum = rows['minimum'][0]
-                        #maximum = rows['maximum'][0]
-                        #dimension = tuple(rows['dimension'][0].split(' x '))
-                        #if minimum != '':
-                            #if is_number(minimum):
-                                #reference = None
-                            #else:
-                                #reference = self
-                            #min_rule = CompareRule('min_value', '>=', minimum,
-                                                   #reference=reference,
-                                                   #error_msg='Minimum unterschritten',
-                                                   #success_msg='Minimum überprüft')
-                            #node.add_rule(min_rule)
-                        #if maximum != '':
-                            #if is_number(maximum):
-                                #reference = None
-                            #else:
-                                #reference = self
-                            #max_rule = CompareRule('max_value', '<=', maximum,
-                                                   #reference=reference,
-                                                   #error_msg='Maximum überschritten',
-                                                   #success_msg='Maximum überprüft')
-                            #node.add_rule(max_rule)
-                        #if (np.array(dimension) != '').any():
-                            #if len(dimension) == 1:
-                                #dimension = dimension[0]
-                            #dim_rule = CompareRule('shape', '==', dimension,
-                                                   #reference=self,
-                                                   #error_msg='falsche Dimension',
-                                                   #success_msg='Dimension überprüft')
-                            #node.add_rule(dim_rule)
-                #return node
 
 def is_number(s):
     '''

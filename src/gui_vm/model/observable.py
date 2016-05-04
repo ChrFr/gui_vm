@@ -6,7 +6,7 @@
 ##
 ## Author:      Christoph Franke
 ##
-## Created:     
+## Created:
 ## Copyright:   Gertz Gutsche Rümenapp - Stadtentwicklung und Mobilität GbR
 ##------------------------------------------------------------------------------
 
@@ -38,10 +38,10 @@ class Observable(object):
         for attribute in self._observed:
             self.set(attribute, None)
         self.emit()
-            
-    def on_change(self, callback):        
+
+    def on_change(self, callback):
         self.connected.append(callback)
-    
+
     def emit(self):
         for callback in self.connected:
             callback()

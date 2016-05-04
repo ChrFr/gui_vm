@@ -118,6 +118,38 @@ class TrafficModel(Observable):
                     h5resource.add_child(array)
             self.add_resource(h5resource)
 
+
+        # MONITOR SPECIFIED RESOURCES
+        for monitor in parser.root.findall('Monitor'):
+            # CONTENT OBSERVATION
+            for monitor_content in monitor.findall('Content'):
+                monitor_name = monitor_content.attrib['name']
+                pretty_name = monitor_content.attrib['alias']
+                res_name = monitor_content.attrib['resource']
+                sub_name = monitor_content.attrib['subdivision']
+                col_name = monitor_content.attrib['column']
+                column = self.resources[res_name].get_child(sub_name).get_child(col_name)
+
+                self.monitored[monitor_name] = pretty_name
+                # change the value of the monitor (simple attribute with defined name)
+                # each time the column changes
+                self.set(monitor_name, None)
+                column.bind('content', (lambda attr: lambda value: self.set(attr, value))(monitor_name))  # double lambda, because monitor_name changes in closure (else last one taken)
+
+            ## SHAPE OBSERVATION (set as properties)
+            #for monitor_content in monitor.findall('Shape'):
+                #monitor_name = monitor_content.attrib['name']
+                #pretty_name = monitor_content.attrib['alias']
+                #res_name = monitor_content.attrib['resource']
+                #sub_name = monitor_content.attrib['subdivision']
+
+                #table = self.resources[res_name].get_child(sub_name)
+
+                ## change the value of the monitor (simple attribute with defined name)
+                ## each time the column changes
+                #prop = (lambda t: None if t.shape is None else int(t.shape))(table)
+                #setattr(self, monitor_name, property(prop))
+
     @property
     def meta(self):
         '''
@@ -150,6 +182,6 @@ class TrafficModel(Observable):
 
             module = importlib.import_module(class_module)
 
-            return module.SpecificModel()
+            return getattr(module, name)()
         else:
             return None

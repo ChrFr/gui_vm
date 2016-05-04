@@ -1,4 +1,14 @@
 <Resources>
+  <!-- observed attributes, can be used in the resource definitions: {nameofmonitorobject} -->
+  <Monitor>
+    <!-- observe the content of a column, can be used like this: <column name="xxx{nameofmonitorobject}xxx" ... /> -->
+    <Content name="activity_codes" alias="Aktivitätencodes" resource="Params" subdivision="/activities/activities" column="code" />
+    <Content name="activity_names" alias="Aktivitäten" resource="Params" subdivision="/activities/activities" column="name" />
+    <Content name="area_types" alias="Gebietstypen" resource="Zonen" subdivision="/zones/area_types" column="areatype_name" />
+    <Content name="groups_generation" alias="Personengruppen" resource="Params" subdivision="/groups/groups_generation" column="code" />
+    <!-- observe the shape of a table, can be used like this: <H5Array dimension="{nameofmonitorobject} x {nameofmonitorobject} x 10" ... /> -->
+    <Shape name="n_zones" alias="Anzahl Zonen (Test)" resource="Zonen" subdivision="/zones/zones" />
+  </Monitor>
   <H5Resource name="Fuss und Rad" category="Fuss und Rad">
     <H5Table subdivision="/Bezirke" n_rows="{n_zones}">
       <column name="zone_no" type="int32" minimum="" maximum="" is_primary_key="0"/>
