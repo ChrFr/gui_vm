@@ -146,13 +146,13 @@ class Status(object):
         '''
         status_code = self.NOT_CHECKED
         messages = []
-        for flag in self._flag_dict.values():
+        for flag, status in self._flag_dict.items():
 
             # flag is Status itself
-            if isinstance(flag, Status):
-                flag.merge()
-                child_status = flag.code
-                child_msgs = flag.messages
+            if isinstance(status, Status):
+                status.merge()
+                child_status = status.code
+                child_msgs = status.messages
                 # append error messages only (avoid confusion in GUI)
                 if child_status >= self.NOT_FOUND:
                     messages.extend(child_msgs)
@@ -161,11 +161,13 @@ class Status(object):
                 continue
 
             # no message found -> take default one
-            if not isinstance(flag, tuple):
-                flag = (flag, self.DEFAULT_MESSAGES[flag])
+            if not isinstance(status, tuple):
+                status = (status, self.DEFAULT_MESSAGES[flag])
 
-            if flag[0] > status_code:
-                status_code = flag[0]
+            if status[0] >= self.NOT_FOUND:
+                messages.append(status[1])
+            if status[0] > status_code:
+                status_code = status[0]
 
         self.code = status_code
 
