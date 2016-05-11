@@ -27,6 +27,8 @@ class Observable(object):
         '''
         set the attribute with the given value
         '''
+        if hasattr(self, attribute) and value == self.get(attribute):
+            return
         setattr(self, attribute, value)
         if attribute in self._observed:
             callbacks = self._observed[attribute]

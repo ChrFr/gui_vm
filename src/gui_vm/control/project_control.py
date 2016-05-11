@@ -1385,8 +1385,6 @@ class VMProjectControl(ProjectTreeControl):
         validate the active project and it's scenarios
         '''
         scenarios = self.project.find_all_by_class(Scenario)
-        #for scen in scenarios:
-            #scen.update()
         for scen in scenarios:
             scen.validate()
         self.view_changed.emit()

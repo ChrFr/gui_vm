@@ -19,6 +19,13 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="file_edit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item row="6" column="2">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
@@ -41,13 +48,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QPushButton" name="status_button">
-         <property name="text">
-          <string>Status prüfen</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
      <item row="1" column="3">
@@ -66,10 +66,26 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="2">
-      <widget class="QLineEdit" name="file_edit">
-       <property name="readOnly">
-        <bool>true</bool>
+     <item row="2" column="2">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>30</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Projektdatei</string>
        </property>
       </widget>
      </item>
@@ -77,13 +93,6 @@
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Quelle</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Projektdatei</string>
        </property>
       </widget>
      </item>
@@ -110,22 +119,6 @@
         </spacer>
        </item>
       </layout>
-     </item>
-     <item row="2" column="2">
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>30</height>
-        </size>
-       </property>
-      </spacer>
      </item>
      <item row="0" column="2">
       <widget class="QLabel" name="project_copy">
@@ -200,6 +193,49 @@
         </size>
        </property>
       </widget>
+     </item>
+     <item row="4" column="3">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="status_button">
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Quelldatei erneut prüfen</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="gui.qrc">
+           <normaloff>:/buttons/icons/reload.png</normaloff>:/buttons/icons/reload.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

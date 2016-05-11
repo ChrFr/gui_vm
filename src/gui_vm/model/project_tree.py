@@ -919,7 +919,7 @@ class ResourceNode(TreeNode):
 
     def reset_to_default(self):
         '''
-        reset the scenario to the defaults
+        reset the resource to the defaults
         no real reset, only setting of source, because the resource can't be
         set to the old model (incl. references of rules and resource list
         of model) at the moment
@@ -942,7 +942,7 @@ class ResourceNode(TreeNode):
                          Scenario.INPUT_NODES,
                          self.file_relative))
 
-        return True, "Szenario erfolgreich auf defaults zurückgesetzt"
+        return True, "Ressource erfolgreich auf defaults zurückgesetzt"
 
 
 class InputNode(ResourceNode):

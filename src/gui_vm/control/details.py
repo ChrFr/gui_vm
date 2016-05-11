@@ -221,9 +221,8 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         # edit button disabled at the moment, many other ways to edit file via ui (try not to confuse the user)
         self.edit_button.setVisible(False)
 
-        # status button not needed anymore, because status is frequently updated
-        #self.status_button.clicked.connect(self.get_status)
-        self.status_button.setVisible(False)
+        self.status_button.clicked.connect(self.get_status)
+
         self.setMinimumSize(500, 0)
         self.update()
 

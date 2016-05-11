@@ -65,6 +65,12 @@ class Status(object):
             return
         self._flag_dict[flag] = self.NOT_CHECKED, self.DEFAULT_MESSAGES[self.NOT_CHECKED]
 
+    def clear(self):
+        '''
+        remove all status flags
+        '''
+        self._flag_dict.clear()
+
     def set(self, flag, value, message=None):
         '''
         set the status-code of a flag, is added if not exisiting,
@@ -338,6 +344,7 @@ class Resource(Observable):
         reset the status flags of the resource and its children recursive
         '''
         self._status.code = Status.NOT_CHECKED
+        self._status.clear()
         for key, value in self.monitored.items():
             self._status.set(key, Status.NOT_CHECKED)
         for child in self.children:
@@ -350,7 +357,8 @@ class Resource(Observable):
         '''
         if len(self.children) > 0:
             for i in xrange(len(self.children)):
-                self.children.pop(0).remove_children()
+                child = self.children.pop(0)
+                child.remove_children()
 
 
 class ResourceFile(Resource):
@@ -532,7 +540,7 @@ class H5Node(H5Resource):
         table = self.read(path, h5_in=h5_in)
         if not table:
             self._status.set('table_path', Status.NOT_FOUND)
-            self.shape = None
+            self.set('shape', None)
             return None
         self._status.set('table_path', Status.FOUND)
         table = table.read()
@@ -621,6 +629,19 @@ class H5Table(H5Node):
         return column_names
 
     def multiply_placeholder(self, placeholder_column, field_name, replacement_list):
+        '''
+        multiplies the given column, resulting columns differ in the names;
+        name of column to multiply should contain the field_name surrounded with
+        braces (->'xxx{field_name}xxx'), will be replaced by the strings in the given list;
+        adds the resulting columns as children (number of added columns = length of replacement_list);
+        all existing columns matching the pattern of the given column will be removed
+
+        Parameters
+        ----------
+        placeholder_column: the column to multiply
+        field_name: the tag that will be replaced
+        replacement_list: list of strings, that the tag will be replaced with
+        '''
         pattern = placeholder_column.name
 
         # remove all temporary columns TODO: only remove matching pattern
