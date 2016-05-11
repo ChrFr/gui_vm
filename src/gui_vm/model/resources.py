@@ -14,10 +14,11 @@ from backend import HDF5
 import os
 import numpy as np
 import time
+import copy
+import re
 from collections import OrderedDict
 from gui_vm.model.observable import Observable
 from gui_vm.model.rules import DtypeCompareRule, CompareRule, Rule
-import copy
 
 class Status(object):
     '''
@@ -194,7 +195,6 @@ class Resource(Observable):
         self.children = []
         self.rules = []
         self.is_required = False
-        self.dynamic = False
         #add status flags for the monitored attributes
         self._status = Status()
         for key, value in self.monitored.items():
@@ -632,7 +632,8 @@ class H5Table(H5Node):
         '''
         multiplies the given column, resulting columns differ in the names;
         name of column to multiply should contain the field_name surrounded with
-        braces (->'xxx{field_name}xxx'), will be replaced by the strings in the given list;
+        braces (or what ever is defined as replace_indicators ->e.g. 'xxx{field_name}xxx'),
+        will be replaced by the strings in the given list;
         adds the resulting columns as children (number of added columns = length of replacement_list);
         all existing columns matching the pattern of the given column will be removed
 
@@ -644,11 +645,12 @@ class H5Table(H5Node):
         '''
         pattern = placeholder_column.name
 
-        # remove all temporary columns TODO: only remove matching pattern
         tmp = []
+        tag = Rule.replace_indicators[0] + field_name + Rule.replace_indicators[1]
+        regex = placeholder_column.name.replace(tag, '[a-zA-Z\d]+')
         for i in xrange(len(self.children)):
             column = self.children.pop(0)
-            if column.dynamic:
+            if re.search(regex, column.name):
                 column.remove_children()
             else:
                 tmp.append(column)
@@ -656,12 +658,9 @@ class H5Table(H5Node):
         if not replacement_list:
             return
         for replacement in replacement_list:
-            new_col_name = pattern.replace(
-                Rule.replace_indicators[0] + field_name + Rule.replace_indicators[1],
-                replacement)
+            new_col_name = pattern.replace(tag, replacement)
             dynamic_column = copy.deepcopy(placeholder_column)
             dynamic_column.name = new_col_name
-            dynamic_column.dynamic = True
             dynamic_column.is_required = True
             self.add_child(dynamic_column)
 
