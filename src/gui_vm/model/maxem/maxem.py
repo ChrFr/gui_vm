@@ -24,12 +24,6 @@ class Maxem(TrafficModel):
     # relative to the directory this file is in
     RESOURCES_XML = 'Maxem.xml'
 
-    #names of the fields that can be displayed outside the model
-    #can be adressed in the csv as fields of the table
-    monitored = OrderedDict([('n_zones', 'Anzahl Zonen'),
-                             ('n_time_series', 'Anzahl Zeitscheiben'),
-                             ('n_activity_pairs', 'Aktivitätenpaare')])
-
     def __init__(self):
         super(Maxem, self).__init__('Maxem')
         maxem_path = os.path.dirname(__file__)
@@ -75,34 +69,6 @@ class Maxem(TrafficModel):
                                 "is_primary_only": False,
                                 "is_special_only": True }
         return options
-
-    @property
-    def n_zones(self):
-        #number of zones is determined by the number of rows in
-        #/zones/zones
-        shape = self.resources['Zonen'].get_child('/zones/zones').shape
-        if shape is None:
-            return None
-        else:
-            return int(shape[0])
-
-    @property
-    def n_time_series(self):
-        #time series is determined by the number of rows in
-        #/activities/time_series
-        shape = self.resources['Params'].get_child('/activities/time_series').shape
-        if shape is None:
-            return None
-        else:
-            return int(shape[0])
-
-    @property
-    def n_activity_pairs(self):
-        shape = self.resources['Params'].get_child('/activities/activitypairs').shape
-        if shape is None:
-            return None
-        else:
-            return int(shape[0])
 
     def evaluate (self, file_path, overwrite=False):
         '''

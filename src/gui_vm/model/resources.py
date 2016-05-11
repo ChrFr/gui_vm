@@ -536,7 +536,7 @@ class H5Node(H5Resource):
             return None
         self._status.set('table_path', Status.FOUND)
         table = table.read()
-        self.shape = table.shape
+        self.set('shape', table.shape)
         return table
 
     @property
