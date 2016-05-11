@@ -153,23 +153,26 @@ class Status(object):
                 flag.merge()
                 child_status = flag.code
                 child_msgs = flag.messages
-                for child_msg in child_msgs:
-                    if len(child_msg) > 0 and child_msg not in messages:
-                        messages.append(child_msg)
+                # append error messages only (avoid confusion in GUI)
+                if child_status >= self.NOT_FOUND:
+                    messages.extend(child_msgs)
                 if child_status > status_code:
                     status_code = child_status
                 continue
 
+            # no message found -> take default one
             if not isinstance(flag, tuple):
                 flag = (flag, self.DEFAULT_MESSAGES[flag])
 
-            msg = flag[1]
-            if len(msg) > 0 and msg not in messages:
-                messages.append(msg)
             if flag[0] > status_code:
                 status_code = flag[0]
 
         self.code = status_code
+
+        # messages should contain at least one message (esp. if no errors occurred)
+        if len(messages) == 0:
+            messages = [self.DEFAULT_MESSAGES[status_code]]
+
         self.messages = messages
 
 
@@ -751,7 +754,7 @@ class H5TableColumn(H5Resource):
 
         if table is None or self.name not in table.dtype.names:
             self.reset()
-            self._status.set('dtype', Status.NOT_FOUND)
+            self._status.set('dtype', Status.NOT_FOUND, 'Spalte fehlt')
             self.max_value = None
             self.min_value = None
             self.dtype = None
