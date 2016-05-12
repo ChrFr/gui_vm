@@ -403,10 +403,13 @@ class RunOptionsDialog(QtGui.QDialog):
         model_options = self.scenario.model.options
         for option, attr in model_options.items():
             if (attr.has_key('default') and not stored_options.has_key(option)):
-                stored_options[option] = [attr['default']]
+                index = int(attr['default'])
+                stored_options[option] = [attr['values'][index]]
             unique = attr.has_key('is_unique') and attr['is_unique'] == True
-            if ((not is_primary and not attr['is_primary_only']) or
-                (is_primary and not attr['is_special_only'])):
+            tagged_as_primary_only = attr.has_key('is_primary_only') and bool(attr['is_primary_only'])
+            tagged_as_special_only = attr.has_key('is_special_only') and bool(attr['is_special_only'])
+            if ((not is_primary and not tagged_as_primary_only) or
+                (is_primary and not tagged_as_special_only)):
                 self.option_checks[option] = create_tab(
                     option, attr['names'], attr['values'], stored_options, unique)
         self.show()

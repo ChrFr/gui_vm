@@ -653,7 +653,7 @@ class H5Table(H5Node):
 
         tmp = []
         tag = Rule.replace_indicators[0] + field_name + Rule.replace_indicators[1]
-        regex = placeholder_column.name.replace(tag, '[a-zA-Z\d]+')
+        regex = placeholder_column.name.replace(tag, '[a-zA-Z\d_]+')
         for i in xrange(len(self.children)):
             column = self.children.pop(0)
             if re.search(regex, column.name):

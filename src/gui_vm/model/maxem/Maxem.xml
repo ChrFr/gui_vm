@@ -1,5 +1,5 @@
 <Resources>
-  <!-- observed attributes, can be used in the resource definitions with {nameofmonitorobject},
+  <!-- observed attributes, can be cross referenced to from other resources via definitions with {nameofmonitorobject},
        order of monitored attributes determines the order in which they will be shown in GUI Scenario details-->
   <Monitor>
     <!-- observe the shape of a table, can be used like this: <H5Array dimension="{nameofmonitorobject} x {nameofmonitorobject} x 10" ... /> -->
@@ -12,6 +12,30 @@
     <content alias="Gebietstypen" resource="Zonen" path="/zones/area_types" column="areatype_name">area_types</content>
     <content alias="Personengruppen" resource="Params" path="/groups/groups_generation" column="code">groups_generation</content>
   </Monitor>
+  <RunOptions>
+    <group name="areatype" is_special_only="True">
+      <option value="{area_types}">{area_types}</option>
+    </group>
+    <group name="activities" is_special_only="True">
+      <option value="{activity_codes}">{activity_names}</option>
+    </group>
+    <group name="groups" is_special_only="True">
+      <option value="{groups_generation}">{groups_generation}</option>
+    </group>
+    <group name="detailed" is_special_only="True">
+      <option value="groups">Gruppendetails</option>
+      <option value="activities">Aktivitätendetails</option>
+    </group>
+    <!--is_unique - only one option can be checked at a time, default - by default selected option (index), is_special_only - only available for special runs, is_primary_only - only available for primary runs-->
+    <group name="calibrate" is_primary_only="True" is_unique="True" default="1">
+      <option value="True">An</option>
+      <option value="False">Aus</option>
+    </group>
+    <group name="balance" is_primary_only="True" is_unique="True" default="0">
+      <option value="True">An</option>
+      <option value="False">Aus</option>
+    </group>
+  </RunOptions>
   <H5Resource name="Fuss und Rad" category="Fuss und Rad">
     <H5Table path="/Bezirke" n_rows="{n_zones}">
       <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>

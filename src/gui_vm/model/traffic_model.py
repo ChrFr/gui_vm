@@ -21,6 +21,8 @@ from gui_vm.model.observable import Observable
 from gui_vm.config.config import Config
 from functools import partial
 import importlib
+import re
+from gui_vm.model.rules import Rule
 
 config = Config()
 
@@ -144,11 +146,61 @@ class TrafficModel(Observable):
                     # each time the column changes
                     column.bind('content', (lambda attr: lambda value: self.set(attr, value))(monitor_name))  # double lambda, because monitor_name changes in closure (-> else always the same name would be taken in callback)
 
-                # SHAPE OBSERVATION (set as properties)
+                # SHAPE OBSERVATION
                 if tag == 'shape':
                     table = self.resources[res_name].get_child(sub_path)
                     # change the value of the monitor each time shape is reset
                     table.bind('shape', (lambda attr: lambda shape: self.set(attr, int(shape[0]) if shape else None))(monitor_name))
+
+        # OPTIONS FOR RUNNING THE MODEL (need to be parsed and updated at runtime)
+        self._options = OrderedDict()
+        options_node = parser.root.find('RunOptions')
+        for group in options_node.findall('group'):
+            key = group.attrib['name']
+            #take all attributes as key/values
+            self._options[key] = dict(group.attrib)
+            # name already set as key
+            del(self._options[key]['name'])
+
+            keys = []
+            values = []
+            for option in group:
+                keys.append(option.text)
+                values.append(option.attrib['value'])
+            self._options[key]['names'] = keys
+            self._options[key]['values'] = values
+
+    @property
+    def options(self):
+        '''
+        parses options for running the model and updates referenced values
+
+        Return
+        ------
+        options - dictionary with available run options
+        '''
+        options = OrderedDict()
+        left_ind = Rule.replace_indicators[0]
+        right_ind = Rule.replace_indicators[1]
+        regex = left_ind + '[a-zA-Z\d_]+' + right_ind
+        for group, group_options in self._options.items():
+            options[group] = {}
+            for option, values in group_options.items():
+                if isinstance(values, list):
+                    processed_values = []
+                    for value in values:
+                        # replace references with actual values
+                        if re.match(regex, value):
+                            value = value.replace(left_ind, '').replace(right_ind, '')
+                            value = getattr(self, value)
+                        if isinstance(value, list):
+                            processed_values.extend(value)
+                        else:
+                            processed_values.append(value)
+                    values = processed_values
+                options[group][option] = values
+        return options
+
 
     @property
     def meta(self):
@@ -166,10 +218,6 @@ class TrafficModel(Observable):
             pretty_name = self.monitored[attr]
             meta[pretty_name] = value
         return meta
-
-    @property
-    def options(self):
-        return None
 
     @staticmethod
     def new_specific_model(name):
