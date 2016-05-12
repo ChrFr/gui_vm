@@ -185,9 +185,10 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                                     "\nWollen Sie sie überschreiben?"))
                     msgBox.addButton(QtGui.QPushButton('Ja'),
                                      QtGui.QMessageBox.YesRole)
-                    if len(filenames) > 1:
-                        msgBox.addButton(QtGui.QPushButton(_fromUtf8('Ja für Alle')),
-                                         QtGui.QMessageBox.YesRole)
+                    yta_btn = QtGui.QPushButton(_fromUtf8('Ja für Alle'))
+                    msgBox.addButton(yta_btn, QtGui.QMessageBox.YesRole)
+                    if len(filenames) == 1:
+                        yta_btn.setDisabled(True)
                     msgBox.addButton(QtGui.QPushButton('Nein'),
                                      QtGui.QMessageBox.NoRole)
                     msgBox.addButton(QtGui.QPushButton('Abbrechen'),
@@ -195,6 +196,7 @@ class CopyFilesDialog(QtGui.QDialog, Ui_ProgressDialog):
                     reply = msgBox.exec_()
                     do_copy = reply == 0
                     yes_to_all = reply == 1
+                    no = reply == 2
                     cancel = reply == 3
                     if cancel:
                         return
