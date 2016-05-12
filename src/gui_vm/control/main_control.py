@@ -13,7 +13,6 @@ from gui_vm.config.config import Config
 from gui_vm.model.project_tree import TreeNode, Scenario
 
 config = Config()
-config.read()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

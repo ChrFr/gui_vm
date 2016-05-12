@@ -22,6 +22,8 @@ from gui_vm.config.config import Config
 from functools import partial
 import importlib
 
+config = Config()
+
 
 class TrafficModel(Observable):
     '''
@@ -108,12 +110,12 @@ class TrafficModel(Observable):
                                     filename='')
             for sub_node in h5res_node:
                 if sub_node.tag == 'H5Table':
-                    table = H5Table(sub_node.attrib['subdivision'])
+                    table = H5Table(sub_node.attrib['path'])
                     table.from_xml(sub_node, reference=self)
                     h5resource.add_child(table)
 
                 elif sub_node.tag == 'H5Array':
-                    array = H5Array(sub_node.attrib['subdivision'])
+                    array = H5Array(sub_node.attrib['path'])
                     array.from_xml(sub_node, reference=self)
                     h5resource.add_child(array)
             self.add_resource(h5resource)
@@ -124,27 +126,27 @@ class TrafficModel(Observable):
             for monitored in monitor:
                 tag = monitored.tag
                 # ignore comments and unknown tags
-                if tag not in ['Content', 'Shape']:
+                if tag not in ['content', 'shape']:
                     continue
-                monitor_name = monitored.attrib['name']
+                monitor_name = monitored.text
                 pretty_name = monitored.attrib['alias']
                 res_name = monitored.attrib['resource']
-                sub_name = monitored.attrib['subdivision']
+                sub_path = monitored.attrib['path']
 
                 self.monitored[monitor_name] = pretty_name
                 self.set(monitor_name, None)
 
                 # CONTENT OBSERVATION
-                if tag == 'Content':
+                if tag == 'content':
                     col_name = monitored.attrib['column']
-                    column = self.resources[res_name].get_child(sub_name).get_child(col_name)
+                    column = self.resources[res_name].get_child(sub_path).get_child(col_name)
                     # change the value of the monitor (simple attribute with defined name)
                     # each time the column changes
                     column.bind('content', (lambda attr: lambda value: self.set(attr, value))(monitor_name))  # double lambda, because monitor_name changes in closure (-> else always the same name would be taken in callback)
 
                 # SHAPE OBSERVATION (set as properties)
-                if tag == 'Shape':
-                    table = self.resources[res_name].get_child(sub_name)
+                if tag == 'shape':
+                    table = self.resources[res_name].get_child(sub_path)
                     # change the value of the monitor each time shape is reset
                     table.bind('shape', (lambda attr: lambda shape: self.set(attr, int(shape[0]) if shape else None))(monitor_name))
 
@@ -171,8 +173,6 @@ class TrafficModel(Observable):
 
     @staticmethod
     def new_specific_model(name):
-        config = Config()
-        config.read()
         traffic_models = config.settings['trafficmodels']
         if name in traffic_models:
             main_path = os.path.split(os.path.split(__file__)[0])[0]
@@ -183,3 +183,33 @@ class TrafficModel(Observable):
             return getattr(module, name)()
         else:
             return None
+
+    # SUBCLASSES HAVE TO OVERRIDE THIS METHOD! (called by the GUI control)
+    def run(self, scenario_name, process, callback=None,
+            on_success=None, xml_file=None, run_name=None):
+        '''
+        run the traffic model
+
+        Parameters
+        ----------
+        scenario_name: String, name of the scenario
+        process: a clean qtProcess to run the model in
+        callback: function to track the progress
+        on_success: is executed after successfully running the model
+        run_name: name of the run inside the scenario
+        xml_file: absolute path to a xml-file containing the paths to the used resources and the settings for the scenario and run with the given names (gui_vm project-style)
+        '''
+        pass
+
+    # SUBCLASSES HAVE TO OVERRIDE THIS METHOD! (called by the GUI control)
+    def evaluate (self, file_path, overwrite=False):
+        '''
+        evaluate the demand file at the given path and run the evaluation script
+        (creates csv file)
+
+        Parameters
+        ----------
+        file_path: path to file, the evaluation will be written to
+        overwrite: overwrite existing files, if True
+        '''
+        pass

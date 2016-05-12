@@ -11,7 +11,6 @@ from gui_vm.config.config import Config, Singleton
 import gui_vm
 
 config = Config()
-config.read()
 
 class Maxem(TrafficModel):
     '''
@@ -23,6 +22,7 @@ class Maxem(TrafficModel):
     # name of the config file containing the target status of all input data
     # relative to the directory this file is in
     RESOURCES_XML = 'Maxem.xml'
+    EVALUATION_SCRIPT = 'evaluate_maxem.py'
 
     def __init__(self):
         super(Maxem, self).__init__('Maxem')
@@ -75,8 +75,7 @@ class Maxem(TrafficModel):
         evaluate the demand file at the given path and run the evaluation script
         (creates csv file)
         '''
-        eval_script = os.path.join(os.path.dirname(__file__),
-                                   'evaluate_maxem.py')
+        eval_script = os.path.join(os.path.dirname(__file__), self.EVALUATION_SCRIPT)
         Evaluation = (imp.load_source('evaluate', eval_script))
         if file_path is None:
             return None
@@ -109,7 +108,7 @@ class Maxem(TrafficModel):
         scenario_name: String, name of the scenario
         process: a clean qtProcess to run the model in
         callback: function to track the progress
-        on_success: is executed after successful running the model
+        on_success: is executed after successfully running the model
         run_name: name of the run inside the scenario
         xml_file: absolute path th a xml-file containing the paths to the used resources and the settings for the scenario and run with the given names (gui_vm project-style)
         '''

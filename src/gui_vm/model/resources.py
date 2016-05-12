@@ -633,6 +633,7 @@ class H5Table(H5Node):
             column_names.append(col.name)
         return column_names
 
+    #TODO: replace multiple field tags like xxx{tag}xxx{anothertag}xxx (no need atm)
     def multiply_placeholder(self, placeholder_column, field_name, replacement_list):
         '''
         multiplies the given column, resulting columns differ in the names;
@@ -689,7 +690,7 @@ class H5Table(H5Node):
                                    success_msg='Dimension überprüft')
             self.add_rule(dim_rule)
         for column_node in element.findall('column'):
-            col_name = column_node.attrib['name']
+            col_name = column_node.text
             column = H5TableColumn(col_name, is_required=True)
             column.from_xml(column_node, reference=reference)
 

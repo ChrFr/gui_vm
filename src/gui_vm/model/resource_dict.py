@@ -32,7 +32,7 @@ class ResourceConfigXMLParser(object):
                 columns = table_data.dtype
                 for col in columns.names:
                     col_xml = etree.SubElement(table_xml, 'column')
-                    col_xml.attrib['name'] = col
+                    col_xml.text = col
                     col_xml.attrib['type'] = str(columns[col])
 
                     # following attributes have to be set manually!

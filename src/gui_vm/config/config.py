@@ -46,6 +46,7 @@ class Config():
             },
             'history': [],
         }
+        self.read()
 
     def add_to_history(self, project_folder):
         h = self.settings['history']
