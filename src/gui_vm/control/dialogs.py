@@ -405,7 +405,7 @@ class RunOptionsDialog(QtGui.QDialog):
             if (attr.has_key('default') and not stored_options.has_key(option)):
                 index = int(attr['default'])
                 stored_options[option] = [attr['values'][index]]
-            unique = attr.has_key('is_unique') and attr['is_unique'] == True
+            unique = attr.has_key('is_unique') and bool(attr['is_unique'])
             tagged_as_primary_only = attr.has_key('is_primary_only') and bool(attr['is_primary_only'])
             tagged_as_special_only = attr.has_key('is_special_only') and bool(attr['is_special_only'])
             if ((not is_primary and not tagged_as_primary_only) or
