@@ -486,7 +486,6 @@ class Scenario(TreeNode):
         return results_run
 
     def validate(self):
-        print self.name
         resource_nodes = self.get_input_files()
         #for input in resource_nodes:
             #input.update()

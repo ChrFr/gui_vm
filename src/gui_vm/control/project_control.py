@@ -560,6 +560,7 @@ class VMProjectControl(ProjectTreeControl):
                                      os.path.split(input_node.file_absolute)[0])
             dialog.exec_()
         input_node.update()
+        self.nodes_changed.emit(input_node)
         return fileinput
 
     def _map_buttons(self, node):
@@ -1541,7 +1542,6 @@ class VMProjectControl(ProjectTreeControl):
         handle what happens, if nodes have changed
         '''
         for node in args:
-            print 'validating ' + node.name
             # if input changes, all other nodes have to be validated
             if isinstance(node, InputNode):
                 scenario = node.scenario
