@@ -247,7 +247,7 @@ class TrafficModel(Observable):
         run_name: name of the run inside the scenario
         xml_file: absolute path to a xml-file containing the paths to the used resources and the settings for the scenario and run with the given names (gui_vm project-style)
         '''
-        pass
+        raise NotImplementedError
 
     # SUBCLASSES HAVE TO OVERRIDE THIS METHOD! (called by the GUI control)
     def evaluate (self, file_path, overwrite=False):
@@ -260,4 +260,4 @@ class TrafficModel(Observable):
         file_path: path to file, the evaluation will be written to
         overwrite: overwrite existing files, if True
         '''
-        pass
+        raise NotImplementedError

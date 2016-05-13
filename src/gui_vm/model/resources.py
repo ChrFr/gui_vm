@@ -428,7 +428,7 @@ class ResourceFile(Resource):
     def read(self, path):
         '''
         read the resource from file at given path
-        When inheriting from Resource, method foo must be overridden.
+        When inheriting from Resource, method must be overridden.
 
         Return
         ------------
