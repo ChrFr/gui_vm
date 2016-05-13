@@ -22,7 +22,6 @@ except AttributeError:
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
-    project_changed = QtCore.pyqtSignal()
 
     @classmethod
     def only_validate(cls, project_file, scenario_name):
@@ -108,7 +107,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.actionBeenden.triggered.connect(self.close)
 
         self.project_control.project_changed.connect(self.project_changed_handler)
-        self.project_changed.connect(self.project_changed_handler)
 
         h = config.settings['history']
         self.validated = False
@@ -239,8 +237,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         handle what happens, if project has changed
         '''
         self.project_has_changed = True
+        # TODO: autosave option (currently true)
         self.save_project(os.path.join(self.project_control.project.filename))
-        self.project_control.validate_project()
 
     def project_changed_message(self):
         '''

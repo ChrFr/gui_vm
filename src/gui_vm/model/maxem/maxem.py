@@ -30,7 +30,6 @@ class Maxem(TrafficModel):
         resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
         self.resource_config_from_xml(resource_xml_file)
 
-
     def evaluate (self, file_path, overwrite=False):
         '''
         evaluate the demand file at the given path and run the evaluation script

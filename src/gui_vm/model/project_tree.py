@@ -370,6 +370,12 @@ class TreeNode(Observable):
             clone.name = name
         return clone
 
+    def validate(self):
+        '''
+        validate the node, override this in subclasses
+        '''
+        pass
+
 
 class Scenario(TreeNode):
     '''
@@ -480,6 +486,7 @@ class Scenario(TreeNode):
         return results_run
 
     def validate(self):
+        print self.name
         resource_nodes = self.get_input_files()
         #for input in resource_nodes:
             #input.update()
@@ -714,6 +721,14 @@ class Project(TreeNode):
 
     def remove_meta(self, key):
         self.meta.pop(key, None)
+
+    def validate(self):
+        '''
+        validate the active project and it's scenarios
+        '''
+        scenarios = self.find_all_by_class(Scenario)
+        for scen in scenarios:
+            scen.validate()
 
     @property
     def filename(self):

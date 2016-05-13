@@ -120,21 +120,7 @@
     </H5Table>
     <H5Table path="/activities/activity_parking" n_rows="">
       <column type="int32" minimum="" maximum="" is_primary_key="0">park_zone</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">A</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">B</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">E</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">F</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">G</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">K</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">M</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">O</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">R</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">S</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">T</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">U</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">V</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">W</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">Z</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{activity_codes}</column>
     </H5Table>
     <H5Array path="/activities/activitypair_time_series" dimension="{n_activity_pairs} x 24" minimum="" maximum=""/>
     <H5Table path="/activities/activitypairs" n_rows="">
@@ -228,21 +214,7 @@
     </H5Table>
     <H5Table path="/activities/attraction" n_rows="{n_zones}">
       <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_A</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_B</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_E</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_F</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_G</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_K</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_M</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_O</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_R</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_S</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_T</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_U</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_V</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_W</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_Z</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_{activity_codes}</column>
     </H5Table>
     <H5Table path="/groups/production" n_rows="{n_zones}">
       <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
