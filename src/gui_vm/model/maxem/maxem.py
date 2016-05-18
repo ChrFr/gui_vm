@@ -30,46 +30,6 @@ class Maxem(TrafficModel):
         resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
         self.resource_config_from_xml(resource_xml_file)
 
-    @property
-    def options(self):
-        #ToDo: is_unique, is_primary, is_admin missing
-        #class rather than dict
-        options = OrderedDict()
-        options['areatype'] = { "names": self.area_types,
-                                "values": self.area_types,
-                                "is_primary_only": False,
-                                "is_special_only": True }
-
-        options['activities'] = { "names": self.activity_names,
-                                  "values": self.activity_codes,
-                                  "is_primary_only": False,
-                                  "is_special_only": True }
-
-        options['groups'] = { "names": self.groups_generation,
-                              "values": self.groups_generation,
-                              "is_primary_only": False,
-                              "is_special_only": True }
-
-        options['calibrate'] = { "names": ['An', 'Aus'],
-                                 "values": [True, False],
-                                 "is_primary_only": True,
-                                 "is_special_only": False,
-                                 "default": False,
-                                 "is_unique": True}
-
-        options['balance'] = { "names": ['An', 'Aus'],
-                               "values": [True, False],
-                               "is_primary_only": True,
-                               "is_special_only": False,
-                               "default": True,
-                               "is_unique": True}
-
-        options['detailed'] = { "names": ['Gruppendetails', 'Aktivitätendetails'],
-                                "values": ['groups', 'activities'],
-                                "is_primary_only": False,
-                                "is_special_only": True }
-        return options
-
     def evaluate (self, file_path, overwrite=False):
         '''
         evaluate the demand file at the given path and run the evaluation script

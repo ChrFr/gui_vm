@@ -428,7 +428,7 @@ class ResourceFile(Resource):
     def read(self, path):
         '''
         read the resource from file at given path
-        When inheriting from Resource, method foo must be overridden.
+        When inheriting from Resource, method must be overridden.
 
         Return
         ------------
@@ -634,7 +634,7 @@ class H5Table(H5Node):
         return column_names
 
     #TODO: replace multiple field tags like xxx{tag}xxx{anothertag}xxx (no need atm)
-    def multiply_placeholder(self, placeholder_column, field_name, replacement_list):
+    def multiply_placeholder(self, placeholder_column, field_name, replacement_list, referenced_name=None):
         '''
         multiplies the given column, resulting columns differ in the names;
         name of column to multiply should contain the field_name surrounded with
@@ -648,12 +648,13 @@ class H5Table(H5Node):
         placeholder_column: the column to multiply
         field_name: the tag that will be replaced
         replacement_list: list of strings, that the tag will be replaced with
+        referenced_name: optional, name of the content the column-names are referenced to
         '''
         pattern = placeholder_column.name
 
         tmp = []
         tag = Rule.replace_indicators[0] + field_name + Rule.replace_indicators[1]
-        regex = placeholder_column.name.replace(tag, '[a-zA-Z\d]+')
+        regex = placeholder_column.name.replace(tag, '[a-zA-Z\d_]+')
         for i in xrange(len(self.children)):
             column = self.children.pop(0)
             if re.search(regex, column.name):
@@ -667,6 +668,7 @@ class H5Table(H5Node):
             new_col_name = pattern.replace(tag, replacement)
             dynamic_column = copy.deepcopy(placeholder_column)
             dynamic_column.name = new_col_name
+            dynamic_column.referenced_name = referenced_name
             dynamic_column.is_required = True
             self.add_child(dynamic_column)
 
@@ -704,7 +706,8 @@ class H5Table(H5Node):
                 reference.bind(field_name,
                                lambda value: self.multiply_placeholder(column,
                                                                        field_name,
-                                                                       value))
+                                                                       value,
+                                                                       reference.monitored[field_name][0]))
             else:
                 # only add columns, that don't act as placeholders
                 self.add_child(column)
@@ -737,7 +740,7 @@ class H5TableColumn(H5Resource):
 
     def __init__(self, name, exp_dtype=None,
                    exp_minimum=None, exp_maximum=None,
-                   is_primary_key=False, reference=None,
+                   is_primary_key=False,
                    is_required=False):
         super(H5TableColumn, self).__init__(name)
 
@@ -747,6 +750,7 @@ class H5TableColumn(H5Resource):
         self.content = None
         self.is_required = is_required
         self.is_primary_key = is_primary_key
+        self.referenced_name = None
 
     def update(self, table):
         '''
@@ -757,7 +761,10 @@ class H5TableColumn(H5Resource):
 
         if table is None or self.name not in table.dtype.names:
             self.reset()
-            self._status.set('dtype', Status.NOT_FOUND, 'Spalte fehlt')
+            message = 'Spalte fehlt'
+            if self.referenced_name:
+                message += u' (Referenz auf {})'.format(self.referenced_name)
+            self._status.set('dtype', Status.NOT_FOUND, message)
             self.max_value = None
             self.min_value = None
             self.dtype = None

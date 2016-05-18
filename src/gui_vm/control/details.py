@@ -14,6 +14,7 @@ from gui_vm.view.resource_ui import Ui_DetailsResource
 from gui_vm.view.scenario_ui import Ui_DetailsScenario
 from gui_vm.view.project_ui import Ui_DetailsProject
 from gui_vm.model.resources import Status
+from gui_vm.model.project_tree import TreeNode
 from gui_vm.control.dialogs import (CopyFilesDialog, RunOptionsDialog,
                                     InputDialog, ExecDialog, set_directory)
 from PyQt4 import QtGui, QtCore
@@ -54,7 +55,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             layout
     '''
 
-    value_changed = QtCore.pyqtSignal()
+    value_changed = QtCore.pyqtSignal([TreeNode])
 
     def __init__(self, scenario_node, project_control):
         super(ScenarioDetails, self).__init__()
@@ -76,15 +77,17 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             self.combo_model.setEnabled(False)
         for meta in scenario_node.meta:
             label = QtGui.QLabel(_fromUtf8(meta))
-            txt = scenario_node.meta[meta]
+            tooltip = scenario_node.meta[meta][1]
+            txt = scenario_node.meta[meta][0]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
-                #txt = unicode(txt, "ISO-8859-1").encode('ascii', 'xmlcharrefreplace')
                 edit = QtGui.QTextEdit(txt)
                 edit.setMinimumHeight(100)
             else:
-                edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
+                edit = QtGui.QLineEdit(_fromUtf8(str(txt)))
             edit.setReadOnly(True)
+            label.setToolTip(tooltip)
+            edit.setToolTip(tooltip)
             self.data_form.addRow(label, edit)
 
     def special_run(self):
@@ -95,7 +98,7 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         change the traffic model
         '''
         self.scenario.set_model(str(name))
-        self.value_changed.emit()
+        self.value_changed.emit(self.scenario)
 
     def primary_run(self):
         self.project_control.add_primary_run(self.scenario)
@@ -114,7 +117,7 @@ class ProjectDetails(QtGui.QGroupBox, Ui_DetailsProject):
             the elements showing the details are added as children of this
             layout
     '''
-    value_changed = QtCore.pyqtSignal()
+    value_changed = QtCore.pyqtSignal([TreeNode])
 
     def __init__(self, project_node):
         super(ProjectDetails, self).__init__()
@@ -198,7 +201,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             the elements showing the details are added as children of this
             layout
     '''
-    value_changed = QtCore.pyqtSignal()
+    value_changed = QtCore.pyqtSignal([TreeNode])
 
     def __init__(self, resource_node, project_control):
         super(InputDetails, self).__init__()
@@ -280,6 +283,9 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
                         .format(name=key, value=val))
                 status_color = get_status_color(status)
                 item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(message)])
+                tooltip = line + ' ' + message
+                item.setToolTip(0, tooltip)
+                item.setToolTip(1, tooltip)
                 item.setFont(0, font)
                 if status in [Status.CHECKED_AND_VALID, Status.NOT_FOUND, Status.MISMATCH]:
                     item.setTextColor(0, status_color)
@@ -305,7 +311,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         fileinput = self.project_control.change_resource(self.resource_node)
         if not fileinput:
             return
-        self.value_changed.emit()
+        self.value_changed.emit(self.resource_node)
 
     def get_status(self):
         '''
@@ -329,7 +335,7 @@ class OutputDetails(QtGui.QGroupBox):
             the elements showing the details are added as children of this
             layout
     '''
-    value_changed = QtCore.pyqtSignal()
+    value_changed = QtCore.pyqtSignal([TreeNode])
 
     def __init__(self, output_node, project_control, func_evaluate):
         super(OutputDetails, self).__init__(output_node.name)
@@ -392,7 +398,7 @@ class OutputDetails(QtGui.QGroupBox):
             is_primary=self.output.is_primary)
         if ok:
             self.output.options = new_options
-            scenario.project.emit()
+            self.value_changed.emit(self.output)
 
     def run(self):
         self.project_control.run(self.output.scenario, run_name=self.output.name, options=self.output.options)

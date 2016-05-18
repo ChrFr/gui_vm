@@ -53,7 +53,7 @@ class Rule(object):
         self._target = target_value
 
     @property
-    def target(self):
+    def target_value(self):
         '''
         return the targeted values
 
@@ -95,6 +95,24 @@ class Rule(object):
             ref_target = ref_target[0]
         return ref_target
 
+    @property
+    def target_pretty_names(self):
+        if not self.reference or not hasattr(self.reference, 'monitored'):
+            return None
+        target = copy.copy(self._target)
+        if not hasattr(target, '__iter__'):
+            target = [target]
+        pretty_names = []
+        for val in target:
+            if not is_number(val):
+                val = val[val.find(self.replace_indicators[0]) +
+                          1:val.find(self.replace_indicators[1])]
+                name = self.reference.monitored[val]
+                pretty_names.append(name)
+        if len(pretty_names) > 0:
+            return pretty_names
+        return None
+
     def check(self, obj):
         '''
         check if defined rule is met
@@ -117,8 +135,8 @@ class Rule(object):
                             .format(obj, self.field_name))
         attr_value = getattr(obj, self.field_name)
         #wrap all values with a list (if they are not already)
-        target = self.target
-        result = self.function(attr_value, target)
+        target_value = self.target_value
+        result = self.function(attr_value, target_value)
         #check if there is a message sent with, if not, append default messages
         if isinstance(result, tuple):
             message = result[1]
@@ -127,9 +145,11 @@ class Rule(object):
             message = DEFAULT_MESSAGES[CHECKED_AND_VALID]
         else:
             message = DEFAULT_MESSAGES[MISMATCH]
-        #append place where mismatch happened to message
-        #if not result:
-            #message += " (in '{}')".format(obj.name)
+
+        if not result:
+            pretty_names = self.target_pretty_names
+            if pretty_names:
+                message += ' (Referenz auf {})'.format(self.target_pretty_names)
         return result, message
 
 

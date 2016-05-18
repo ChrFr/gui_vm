@@ -65,8 +65,11 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
     ---------
     view: the window, where the dialogs will be shown in
     '''
-
+    # signals, that the project has changed (-> autosave)
     project_changed = QtCore.pyqtSignal()
+    # signals, that nodes inside the project were changed (-> init validation)
+    nodes_changed = QtCore.pyqtSignal([TreeNode])
+    # signals, that the view should be updated
     view_changed = QtCore.pyqtSignal()
 
     def __init__(self, view=None):
@@ -89,7 +92,10 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
         '''
         get the index of the currently selected item
         '''
-        self._current_index = _Index(value)
+        try:
+            self._current_index = _Index(value)
+        except:
+            return
 
     @property
     def selected_item(self):
@@ -157,6 +163,10 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
                 else:
                     return QtCore.QVariant(QtGui.QColor(QtCore.Qt.red))
             return QtCore.QVariant(QtGui.QColor(QtCore.Qt.black))
+
+        # tooltip always shows the name of the node (ToDo: show error messages?)
+        if role == QtCore.Qt.ToolTipRole:
+            return QtCore.QVariant(node.name)
 
         if role == QtCore.Qt.FontRole:
             #if  (index.column() == 0 and
@@ -389,6 +399,15 @@ class VMProjectControl(ProjectTreeControl):
 
     def __init__(self, view, details_view, button_group):
         super(VMProjectControl, self).__init__(view)
+
+        # CONNECT SLOTS TO SIGNALS
+        self.view_changed.connect(self.update_view)
+        self.nodes_changed.connect(self.validate_nodes)
+        # nodes changed -> project changed as well (save project in main_control)
+        self.nodes_changed.connect(lambda: self.project_changed.emit())
+        # dataChanged signals, that rows of the qtreeview have changed
+        self.dataChanged.connect(self.update_view)
+
         self.details_view = details_view
         self.button_group = button_group
         self.plus_button = self.button_group.findChild(
@@ -407,9 +426,6 @@ class VMProjectControl(ProjectTreeControl):
             QtGui.QAbstractButton, 'clean_button')
         self.open_button = self.button_group.findChild(
             QtGui.QAbstractButton, 'context_open_button')
-
-        self.view_changed.connect(self.update_view)
-        self.dataChanged.connect(self.update_view)
 
         # connect the context buttons with the defined actions
         self.plus_button.clicked.connect(lambda: self.context_function('add'))
@@ -548,6 +564,7 @@ class VMProjectControl(ProjectTreeControl):
                                      os.path.split(input_node.file_absolute)[0])
             dialog.exec_()
         input_node.update()
+        self.nodes_changed.emit(input_node)
         return fileinput
 
     def _map_buttons(self, node):
@@ -816,6 +833,8 @@ class VMProjectControl(ProjectTreeControl):
         '''
         if not resource_node:
             resource_node = self.selected_item
+
+        scenario = resource_node.scenario
         if resource_node.locked:
             QtGui.QMessageBox.about(
                 None, "Fehler",
@@ -841,9 +860,8 @@ class VMProjectControl(ProjectTreeControl):
             resource_node.update()
 
         if remove_outputs:
-            scenario = resource_node.scenario
             self.remove_outputs(scenario)
-        self.project_changed.emit()
+        self.nodes_changed.emit(scenario)
 
     def _remove_output(self, output_node=None):
         '''
@@ -925,6 +943,7 @@ class VMProjectControl(ProjectTreeControl):
         dialog = ExecDialog(scenario_node, run_name,
                             parent=self.tree_view, options=options)
         dialog.exec_()
+        self.nodes_changed.emit(scenario_node)
 
     def _switch_lock(self, scenario_node=None):
         '''
@@ -1199,9 +1218,9 @@ class VMProjectControl(ProjectTreeControl):
             return
 
         if scenario.get_output(Scenario.PRIMARY_RUN) is None:
-            return self.add_primary_run(scenario=scenario)
+            self.add_primary_run(scenario=scenario)
         else:
-            return self.add_special_run(scenario=scenario)
+            self.add_special_run(scenario=scenario)
 
     def add_primary_run(self, scenario=None, do_choose=False):
         '''
@@ -1250,6 +1269,7 @@ class VMProjectControl(ProjectTreeControl):
         if not ok:
             return
         run_node = scenario.add_run(Scenario.PRIMARY_RUN, options)
+        run_node.is_valid = False
         self.select_node(run_node)
         reply = QtGui.QMessageBox.question(
             None, _fromUtf8('Ausführung'),
@@ -1257,6 +1277,7 @@ class VMProjectControl(ProjectTreeControl):
             QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
         if reply == QtGui.QMessageBox.Yes:
             self.run(scenario, run_name=run_node.name, options=run_node.options)
+        self.nodes_changed.emit(run_node)
         return run_node
 
     def add_special_run(self, scenario=None, do_choose=False):
@@ -1318,6 +1339,7 @@ class VMProjectControl(ProjectTreeControl):
             options, ok = RunOptionsDialog.getValues(scenario, is_primary = False)
             if ok:
                 run_node = scenario.add_run(run_name, options=options)
+                run_node.is_valid = False
                 self.select_node(run_node)
                 reply = QtGui.QMessageBox.question(
                     None, _fromUtf8('Ausführung'),
@@ -1325,6 +1347,7 @@ class VMProjectControl(ProjectTreeControl):
                     QtGui.QMessageBox.Yes, QtGui.QMessageBox.Cancel)
                 if reply == QtGui.QMessageBox.Yes:
                     self.run(scenario, run_name=run_node.name, options=run_node.options)
+                self.nodes_changed.emit(run_node)
                 return run_node
 
 
@@ -1378,16 +1401,7 @@ class VMProjectControl(ProjectTreeControl):
             scenario_node.update()
             self.remove_outputs(scenario_node)
 
-        self.project_changed.emit()
-
-    def validate_project(self):
-        '''
-        validate the active project and it's scenarios
-        '''
-        scenarios = self.project.find_all_by_class(Scenario)
-        for scen in scenarios:
-            scen.validate()
-        self.view_changed.emit()
+        self.nodes_changed.emit(scenario_node)
 
     def _reset_resource(self, res_node=None):
         '''
@@ -1433,7 +1447,7 @@ class VMProjectControl(ProjectTreeControl):
             res_node.update()
             scenario = res_node.scenario
             self.remove_outputs(scenario)
-            self.project_changed.emit()
+            self.nodes_changed.emit(scenario)
 
     def write_project(self, filename):
         '''
@@ -1475,7 +1489,7 @@ class VMProjectControl(ProjectTreeControl):
         if self.project:
             self.close_project()
         self.model.add_child(Project(name, project_folder=project_folder))
-        self.project.on_change(self.project_changed.emit)
+        self.project.on_change(lambda: self.project_changed.emit())
         index = self.createIndex(0, 0, self.project)
         self.select_item(index)
         self.tree_view.setCurrentIndex(index)
@@ -1501,10 +1515,10 @@ class VMProjectControl(ProjectTreeControl):
         '''
         self.close_project()
         XMLParser.read_xml(self.model, filename)
-        self.project.on_change(self.project_changed.emit)
+        self.project.on_change(lambda: self.project_changed.emit())
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
-        self.project_changed.emit()
+        self.nodes_changed.emit(self.project)
         self.view_changed.emit()
         self.tree_view.resizeColumnToContents(0)
         self.select_node(self.project)
@@ -1526,3 +1540,15 @@ class VMProjectControl(ProjectTreeControl):
         output_parent = scenario.get_child(scenario.OUTPUT_NODES)
         if output_parent:
             self._remove_node(output_parent)
+
+    def validate_nodes(self, *args):
+        '''
+        handle what happens, if nodes have changed
+        '''
+        for node in args:
+            # if input changes, all other nodes have to be validated
+            if isinstance(node, InputNode):
+                scenario = node.scenario
+                scenario.validate()
+            else:
+                node.validate()
