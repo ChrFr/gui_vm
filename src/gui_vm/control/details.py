@@ -80,7 +80,6 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             txt = scenario_node.meta[meta]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
-                #txt = unicode(txt, "ISO-8859-1").encode('ascii', 'xmlcharrefreplace')
                 edit = QtGui.QTextEdit(txt)
                 edit.setMinimumHeight(100)
             else:
@@ -281,6 +280,9 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
                         .format(name=key, value=val))
                 status_color = get_status_color(status)
                 item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(message)])
+                tooltip = line + ' ' + message
+                item.setToolTip(0, tooltip)
+                item.setToolTip(1, tooltip)
                 item.setFont(0, font)
                 if status in [Status.CHECKED_AND_VALID, Status.NOT_FOUND, Status.MISMATCH]:
                     item.setTextColor(0, status_color)

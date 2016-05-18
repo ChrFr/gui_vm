@@ -104,11 +104,14 @@ class Rule(object):
             target = [target]
         pretty_names = []
         for val in target:
-            val = val[val.find(self.replace_indicators[0]) +
-                      1:val.find(self.replace_indicators[1])]
-            name = self.reference.monitored[val]
-            pretty_names.append(name)
-        return pretty_names
+            if not is_number(val):
+                val = val[val.find(self.replace_indicators[0]) +
+                          1:val.find(self.replace_indicators[1])]
+                name = self.reference.monitored[val]
+                pretty_names.append(name)
+        if len(pretty_names) > 0:
+            return pretty_names
+        return None
 
     def check(self, obj):
         '''
