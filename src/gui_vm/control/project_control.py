@@ -164,6 +164,10 @@ class ProjectTreeControl(QtCore.QAbstractItemModel):
                     return QtCore.QVariant(QtGui.QColor(QtCore.Qt.red))
             return QtCore.QVariant(QtGui.QColor(QtCore.Qt.black))
 
+        # tooltip always shows the name of the node (ToDo: show error messages?)
+        if role == QtCore.Qt.ToolTipRole:
+            return QtCore.QVariant(node.name)
+
         if role == QtCore.Qt.FontRole:
             #if  (index.column() == 0 and
             if (isinstance(node, Scenario) or isinstance(node, Project)):

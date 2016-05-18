@@ -135,7 +135,7 @@ class TrafficModel(Observable):
                 res_name = monitored.attrib['resource']
                 sub_path = monitored.attrib['path']
 
-                self.monitored[monitor_name] = pretty_name
+                self.monitored[monitor_name] = pretty_name, res_name + sub_path
                 self.set(monitor_name, None)
 
                 # CONTENT OBSERVATION
@@ -215,8 +215,9 @@ class TrafficModel(Observable):
         meta = OrderedDict()
         for i, attr in enumerate(self.monitored):
             value = getattr(self, attr)
-            pretty_name = self.monitored[attr]
-            meta[pretty_name] = value
+            pretty_name = self.monitored[attr][0]
+            reference = self.monitored[attr][1]
+            meta[pretty_name] = value, reference
         return meta
 
     @staticmethod

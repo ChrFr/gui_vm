@@ -77,14 +77,17 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             self.combo_model.setEnabled(False)
         for meta in scenario_node.meta:
             label = QtGui.QLabel(_fromUtf8(meta))
-            txt = scenario_node.meta[meta]
+            tooltip = scenario_node.meta[meta][1]
+            txt = scenario_node.meta[meta][0]
             if isinstance(txt, list):
                 txt = '<br>'.join(txt)
                 edit = QtGui.QTextEdit(txt)
                 edit.setMinimumHeight(100)
             else:
-                edit = QtGui.QLineEdit(_fromUtf8(str(scenario_node.meta[meta])))
+                edit = QtGui.QLineEdit(_fromUtf8(str(txt)))
             edit.setReadOnly(True)
+            label.setToolTip(tooltip)
+            edit.setToolTip(tooltip)
             self.data_form.addRow(label, edit)
 
     def special_run(self):

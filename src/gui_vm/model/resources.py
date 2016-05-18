@@ -648,7 +648,7 @@ class H5Table(H5Node):
         placeholder_column: the column to multiply
         field_name: the tag that will be replaced
         replacement_list: list of strings, that the tag will be replaced with
-        referenced_name: optional
+        referenced_name: optional, name of the content the column-names are referenced to
         '''
         pattern = placeholder_column.name
 
@@ -707,7 +707,7 @@ class H5Table(H5Node):
                                lambda value: self.multiply_placeholder(column,
                                                                        field_name,
                                                                        value,
-                                                                       reference.monitored[field_name]))
+                                                                       reference.monitored[field_name][0]))
             else:
                 # only add columns, that don't act as placeholders
                 self.add_child(column)
