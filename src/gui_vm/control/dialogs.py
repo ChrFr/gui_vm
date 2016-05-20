@@ -550,7 +550,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
                              selected_filter_idx=1)
         )
         self.maxem_default_browse_button.clicked.connect(
-            lambda: set_file(self, self.python_edit,
+            lambda: set_file(self, self.maxem_default_edit,
                              filters=[ALL_FILES_FILTER, TRAFFICMODEL_FILE_FILTER],
                              selected_filter_idx=1,
                              do_split=True)
