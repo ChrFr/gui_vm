@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     package_data={
-        'gui_vm': ['*.csv',
+        'gui_vm': ['model/maxem/Maxem.xml',
                    'config_template.xml'],
     },
 
