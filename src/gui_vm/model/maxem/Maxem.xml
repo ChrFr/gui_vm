@@ -74,7 +74,6 @@
       <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
       <column type="|S255" minimum="" maximum="" is_primary_key="0">zone_name</column>
     </H5Table>
-    <H5Array path="/tarif_relationen" dimension="{n_zones}" minimum="" maximum=""/>
     <H5Array path="/put/cost_put" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
     <H5Array path="/put/no_connection" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
     <H5Array path="/put/share_bus" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
