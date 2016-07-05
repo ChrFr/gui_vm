@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'progress.ui'
 #
-# Created: Tue Feb 23 14:02:25 2016
+# Created: Tue Jul 05 15:45:59 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -44,6 +44,10 @@ class Ui_ProgressDialog(object):
         self.verticalLayout_2.addWidget(self.progress_bar)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.elapsed_time_label = QtGui.QLabel(ProgressDialog)
+        self.elapsed_time_label.setText(_fromUtf8(""))
+        self.elapsed_time_label.setObjectName(_fromUtf8("elapsed_time_label"))
+        self.horizontalLayout.addWidget(self.elapsed_time_label)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.startButton = QtGui.QPushButton(ProgressDialog)

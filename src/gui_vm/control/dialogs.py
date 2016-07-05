@@ -11,6 +11,7 @@ import sys, os, collections
 import re
 from gui_vm.config.config import Config
 from shutil import rmtree
+import datetime
 
 config = Config()
 
@@ -243,6 +244,9 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.process.started.connect(self.running)
         self.process.finished.connect(self.finished)
 
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.update_timer)
+
         self.show()
         #start process when window is opened
         self.startButton.clicked.emit(True)
@@ -272,6 +276,8 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
                     pass
                 pass
 
+        self.start_time = datetime.datetime.now()
+        self.timer.start(1000)
         self.scenario.run(self.process, self.run_name, options=self.options,
                           callback=self.show_status)
 
@@ -284,6 +290,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.cancelButton.clicked.connect(self.kill)
 
     def stopped(self):
+        self.timer.stop()
         self.startButton.setEnabled(True)
         self.cancelButton.setText(_fromUtf8('Schließen'))
         self.cancelButton.clicked.disconnect(self.kill)
@@ -299,6 +306,7 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         self.stopped()
 
     def kill(self):
+        self.timer.stop()
         self.progress_bar.setStyleSheet(ABORTED_STYLE)
         self.process.kill()
         demand_file = self.scenario.get_output(self.run_name).file_absolute
@@ -306,12 +314,18 @@ class ExecDialog(QtGui.QDialog, Ui_ProgressDialog):
         if os.path.exists(demand_file):
             os.remove(demand_file)
 
-
     def show_status(self, text, progress=None):
         self.log_edit.insertHtml(str(text) + '<br>')
         self.log_edit.moveCursor(QtGui.QTextCursor.End)
         if progress:
             self.progress_bar.setValue(progress)
+
+    def update_timer(self):
+        delta = datetime.datetime.now() - self.start_time
+        h, remainder = divmod(delta.seconds, 3600)
+        m, s = divmod(remainder, 60)
+        timer_text = '{:02d}:{:02d}:{:02d}'.format(h, m, s)
+        self.elapsed_time_label.setText(timer_text)
 
 
 class NewProjectDialog(QtGui.QDialog, Ui_NewProject):
