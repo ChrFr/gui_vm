@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'scenario.ui'
 #
-# Created: Wed Feb 24 14:20:52 2016
+# Created: Tue Jul 12 17:19:52 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,17 +35,6 @@ class Ui_DetailsScenario(object):
         DetailsScenario.setMinimumSize(QtCore.QSize(450, 0))
         self.gridLayout = QtGui.QGridLayout(DetailsScenario)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.formLayout = QtGui.QFormLayout()
-        self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
-        self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
-        self.formLayout.setObjectName(_fromUtf8("formLayout"))
-        self.label = QtGui.QLabel(DetailsScenario)
-        self.label.setObjectName(_fromUtf8("label"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
-        self.combo_model = QtGui.QComboBox(DetailsScenario)
-        self.combo_model.setObjectName(_fromUtf8("combo_model"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.combo_model)
-        self.gridLayout.addLayout(self.formLayout, 1, 0, 1, 1)
         self.groupBox = QtGui.QGroupBox(DetailsScenario)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.groupBox)
@@ -209,7 +198,7 @@ class Ui_DetailsScenario(object):
         self.scroll_data.setWidgetResizable(True)
         self.scroll_data.setObjectName(_fromUtf8("scroll_data"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 630, 439))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 597, 439))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
@@ -219,10 +208,35 @@ class Ui_DetailsScenario(object):
         self.scroll_data.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout.addWidget(self.scroll_data)
         self.gridLayout.addWidget(self.groupBox_2, 3, 0, 1, 2)
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem, 0, 1, 1, 1)
-        spacerItem1 = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.gridLayout.addItem(spacerItem1, 2, 0, 1, 1)
+        self.formLayout = QtGui.QFormLayout()
+        self.formLayout.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
+        self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout.setObjectName(_fromUtf8("formLayout"))
+        self.label = QtGui.QLabel(DetailsScenario)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
+        self.combo_model = QtGui.QComboBox(DetailsScenario)
+        self.combo_model.setObjectName(_fromUtf8("combo_model"))
+        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.combo_model)
+        self.gridLayout.addLayout(self.formLayout, 1, 0, 1, 1)
+        spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.gridLayout.addItem(spacerItem, 2, 0, 1, 1)
+        self.verticalLayout_4 = QtGui.QVBoxLayout()
+        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
+        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_4.addItem(spacerItem1)
+        self.status_button = QtGui.QPushButton(DetailsScenario)
+        self.status_button.setMaximumSize(QtCore.QSize(25, 25))
+        self.status_button.setText(_fromUtf8(""))
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/reload.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.status_button.setIcon(icon1)
+        self.status_button.setIconSize(QtCore.QSize(20, 20))
+        self.status_button.setObjectName(_fromUtf8("status_button"))
+        self.verticalLayout_4.addWidget(self.status_button)
+        self.gridLayout.addLayout(self.verticalLayout_4, 3, 2, 1, 1)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem2, 0, 1, 1, 1)
 
         self.retranslateUi(DetailsScenario)
         QtCore.QMetaObject.connectSlotsByName(DetailsScenario)
@@ -230,10 +244,11 @@ class Ui_DetailsScenario(object):
     def retranslateUi(self, DetailsScenario):
         DetailsScenario.setWindowTitle(_translate("DetailsScenario", "GroupBox", None))
         DetailsScenario.setTitle(_translate("DetailsScenario", "GroupBox", None))
-        self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
         self.groupBox.setTitle(_translate("DetailsScenario", "Läufe hinzufügen", None))
         self.primary_button.setText(_translate("DetailsScenario", "Gesamtlauf", None))
         self.special_button.setText(_translate("DetailsScenario", "Sonderauswertung", None))
         self.groupBox_2.setTitle(_translate("DetailsScenario", "Kenngrößen", None))
+        self.label.setText(_translate("DetailsScenario", "Verkehrsmodell", None))
+        self.status_button.setToolTip(_translate("DetailsScenario", "Szenario inkl. aller Ressourcen erneut prüfen", None))
 
 import gui_rc

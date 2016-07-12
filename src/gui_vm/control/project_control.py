@@ -1518,9 +1518,9 @@ class VMProjectControl(ProjectTreeControl):
         '''
         self.close_project()
         XMLParser.read_xml(self.model, filename)
-        self.project.on_change(lambda: self.project_changed.emit())
         self.project.project_folder = os.path.split(filename)[0]
         self.project.update()
+        self.project.on_change(lambda: self.project_changed.emit())
         self.nodes_changed.emit(self.project)
         self.view_changed.emit()
         self.tree_view.resizeColumnToContents(0)

@@ -681,7 +681,7 @@ class Scenario(TreeNode):
         model = TrafficModel.new_specific_model(tm_name)
         if model:
             self.model = model
-            self.model.update(self.path)
+            #self.model.update(self.path)
         else:
             raise Exception('Traffic Model {0} not available'.format(tm_name))
         #lock scenario, if defined in xml
