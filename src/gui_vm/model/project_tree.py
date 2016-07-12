@@ -708,6 +708,7 @@ class Scenario(TreeNode):
         for input_node in self.get_input_files():
             cloned_node = clone.get_input(input_node.name)
             cloned_node.file_relative = input_node.file_relative
+            cloned_node.original_source = input_node.original_source
 
         output_node = self.get_child(clone.OUTPUT_NODES)
         if output_node:
