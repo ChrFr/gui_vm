@@ -323,7 +323,7 @@ class Resource(Observable):
         '''
         validate the resource and set the status
         '''
-        self.update(path)
+        #self.update(path)
         #only check rules if resource-file is found
         if self._status.code != Status.NOT_FOUND:
             self._validate(path)
@@ -651,17 +651,9 @@ class H5Table(H5Node):
         referenced_name: optional, name of the content the column-names are referenced to
         '''
         pattern = placeholder_column.name
-
-        tmp = []
         tag = Rule.replace_indicators[0] + field_name + Rule.replace_indicators[1]
-        regex = placeholder_column.name.replace(tag, '[a-zA-Z\d_]+')
-        for i in xrange(len(self.children)):
-            column = self.children.pop(0)
-            if re.search(regex, column.name):
-                column.remove_children()
-            else:
-                tmp.append(column)
-        self.children = tmp
+
+        dynamic_columns = []
         if not replacement_list:
             return
         for replacement in replacement_list:
@@ -670,7 +662,33 @@ class H5Table(H5Node):
             dynamic_column.name = new_col_name
             dynamic_column.referenced_name = referenced_name
             dynamic_column.is_required = True
+            dynamic_column.is_dynamic = True
+            # try to keep already updated contents
+            # (if placeholder column is in same file and loaded after
+            # table referencing it, it overwrites it on update with empty values)
+            old_dynamic = self.get_child(new_col_name)
+            if old_dynamic:
+                dynamic_column.dtype = old_dynamic.dtype
+                dynamic_column.content = old_dynamic.content
+
+            dynamic_columns.append(dynamic_column)
+
+        # remove the old dynamic columns
+        tmp = []
+        #regex = placeholder_column.name.replace(tag, '[a-zA-Z\d_]+')
+        for i in xrange(len(self.children)):
+            column = self.children.pop(0)
+            #if re.search(regex, column.name):
+            if column.is_dynamic:
+                column.remove_children()
+            else:
+                tmp.append(column)
+        self.children = tmp
+
+        # add the new ones
+        for dynamic_column in dynamic_columns:
             self.add_child(dynamic_column)
+
 
     def from_xml(self, element, reference=None):
         '''
@@ -702,7 +720,7 @@ class H5Table(H5Node):
                 field_name = col_name[col_name.find(Rule.replace_indicators[0]) +
                                       1:col_name.find(Rule.replace_indicators[1])]
                 # on change of the referenced field the dynamic cols will be be
-                # cloned from of the placeholder column
+                # cloned from the placeholder column
                 reference.bind(field_name,
                                lambda value: self.multiply_placeholder(column,
                                                                        field_name,
@@ -749,6 +767,7 @@ class H5TableColumn(H5Resource):
         self.dtype = None
         self.content = None
         self.is_required = is_required
+        self.is_dynamic = False
         self.is_primary_key = is_primary_key
         self.referenced_name = None
 

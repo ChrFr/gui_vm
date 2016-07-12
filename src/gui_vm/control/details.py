@@ -283,7 +283,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
                         .format(name=key, value=val))
                 status_color = get_status_color(status)
                 item = QtGui.QTreeWidgetItem(parent, [line, _fromUtf8(message)])
-                tooltip = line + ' ' + message
+                tooltip = _fromUtf8(line + ' ' + message)
                 item.setToolTip(0, tooltip)
                 item.setToolTip(1, tooltip)
                 item.setFont(0, font)
@@ -317,6 +317,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         '''
         validate the resource files
         '''
+        self.resource_node.update()
         self.resource_node.validate()
         self.show_attributes()
 
