@@ -697,6 +697,25 @@ class Scenario(TreeNode):
         else:
             self.admin_locked = False
 
+    def clone(self, name=None):
+        '''
+        extended cloning by creating a new model
+        '''
+        #clone = super(Scenario, self).clone(name)
+        # if you just do a plain clone, the callbacks point to the wrong model
+        # -> set a new model
+        clone = Scenario(model=self.model.name, name=name, parent=self.parent)
+        for input_node in self.get_input_files():
+            cloned_node = clone.get_input(input_node.name)
+            cloned_node.file_relative = input_node.file_relative
+            cloned_node.original_source = input_node.original_source
+
+        output_node = self.get_child(clone.OUTPUT_NODES)
+        if output_node:
+            cloned_outputs = deepcopy(output_node)
+            clone.add_child(cloned_outputs)
+
+        return clone
 
 class Project(TreeNode):
     '''
@@ -780,8 +799,8 @@ class Project(TreeNode):
     def add_scenario(self, model, name=None):
         if name is None:
             name = 'Szenario {}'.format(self.child_count)
-        new_run = Scenario(model, name, parent=self)
-        self.add_child(new_run)
+        scenario = Scenario(model, name, parent=self)
+        self.add_child(scenario)
 
 
 class ResourceNode(TreeNode):

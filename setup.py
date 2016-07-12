@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gui_vm",
-    version="0.76",
+    version="1.01",
     url='https://github.com/ChrFr/gui_vm',
     author='Christoph Franke',
     description="graphical user interface for different traffic models",
@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     package_data={
-        'gui_vm': ['*.csv',
+        'gui_vm': ['model/maxem/Maxem.xml',
                    'config_template.xml'],
     },
 

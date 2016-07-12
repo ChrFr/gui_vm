@@ -1131,6 +1131,9 @@ class VMProjectControl(ProjectTreeControl):
         dialog = CopyFilesDialog(filenames, destinations)
                                  #parent=self.tree_view)
         self.tree_view.setUpdatesEnabled(True)
+
+        new_scenario_node.update()
+        new_scenario_node.validate()
         self.project_changed.emit()
 
     def open_resource(self, resource_node=None):

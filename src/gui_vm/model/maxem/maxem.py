@@ -73,8 +73,8 @@ class Maxem(TrafficModel):
         xml_file: absolute path th a xml-file containing the paths to the used resources and the settings for the scenario and run with the given names (gui_vm project-style)
         '''
         python_path = config.settings['trafficmodels'][self.name]['interpreter']
-        #executable = config.settings['trafficmodels'][self.name]['executable']
-        executable = '-m tdmks.main'
+        executable = config.settings['trafficmodels'][self.name]['executable']
+        #executable = '-m tdmks.main'
         cmd = python_path + ' ' + executable
         cmd_scen_name = '-n "{}"'.format(scenario_name)
 
@@ -92,7 +92,7 @@ class Maxem(TrafficModel):
 
         self.already_done = 0.
         self.group = None
-        groups_count = len(self.get('groups_generation'))
+        groups_count = len(self.get('groups_dest_mode'))
         self.to_do = 0
         self.group_share = 100. / groups_count
         self.group_counter = 0

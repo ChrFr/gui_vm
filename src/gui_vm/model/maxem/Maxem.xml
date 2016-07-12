@@ -11,6 +11,7 @@
     <content alias="Aktivitäten" resource="Params" path="/activities/activities" column="name">activity_names</content>
     <content alias="Gebietstypen" resource="Zonen" path="/zones/area_types" column="areatype_name">area_types</content>
     <content alias="Personengruppen" resource="Params" path="/groups/groups_generation" column="code">groups_generation</content>
+    <content alias="Gruppen_Ziel_VM_Wahl" resource="Params" path="/groups/groups_dest_mode" column="code">groups_dest_mode</content>
   </Monitor>
   <RunOptions>
     <group name="areatype" is_special_only="True">
@@ -74,7 +75,6 @@
       <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
       <column type="|S255" minimum="" maximum="" is_primary_key="0">zone_name</column>
     </H5Table>
-    <H5Array path="/tarif_relationen" dimension="{n_zones}" minimum="" maximum=""/>
     <H5Array path="/put/cost_put" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
     <H5Array path="/put/no_connection" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
     <H5Array path="/put/share_bus" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>

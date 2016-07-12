@@ -22,7 +22,7 @@ class Config():
     __metaclass__ = Singleton
 
     def __init__(self):
-        main_p = os.path.dirname(gui_vm.__file__)
+        main_p = gui_vm.__path__[0]
         self.filename = os.path.join(main_p, CONFIG_FILE)
         self.default_file = os.path.join(main_p, CONFIG_TEMPLATE)
         self.mainWindow = None

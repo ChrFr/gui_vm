@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Fri Mar 18 11:52:50 2016
+# Created: Tue Jul 12 12:17:31 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -146,13 +146,13 @@ class Ui_MainWindow(object):
         self.new_button.setObjectName(_fromUtf8("new_button"))
         self.horizontalLayout.addWidget(self.new_button)
         self.open_button = QtGui.QPushButton(self.button_bar)
-        self.open_button.setMinimumSize(QtCore.QSize(33, 0))
+        self.open_button.setMinimumSize(QtCore.QSize(28, 0))
         self.open_button.setMaximumSize(QtCore.QSize(30, 30))
         self.open_button.setText(_fromUtf8(""))
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/open.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.open_button.setIcon(icon2)
-        self.open_button.setIconSize(QtCore.QSize(24, 24))
+        self.open_button.setIconSize(QtCore.QSize(26, 19))
         self.open_button.setObjectName(_fromUtf8("open_button"))
         self.horizontalLayout.addWidget(self.open_button)
         spacerItem = QtGui.QSpacerItem(20, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
@@ -341,8 +341,6 @@ class Ui_MainWindow(object):
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuDatei = QtGui.QMenu(self.menubar)
         self.menuDatei.setObjectName(_fromUtf8("menuDatei"))
-        self.menuHilfe = QtGui.QMenu(self.menubar)
-        self.menuHilfe.setObjectName(_fromUtf8("menuHilfe"))
         self.menuProjekt = QtGui.QMenu(self.menubar)
         self.menuProjekt.setObjectName(_fromUtf8("menuProjekt"))
         self.menuZuletzt_benutzt = QtGui.QMenu(self.menuProjekt)
@@ -386,7 +384,6 @@ class Ui_MainWindow(object):
         self.menuDatei.addAction(self.actionEinstellungen)
         self.menuDatei.addSeparator()
         self.menuDatei.addAction(self.actionBeenden)
-        self.menuHilfe.addAction(self.actionInfo)
         self.menuProjekt.addAction(self.actionNeues_Projekt)
         self.menuProjekt.addAction(self.actionProjekt_ffnen)
         self.menuProjekt.addAction(self.actionProjekt_schlie_en)
@@ -401,7 +398,6 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuProjekt.menuAction())
         self.menubar.addAction(self.menuSzenario.menuAction())
         self.menubar.addAction(self.menuL_ufe.menuAction())
-        self.menubar.addAction(self.menuHilfe.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -424,7 +420,6 @@ class Ui_MainWindow(object):
         self.handle_left_arrow.setText(_translate("MainWindow", "< ", None))
         self.handle_right_arrow.setText(_translate("MainWindow", " >", None))
         self.menuDatei.setTitle(_translate("MainWindow", "Datei", None))
-        self.menuHilfe.setTitle(_translate("MainWindow", "Hilfe", None))
         self.menuProjekt.setTitle(_translate("MainWindow", "Projekt", None))
         self.menuZuletzt_benutzt.setTitle(_translate("MainWindow", "zuletzt benutzt", None))
         self.menuSzenario.setTitle(_translate("MainWindow", "Szenario", None))
