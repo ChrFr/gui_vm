@@ -7,6 +7,7 @@
     <shape alias="Anzahl Zeitscheiben" resource="Params" path="/activities/time_series">n_time_series</shape>
     <shape alias="Aktivitätenpaare" resource="Params" path="/activities/activitypairs">n_activity_pairs</shape>
     <!-- observe the content of a column, can be used like this: <column ... > text{nameofmonitorobject}text </column> -->
+    <content alias="Modi" resource="Params" path="/modes/modes" column="code">modes</content>
     <content alias="Aktivitätencodes" resource="Params" path="/activities/activities" column="code">activity_codes</content>
     <content alias="Aktivitäten" resource="Params" path="/activities/activities" column="name">activity_names</content>
     <content alias="Gebietstypen" resource="Zonen" path="/zones/area_types" column="areatype_name">area_types</content>
@@ -14,6 +15,11 @@
     <content alias="Gruppen_Ziel_VM_Wahl" resource="Params" path="/groups/groups_dest_mode" column="code">groups_dest_mode</content>
   </Monitor>
   <RunOptions>
+    <!-- selectable options before running 
+		is_unique - only one option can be checked at a time, 
+		default - by default selected option (index), 
+		is_special_only - only available for special runs, 
+		is_primary_only - only available for primary runs-->
     <group name="areatype" is_special_only="True">
       <option value="{area_types}">{area_types}</option>
     </group>
@@ -27,7 +33,6 @@
       <option value="groups">Gruppendetails</option>
       <option value="activities">Aktivitätendetails</option>
     </group>
-    <!--is_unique - only one option can be checked at a time, default - by default selected option (index), is_special_only - only available for special runs, is_primary_only - only available for primary runs-->
     <group name="calibrate" is_primary_only="True" is_unique="True" default="1">
       <option value="True">An</option>
       <option value="False">Aus</option>
@@ -143,11 +148,7 @@
     <H5Table path="/activities/validation_activities" n_rows="">
       <column type="|S15" minimum="" maximum="" is_primary_key="0">code</column>
       <column type="float32" minimum="" maximum="" is_primary_key="0">mean_trip_length</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">F</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">R</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">O</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">M</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">P</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{modes}</column>
     </H5Table>
     <H5Table path="/groups/groups_calibration" n_rows="">
       <column type="|S30" minimum="" maximum="" is_primary_key="0">group_def</column>
@@ -157,11 +158,7 @@
       <column type="int8" minimum="" maximum="" is_primary_key="0">is_group</column>
       <column type="int8" minimum="" maximum="" is_primary_key="0">is_aggregation</column>
       <column type="int8" minimum="" maximum="" is_primary_key="0">hard_margin</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">F</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">R</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">O</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">M</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">P</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">{modes}</column>
     </H5Table>
     <H5Table path="/groups/groups_dest_mode" n_rows="">
       <column type="int32" minimum="" maximum="" is_primary_key="0">idx</column>
@@ -180,11 +177,7 @@
     </H5Table>
     <H5Table path="/groups/groups_pkwverf" n_rows="">
       <column type="|S15" minimum="" maximum="" is_primary_key="0">code</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">F</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">R</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">O</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">M</column>
-      <column type="int8" minimum="" maximum="" is_primary_key="0">P</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">{modes}</column>
     </H5Table>
     <H5Table path="/groups/validation_mode" n_rows="">
       <column type="|S30" minimum="" maximum="" is_primary_key="0">group_def</column>
@@ -192,11 +185,7 @@
       <column type="float32" minimum="" maximum="" is_primary_key="0">persons</column>
       <column type="float32" minimum="" maximum="" is_primary_key="0">trips</column>
       <column type="float32" minimum="" maximum="" is_primary_key="0">mean_trip_distance</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">F</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">R</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">O</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">M</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">P</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{modes}</column>
     </H5Table>
     <H5Table path="/modes/modes" n_rows="">
       <column type="int8" minimum="" maximum="" is_primary_key="0">idx</column>
@@ -218,69 +207,7 @@
     </H5Table>
     <H5Table path="/groups/production" n_rows="{n_zones}">
       <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">AZePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">AZePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">AZhPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">AZhPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">AZoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">AZoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EINeP</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EINhP</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EINoP</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EWePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EWePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EWhPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EWhPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EWoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">EWoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">GSePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">GSePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">GShPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">GShPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">GSoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">GSoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">KIePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">KIePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">KIhPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">KIhPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">KIoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">KIoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">MSePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">MSePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">MShPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">MShPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">MSoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">MSoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">NEePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">NEePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">NEhPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">NEhPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">NEoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">NEoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">OSePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">OSePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">OShPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">OShPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">OSoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">OSoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RAePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RAePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RAhPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RAhPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RAoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RAoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RJePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RJePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RJhPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RJhPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RJoPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">RJoPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">STePM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">STePW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">SThPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">SThPW</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">SToPM</column>
-      <column type="float32" minimum="" maximum="" is_primary_key="0">SToPW</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{groups_generation}</column>
     </H5Table>
     <H5Array path="/zones/access_egress" dimension="1" minimum="" maximum=""/>
     <H5Table path="/zones/area_types" n_rows="">
