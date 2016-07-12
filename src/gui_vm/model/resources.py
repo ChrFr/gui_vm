@@ -670,7 +670,9 @@ class H5Table(H5Node):
             if old_dynamic:
                 dynamic_column.dtype = old_dynamic.dtype
                 dynamic_column.content = old_dynamic.content
-
+                dynamic_column._status.set('dtype', Status.FOUND)
+            else:
+                dynamic_column._status.set('dtype', Status.NOT_FOUND)
             dynamic_columns.append(dynamic_column)
 
         # remove the old dynamic columns

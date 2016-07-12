@@ -89,6 +89,14 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
             label.setToolTip(tooltip)
             edit.setToolTip(tooltip)
             self.data_form.addRow(label, edit)
+        self.status_button.clicked.connect(self.update_status)
+
+    def update_status(self):
+        '''
+        validate the resource files
+        '''
+        self.scenario.update()
+        self.scenario.validate()
 
     def special_run(self):
         run_node = self.project_control.add_special_run(self.scenario)
@@ -224,7 +232,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
         # edit button disabled at the moment, many other ways to edit file via ui (try not to confuse the user)
         self.edit_button.setVisible(False)
 
-        self.status_button.clicked.connect(self.get_status)
+        self.status_button.clicked.connect(self.update_status)
 
         self.setMinimumSize(500, 0)
         self.update()
@@ -313,7 +321,7 @@ class InputDetails(QtGui.QGroupBox, Ui_DetailsResource):
             return
         self.value_changed.emit(self.resource_node)
 
-    def get_status(self):
+    def update_status(self):
         '''
         validate the resource files
         '''
