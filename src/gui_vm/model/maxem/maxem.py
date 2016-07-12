@@ -92,7 +92,7 @@ class Maxem(TrafficModel):
 
         self.already_done = 0.
         self.group = None
-        groups_count = len(self.get('groups_generation'))
+        groups_count = len(self.get('groups_dest_mode'))
         self.to_do = 0
         self.group_share = 100. / groups_count
         self.group_counter = 0
