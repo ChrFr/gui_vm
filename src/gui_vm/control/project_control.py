@@ -402,7 +402,7 @@ class VMProjectControl(ProjectTreeControl):
 
         # CONNECT SLOTS TO SIGNALS
         self.view_changed.connect(self.update_view)
-        self.nodes_changed.connect(self.validate_nodes)
+        self.nodes_changed.connect(self.validate_nodes_on_change)
         # nodes changed -> project changed as well (save project in main_control)
         self.nodes_changed.connect(lambda: self.project_changed.emit())
         # dataChanged signals, that rows of the qtreeview have changed
@@ -426,6 +426,8 @@ class VMProjectControl(ProjectTreeControl):
             QtGui.QAbstractButton, 'clean_button')
         self.open_button = self.button_group.findChild(
             QtGui.QAbstractButton, 'context_open_button')
+        self.status_button = self.button_group.findChild(
+            QtGui.QAbstractButton, 'status_button')
 
         # connect the context buttons with the defined actions
         self.plus_button.clicked.connect(lambda: self.context_function('add'))
@@ -433,6 +435,7 @@ class VMProjectControl(ProjectTreeControl):
         self.edit_button.clicked.connect(lambda: self.context_function('edit'))
         self.open_button.clicked.connect(lambda: self.context_function('open'))
         self.reset_button.clicked.connect(lambda: self.context_function('reset'))
+        self.status_button.clicked.connect(lambda: self.context_function('check'))
         #self.start_button.clicked.connect(self.project_control.execute)
 
         self.lock_button.clicked.connect(lambda:
@@ -488,6 +491,10 @@ class VMProjectControl(ProjectTreeControl):
             },
             'clean': {
 
+            },
+            'check': {
+                Scenario: [self._check_node, 'Eingabedaten des Szenarios prüfen', False],
+                InputNode: [self._check_node, 'Ressource prüfen', False]
             },
             'other': {
                 OutputNode: [self._open_explorer, 'in Explorer anzeigen', False],
@@ -563,7 +570,9 @@ class VMProjectControl(ProjectTreeControl):
             dialog = CopyFilesDialog(fileinput,
                                      os.path.split(input_node.file_absolute)[0])
             dialog.exec_()
-        input_node.update()
+
+        if config.settings['auto_check']:
+            input_node.update()
         self.nodes_changed.emit(input_node)
         return fileinput
 
@@ -603,6 +612,7 @@ class VMProjectControl(ProjectTreeControl):
         map_button(self.reset_button, 'reset', condition=condition)
         map_button(self.edit_button, 'edit')
         map_button(self.open_button, 'open')
+        map_button(self.status_button, 'check')
         #self.start_button.setEnabled(cls in self.context_map['execute'])
         map_button(self.lock_button, 'switch_lock')
         if node.locked:
@@ -863,6 +873,14 @@ class VMProjectControl(ProjectTreeControl):
             self.remove_outputs(scenario)
         self.nodes_changed.emit(scenario)
 
+    def _check_node(self, output_node=None):
+        if not output_node:
+            output_node = self.selected_item
+
+        output_node.update()
+        output_node.validate()
+        self.view_changed.emit()
+
     def _remove_output(self, output_node=None):
         '''
         remove an output-node from the project-tree and
@@ -918,6 +936,21 @@ class VMProjectControl(ProjectTreeControl):
             return
 
         dialog = QtGui.QMessageBox()
+
+        if not scenario_node.is_checked:
+            msg = _fromUtf8('Das Szenario wurde noch nicht geprüft.\n' +
+                            'Ohne Prüfung kann das Szenario nicht gestartet werden' +
+                            '\nSoll es jetzt geprüft werden?')
+            reply = QtGui.QMessageBox.question(
+                None, _fromUtf8("Prüfung nötig"), msg,
+                QtGui.QMessageBox.Ok, QtGui.QMessageBox.No)
+            if reply == QtGui.QMessageBox.Ok:
+                scenario_node.update()
+                scenario_node.validate()
+                self.view_changed.emit()
+            else:
+                return
+
         if not scenario_node.is_valid:
             msg = _fromUtf8('Das Szenario ist fehlerhaft (rot markierte Felder).' +
                             'Der Lauf kann nicht gestartet werden.')
@@ -1132,8 +1165,9 @@ class VMProjectControl(ProjectTreeControl):
                                  #parent=self.tree_view)
         self.tree_view.setUpdatesEnabled(True)
 
-        new_scenario_node.update()
-        new_scenario_node.validate()
+        if config.settings['auto_check']:
+            new_scenario_node.update()
+            new_scenario_node.validate()
         self.project_changed.emit()
 
     def open_resource(self, resource_node=None):
@@ -1401,7 +1435,9 @@ class VMProjectControl(ProjectTreeControl):
             dialog.exec_()
             self.tree_view.setUpdatesEnabled(True)
             #dialog.deleteLater()
-            scenario_node.update()
+
+            if config.settings['auto_check']:
+                scenario_node.update()
             self.remove_outputs(scenario_node)
 
         self.nodes_changed.emit(scenario_node)
@@ -1447,7 +1483,9 @@ class VMProjectControl(ProjectTreeControl):
             destination = os.path.split(res_node.file_absolute)[0]
             dialog = CopyFilesDialog(filename, destination,
                                      parent=self.tree_view)
-            res_node.update()
+
+            if config.settings['auto_check']:
+                res_node.update()
             scenario = res_node.scenario
             self.remove_outputs(scenario)
             self.nodes_changed.emit(scenario)
@@ -1519,9 +1557,10 @@ class VMProjectControl(ProjectTreeControl):
         self.close_project()
         XMLParser.read_xml(self.model, filename)
         self.project.project_folder = os.path.split(filename)[0]
-        self.project.update()
         self.project.on_change(lambda: self.project_changed.emit())
-        self.nodes_changed.emit(self.project)
+        if config.settings['auto_check']:
+            self.project.update()
+            self.nodes_changed.emit(self.project)
         self.view_changed.emit()
         self.tree_view.resizeColumnToContents(0)
         self.select_node(self.project)
@@ -1544,13 +1583,17 @@ class VMProjectControl(ProjectTreeControl):
         if output_parent:
             self._remove_node(output_parent)
 
-    def validate_nodes(self, *args):
+    def validate_nodes_on_change(self, *args):
         '''
         handle what happens, if nodes have changed
         '''
+
         for node in args:
+
+            if not config.settings['auto_check']:
+                node.is_checked = False
             # if input changes, all other nodes have to be validated
-            if isinstance(node, InputNode):
+            elif isinstance(node, InputNode):
                 scenario = node.scenario
                 scenario.validate()
             else:

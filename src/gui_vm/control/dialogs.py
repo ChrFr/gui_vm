@@ -552,6 +552,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
     def __init__(self, parent=None):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
+        self.restart_required = False
 
         self.python_exec_browse_button.clicked.connect(
             lambda: set_file(self, self.python_edit,
@@ -574,8 +575,14 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
                              filters=[ALL_FILES_FILTER, 'Python-Skript (*.py)'],
                              selected_filter_idx=1)
         )
-        self.verkmod_default_browse_button.setDisabled(True)
-        self.verkmod_exec_browse_button.setDisabled(True)
+
+        def enable_restart_required():
+            self.restart_required = True
+
+        #self.auto_check.stateChanged.connect(enable_restart_required)
+
+        #self.verkmod_default_browse_button.setDisabled(True)
+        #self.verkmod_exec_browse_button.setDisabled(True)
 
         self.OK_button.clicked.connect(self.write_config)
         self.reset_button.clicked.connect(self.reset)
@@ -617,6 +624,7 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.maxem_default_edit.setText(maxem['default_folder'])
         self.maxem_exec_edit.setText(maxem['executable'])
         self.python_edit.setText(maxem['interpreter'])
+        self.auto_check.setChecked(config.settings['auto_check'])
 
         #verkmod = mod['VerkMod']
         #self.verkmod_default_edit.setText(verkmod['default_folder'])
@@ -633,11 +641,15 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         maxem['executable'] = str(self.maxem_exec_edit.text())
         maxem['interpreter'] = str(self.python_edit.text())
 
+        config.settings['auto_check'] = self.auto_check.isChecked()
+
         #verkmod = mod['VerkMod']
         #verkmod['default_folder'] = str(self.verkmod_default_edit.text())
         #verkmod['executable'] = str(self.verkmod_exec_edit.text())
 
         config.write()
+        if self.restart_required:
+            QtGui.QMessageBox.information(None, "Neustart erforderlich", u"Die geänderte Einstellung wird erst wirksam nach einem Neustart der Oberfläche")
         self.close()
 
     def reset(self):

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created: Tue Jul 12 12:17:31 2016
+# Created: Mon Jul 18 16:29:31 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -163,7 +163,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.context_button_group.sizePolicy().hasHeightForWidth())
         self.context_button_group.setSizePolicy(sizePolicy)
-        self.context_button_group.setMinimumSize(QtCore.QSize(295, 35))
+        self.context_button_group.setMinimumSize(QtCore.QSize(325, 35))
         self.context_button_group.setTitle(_fromUtf8(""))
         self.context_button_group.setObjectName(_fromUtf8("context_button_group"))
         self.plus_button = QtGui.QPushButton(self.context_button_group)
@@ -212,7 +212,7 @@ class Ui_MainWindow(object):
         self.minus_button.setIconSize(QtCore.QSize(21, 21))
         self.minus_button.setObjectName(_fromUtf8("minus_button"))
         self.edit_button = QtGui.QPushButton(self.context_button_group)
-        self.edit_button.setGeometry(QtCore.QRect(120, 5, 25, 25))
+        self.edit_button.setGeometry(QtCore.QRect(180, 5, 25, 25))
         self.edit_button.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.edit_button.setLocale(QtCore.QLocale(QtCore.QLocale.German, QtCore.QLocale.Germany))
         self.edit_button.setText(_fromUtf8(""))
@@ -222,7 +222,7 @@ class Ui_MainWindow(object):
         self.edit_button.setIconSize(QtCore.QSize(21, 21))
         self.edit_button.setObjectName(_fromUtf8("edit_button"))
         self.reset_button = QtGui.QPushButton(self.context_button_group)
-        self.reset_button.setGeometry(QtCore.QRect(180, 5, 25, 25))
+        self.reset_button.setGeometry(QtCore.QRect(150, 5, 25, 25))
         self.reset_button.setText(_fromUtf8(""))
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/reset.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -230,7 +230,7 @@ class Ui_MainWindow(object):
         self.reset_button.setIconSize(QtCore.QSize(21, 21))
         self.reset_button.setObjectName(_fromUtf8("reset_button"))
         self.lock_button = QtGui.QPushButton(self.context_button_group)
-        self.lock_button.setGeometry(QtCore.QRect(260, 5, 25, 25))
+        self.lock_button.setGeometry(QtCore.QRect(290, 5, 25, 25))
         self.lock_button.setText(_fromUtf8(""))
         icon7 = QtGui.QIcon()
         icon7.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/unlocked-yellow.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -248,7 +248,7 @@ class Ui_MainWindow(object):
         self.copy_button.setIconSize(QtCore.QSize(21, 21))
         self.copy_button.setObjectName(_fromUtf8("copy_button"))
         self.clean_button = QtGui.QPushButton(self.context_button_group)
-        self.clean_button.setGeometry(QtCore.QRect(210, 5, 25, 25))
+        self.clean_button.setGeometry(QtCore.QRect(240, 5, 25, 25))
         self.clean_button.setText(_fromUtf8(""))
         icon9 = QtGui.QIcon()
         icon9.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/clean.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -256,7 +256,7 @@ class Ui_MainWindow(object):
         self.clean_button.setIconSize(QtCore.QSize(22, 21))
         self.clean_button.setObjectName(_fromUtf8("clean_button"))
         self.context_open_button = QtGui.QPushButton(self.context_button_group)
-        self.context_open_button.setGeometry(QtCore.QRect(150, 5, 25, 25))
+        self.context_open_button.setGeometry(QtCore.QRect(210, 5, 25, 25))
         self.context_open_button.setMinimumSize(QtCore.QSize(0, 0))
         self.context_open_button.setMaximumSize(QtCore.QSize(30, 30))
         self.context_open_button.setText(_fromUtf8(""))
@@ -271,10 +271,19 @@ class Ui_MainWindow(object):
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setObjectName(_fromUtf8("line"))
         self.line_2 = QtGui.QFrame(self.context_button_group)
-        self.line_2.setGeometry(QtCore.QRect(240, 0, 16, 33))
+        self.line_2.setGeometry(QtCore.QRect(270, 0, 16, 33))
         self.line_2.setFrameShape(QtGui.QFrame.VLine)
         self.line_2.setFrameShadow(QtGui.QFrame.Sunken)
         self.line_2.setObjectName(_fromUtf8("line_2"))
+        self.status_button = QtGui.QPushButton(self.context_button_group)
+        self.status_button.setGeometry(QtCore.QRect(120, 5, 25, 25))
+        self.status_button.setMaximumSize(QtCore.QSize(25, 25))
+        self.status_button.setText(_fromUtf8(""))
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(_fromUtf8(":/buttons/icons/reload.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.status_button.setIcon(icon11)
+        self.status_button.setIconSize(QtCore.QSize(20, 20))
+        self.status_button.setObjectName(_fromUtf8("status_button"))
         self.horizontalLayout.addWidget(self.context_button_group)
         spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
@@ -414,6 +423,7 @@ class Ui_MainWindow(object):
         self.copy_button.setToolTip(_translate("MainWindow", "Kopieren", None))
         self.clean_button.setToolTip(_translate("MainWindow", "Aufräumen", None))
         self.context_open_button.setToolTip(_translate("MainWindow", "Öffnen", None))
+        self.status_button.setToolTip(_translate("MainWindow", "Prüfen", None))
         self.scenario_choice_button.setText(_translate("MainWindow", "angeklicktes\n"
 "Szenario wählen \n"
 " und schließen", None))

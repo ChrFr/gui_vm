@@ -33,6 +33,7 @@ class Config():
             'environment': {
                 'hdf5_viewer': ''
                 },
+            'auto_check': False,
             'trafficmodels': {
                 'Maxem': {
                     'default_folder': '',
@@ -137,4 +138,8 @@ def xml_to_dict(tree, represented_as_arrays):
         value = tree.text
         if not value:
             value = ''
+        elif value == 'False':
+            value = False
+        elif value == 'True':
+            value = True
     return value

@@ -2,6 +2,7 @@
   <environment>
 	<hdf5_viewer></hdf5_viewer>
   </environment>
+  <auto_check>False</auto_check>
   <trafficmodels>
     <Maxem>
       <class_module>gui_vm.model.maxem.maxem</class_module>
