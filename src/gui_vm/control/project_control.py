@@ -938,18 +938,9 @@ class VMProjectControl(ProjectTreeControl):
         dialog = QtGui.QMessageBox()
 
         if not scenario_node.is_checked:
-            msg = _fromUtf8('Das Szenario wurde noch nicht geprüft.\n' +
-                            'Ohne Prüfung kann das Szenario nicht gestartet werden' +
-                            '\nSoll es jetzt geprüft werden?')
-            reply = QtGui.QMessageBox.question(
-                None, _fromUtf8("Prüfung nötig"), msg,
-                QtGui.QMessageBox.Ok, QtGui.QMessageBox.No)
-            if reply == QtGui.QMessageBox.Ok:
-                scenario_node.update()
-                scenario_node.validate()
-                self.view_changed.emit()
-            else:
-                return
+            scenario_node.update()
+            scenario_node.validate()
+            self.view_changed.emit()
 
         if not scenario_node.is_valid:
             msg = _fromUtf8('Das Szenario ist fehlerhaft (rot markierte Felder).' +
