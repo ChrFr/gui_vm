@@ -74,7 +74,6 @@ class Maxem(TrafficModel):
         '''
         python_path = config.settings['trafficmodels'][self.name]['interpreter']
         executable = config.settings['trafficmodels'][self.name]['executable']
-        #executable = '-m tdmks.main'
         cmd = python_path + ' ' + executable
         cmd_scen_name = '-n "{}"'.format(scenario_name)
 
@@ -99,6 +98,25 @@ class Maxem(TrafficModel):
 
         def progress():
             message = str(process.readAllStandardError())
+            # reset counter
+            l = message.strip().split('Start iteration')
+            if len(l) > 1:
+                self.iteration = int(l[1].split(':')[0].strip())
+                self.already_done = 0.
+                self.group_counter = 0
+                self.to_do = 0
+
+            # search new group
+            l = message.split("Calculating Group")
+            if len(l)>1:
+                self.group_counter += self.group_share
+
+            # groups which make no trips
+            l = message.split('Wege_Soll: 0,')
+            if len(l)>1:
+                self.already_done += self.group_share
+
+            # new trip chain
             l = message.split("INFO->['")
             if len(l)>1:
                 l2 = l[1].split("'")
@@ -108,7 +126,6 @@ class Maxem(TrafficModel):
                 self.already_done += self.group_share / self.to_do
                 if self.group != new_group:
                     self.group = new_group
-                    self.group_counter += self.group_share
                     self.to_do = 0
             if callback:
                 callback(message, self.already_done)
@@ -121,7 +138,6 @@ class Maxem(TrafficModel):
         # QProcess emits `readyRead` when there is data to be read
         process.readyReadStandardOutput.connect(progress)
         process.readyReadStandardError.connect(progress)
-        #process.finished.connect(self.finished)
 
         # log the command issued
         if callback:
