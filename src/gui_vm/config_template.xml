@@ -1,16 +1,23 @@
 <CONFIG>
   <environment>
-	<hdf5_viewer></hdf5_viewer>
+    <hdf5_viewer></hdf5_viewer>
   </environment>
   <auto_check>False</auto_check>
   <trafficmodels>
     <Maxem>
       <class_module>gui_vm.model.maxem.maxem</class_module>
-      <executable></executable>
+      <executable>-m tdmks.main</executable>
+      <config_file>maxem.py</config_file>
       <default_folder></default_folder>
-	  <interpreter>python.exe</interpreter>
+      <interpreter>python.exe</interpreter>
     </Maxem>
-  </trafficmodels>
+    <Wiver>
+      <class_module>gui_vm.model.wiver.wiver</class_module>
+      <executable>-m vm.wiver</executable>
+      <config_file>wievr.py</config_file>
+      <default_folder></default_folder>
+      <interpreter>python.exe</interpreter>
+    </Wiver>
   <history>
   </history>
 </CONFIG>

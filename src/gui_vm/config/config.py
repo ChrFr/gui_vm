@@ -43,7 +43,12 @@ class Config():
                 'VerkMod': {
                     'default_folder': '',
                     'executable': ''
-                    }
+                    },
+                'Wiver': {
+                    'default_folder': '',
+                    'executable': '',
+                    'interpreter': '',
+                    },
             },
             'history': [],
         }

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gui_vm",
-    version="1.03",
+    version="1.1",
     url='https://github.com/ChrFr/gui_vm',
     author='Christoph Franke',
     description="graphical user interface for different traffic models",
@@ -26,6 +26,7 @@ setup(
     zip_safe=False,
     package_data={
         'gui_vm': ['model/maxem/Maxem.xml',
+                   'model/wiver/Wiver.xml',
                    'config_template.xml'],
     },
 
@@ -43,7 +44,6 @@ setup(
     entry_points={
         'console_scripts': [
             'gui_vm=gui_vm.main:startmain',
-            #'gui_vm.clone_scenario=gui_vm.clone_scenario:main',
             'get_param_from_config=gui_vm.get_param_from_config:main'
         ],
     },

@@ -626,6 +626,11 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.python_edit.setText(maxem['interpreter'])
         self.auto_check.setChecked(config.settings['auto_check'])
 
+        wiver = mod['Wiver']
+        #self.wiver_default_edit.setText(wiver['default_folder'])
+        #self.wiver_exec_edit.setText(wiver['executable'])
+        #self.wiver_python_edit.setText(wiver['interpreter'])
+
         #verkmod = mod['VerkMod']
         #self.verkmod_default_edit.setText(verkmod['default_folder'])
         #self.verkmod_exec_edit.setText(verkmod['executable'])
@@ -642,6 +647,11 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         maxem['interpreter'] = str(self.python_edit.text())
 
         config.settings['auto_check'] = self.auto_check.isChecked()
+
+        wiver = mod['Wiver']
+        #wiver['default_folder'] = str(self.wiver_default_edit.text())
+        #wiver['executable'] = str(self.wiver_exec_edit.text())
+        #wiver['interpreter'] = str(self.wiver_python_edit.text())
 
         #verkmod = mod['VerkMod']
         #verkmod['default_folder'] = str(self.verkmod_default_edit.text())

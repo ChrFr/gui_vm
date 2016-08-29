@@ -1,0 +1,249 @@
+<Resources>
+  <!-- observed attributes, can be cross referenced to from other resources via definitions with {nameofmonitorobject},
+       order of monitored attributes determines the order in which they will be shown in GUI Scenario details-->
+  <Monitor>
+    <!-- observe the shape of a table, can be used like this: <H5Array dimension="{nameofmonitorobject} x {nameofmonitorobject} x 10" ... /> -->
+    <shape alias="Anzahl Zonen" resource="Zonen" path="/zones/zones">n_zones</shape>
+    <shape alias="Anzahl Zeitscheiben" resource="Params" path="/activities/time_series">n_time_series</shape>
+    <shape alias="Aktivitätenpaare" resource="Params" path="/activities/activitypairs">n_activity_pairs</shape>
+    <!-- observe the content of a column, can be used like this: <column ... > text{nameofmonitorobject}text </column> -->
+    <content alias="Modi" resource="Params" path="/modes/modes" column="code">modes</content>
+    <content alias="Aktivitätencodes" resource="Params" path="/activities/activities" column="code">activity_codes</content>
+    <content alias="Aktivitäten" resource="Params" path="/activities/activities" column="name">activity_names</content>
+    <content alias="Gebietstypen" resource="Zonen" path="/zones/area_types" column="areatype_name">area_types</content>
+    <content alias="Personengruppen" resource="Params" path="/groups/groups_generation" column="code">groups_generation</content>
+    <content alias="Gruppen_Ziel_VM_Wahl" resource="Params" path="/groups/groups_dest_mode" column="code">groups_dest_mode</content>
+  </Monitor>
+  <RunOptions>
+    <!-- selectable options before running
+		is_unique - only one option can be checked at a time,
+		default - by default selected option (index),
+		is_special_only - only available for special runs,
+		is_primary_only - only available for primary runs-->
+    <group name="areatype" is_special_only="True">
+      <option value="{area_types}">{area_types}</option>
+    </group>
+    <group name="activities" is_special_only="True">
+      <option value="{activity_codes}">{activity_names}</option>
+    </group>
+    <group name="groups" is_special_only="True">
+      <option value="{groups_generation}">{groups_generation}</option>
+    </group>
+    <group name="detailed" is_special_only="True">
+      <option value="groups">Gruppendetails</option>
+      <option value="activities">Aktivitätendetails</option>
+    </group>
+    <group name="calibrate" is_primary_only="True" is_unique="True" default="1">
+      <option value="True">An</option>
+      <option value="False">Aus</option>
+    </group>
+    <group name="balance" is_primary_only="True" is_unique="True" default="0">
+      <option value="True">An</option>
+      <option value="False">Aus</option>
+    </group>
+  </RunOptions>
+  <H5Resource name="Fuss und Rad" category="Fuss und Rad">
+    <H5Table path="/Bezirke" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">name</column>
+    </H5Table>
+    <H5Table path="/fuss_long" n_rows="">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">vonVZNr</column>
+      <column type="int32" minimum="" maximum="" is_primary_key="0">nachVZNr</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">Fuss_Min</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">Fuss_Meter</column>
+    </H5Table>
+    <H5Table path="/rad_long" n_rows="">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">vonVZNr</column>
+      <column type="int32" minimum="" maximum="" is_primary_key="0">nachVZNr</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">Rad_Min</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">Rad_Meter</column>
+    </H5Table>
+    <H5Array path="/nmt/s_bicycle" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/nmt/s_foot" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/nmt/t_bicycle" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/nmt/t_foot" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+  </H5Resource>
+  <H5Resource name="MIV" category="MIV">
+    <H5Table path="/Bezirke" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">zone_name</column>
+    </H5Table>
+    <H5Array path="/iv/cost_car" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/iv/cost_passenger" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Fahrweite" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/t0" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/tAkt" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
+  </H5Resource>
+  <H5Resource name="OV" category="OV">
+    <H5Table path="/Bezirke" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">zone_name</column>
+    </H5Table>
+    <H5Array path="/put/cost_put" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/put/no_connection" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/put/share_bus" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/put/start_waiting_time" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/put/walk_time" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Abgangszeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Anzahl Tarifzonen" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Bedienungshaufigkeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Fahrpreis" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Fahrweite" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/FahrzeitimFahrzeug" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Reisezeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Umsteigegehzeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Umsteigehaufigkeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Umsteigewartezeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/Zugangszeit" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/in_vehicle_time_ast" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/visum/in_vehicle_time_bus" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+  </H5Resource>
+  <H5Resource name="Betas" category="Parameter">
+    <H5Table path="/coefficients/betas" n_rows="">
+      <column type="|S22" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="float64" minimum="" maximum="" is_primary_key="0">value</column>
+    </H5Table>
+    <H5Array path="/coefficients/offset_ls_a" dimension="1" minimum="" maximum=""/>
+  </H5Resource>
+  <H5Resource name="Konstanten" category="Parameter">
+    <H5Table path="/constants" n_rows="">
+      <column type="|S50" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">value</column>
+    </H5Table>
+  </H5Resource>
+  <H5Resource name="Params" category="Parameter">
+    <H5Table path="/activities/activities" n_rows="">
+      <column type="|S1" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">name</column>
+      <column type="|S55" minimum="" maximum="" is_primary_key="0">potential</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">balance</column>
+      <column type="int32" minimum="" maximum="" is_primary_key="0">rank</column>
+    </H5Table>
+    <H5Table path="/activities/activity_parking" n_rows="">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">park_zone</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{activity_codes}</column>
+    </H5Table>
+    <H5Array path="/activities/activitypair_time_series" dimension="{n_activity_pairs} x 24" minimum="" maximum=""/>
+    <H5Table path="/activities/activitypairs" n_rows="">
+      <column type="|S2" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="int32" minimum="" maximum="" is_primary_key="0">idx</column>
+    </H5Table>
+    <H5Table path="/activities/time_series" n_rows="">
+      <column type="|S8" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">name</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">from_hour</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">to_hour</column>
+      <column type="|S8" minimum="" maximum="" is_primary_key="0">type</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">time_slice_durations</column>
+    </H5Table>
+    <H5Table path="/activities/trip_chain_rates" n_rows="">
+      <column type="|S20" minimum="" maximum="" is_primary_key="0">group</column>
+      <column type="|S20" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="float64" minimum="" maximum="" is_primary_key="0">rate</column>
+    </H5Table>
+    <H5Table path="/activities/validation_activities" n_rows="">
+      <column type="|S15" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">mean_trip_length</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{modes}</column>
+    </H5Table>
+    <H5Table path="/groups/groups_calibration" n_rows="">
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">group_def</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">name</column>
+      <column type="|S25" minimum="" maximum="" is_primary_key="0">code_long</column>
+      <column type="|S5" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">is_group</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">is_aggregation</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">hard_margin</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">{modes}</column>
+    </H5Table>
+    <H5Table path="/groups/groups_dest_mode" n_rows="">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">idx</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">name</column>
+      <column type="|S15" minimum="" maximum="" is_primary_key="0">car_availability</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">occupation</column>
+      <column type="|S15" minimum="" maximum="" is_primary_key="0">total</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">in_commuter</column>
+    </H5Table>
+    <H5Table path="/groups/groups_generation" n_rows="">
+      <column type="|S55" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">group_dest_mode</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">group_generation</column>
+      <column type="|S1" minimum="" maximum="" is_primary_key="0">activity</column>
+    </H5Table>
+    <H5Table path="/groups/groups_pkwverf" n_rows="">
+      <column type="|S15" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">{modes}</column>
+    </H5Table>
+    <H5Table path="/groups/validation_mode" n_rows="">
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">group_def</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">group</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">persons</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">trips</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">mean_trip_distance</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{modes}</column>
+    </H5Table>
+    <H5Table path="/modes/modes" n_rows="">
+      <column type="int8" minimum="" maximum="" is_primary_key="0">idx</column>
+      <column type="|S10" minimum="" maximum="" is_primary_key="0">code</column>
+      <column type="|S30" minimum="" maximum="" is_primary_key="0">name</column>
+      <column type="|S15" minimum="" maximum="" is_primary_key="0">short_name</column>
+      <column type="|S15" minimum="" maximum="" is_primary_key="0">name_eng</column>
+      <column type="bool" minimum="" maximum="" is_primary_key="0">exchangeable</column>
+    </H5Table>
+  </H5Resource>
+  <H5Resource name="Zonen" category="Zonen">
+    <H5Table path="/activities/activity_kf" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">KF_{activity_codes}</column>
+    </H5Table>
+    <H5Table path="/activities/attraction" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">ZP_{activity_codes}</column>
+    </H5Table>
+    <H5Table path="/groups/production" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">{groups_generation}</column>
+    </H5Table>
+    <H5Array path="/zones/access_egress" dimension="1" minimum="" maximum=""/>
+    <H5Table path="/zones/area_types" n_rows="">
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">areatype_name</column>
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">definition</column>
+    </H5Table>
+    <H5Table path="/zones/binnenreisezeiten" n_rows="{n_zones}">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">zone_name</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">in_vehicle_time</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">share_bus</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">frequency_0</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">frequency_1</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">frequency_2</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">frequency_3</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">frequency_4</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">fare</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">n_transfers</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">walk_time</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">transfer_wait_time</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">t_cur</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">t0</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">distance_car</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">t_foot</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">t_bicycle</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">s_foot</column>
+      <column type="float32" minimum="" maximum="" is_primary_key="0">s_bicycle</column>
+    </H5Table>
+    <H5Table path="/zones/zones" n_rows="">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">zone_no</column>
+      <column type="int32" minimum="" maximum="" is_primary_key="0">main_zone_no</column>
+      <column type="|S255" minimum="" maximum="" is_primary_key="0">name</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">area_type</column>
+      <column type="int8" minimum="" maximum="" is_primary_key="0">parking</column>
+    </H5Table>
+    <H5Table path="/zones/zuordnung_alt_neu" n_rows="">
+      <column type="int32" minimum="" maximum="" is_primary_key="0">alt</column>
+      <column type="int32" minimum="" maximum="" is_primary_key="0">neu</column>
+      <column type="|S55" minimum="" maximum="" is_primary_key="0">Name</column>
+    </H5Table>
+  </H5Resource>
+</Resources>
