@@ -7,40 +7,37 @@ import csv
 
 def evaluate(h5_in_path, csv_out):
 
-    mode_path = '/modes'
-    modes = OrderedDict({
-        'Fahrrad': 'bicycle',
-        'Auto': 'car',
-        'zu Fuß': 'foot',
-        'Pkw-Mitfahrer': 'passenger',
-        'ÖPNV': 'put'
-    })
+    mode_path = '/trips_mij'
     meta = OrderedDict()
     modes_sum = 0
 
     if h5_in_path is None or not os.path.exists(h5_in_path):
-        print 'Datei {} nicht vorhanden!'.format(h5_in_path)
+        print('Datei {} nicht vorhanden!'.format(h5_in_path))
         return
 
     with tables.openFile(h5_in_path) as h5_in:
 
         try:
-            for name, mode_table in modes.items():
-                path = mode_path + '/' + mode_table
-                table = h5_in.getNode(path).read()
-                mode_sum = table.sum()
-                meta['Wegesumme ' + name] = int(round(mode_sum))
-                modes[name] = mode_sum
-                modes_sum += mode_sum
+            table = h5_in.getNode(mode_path).read()
+            sum_of_each_mode = table.sum(1).sum(1)
         except tables.NoSuchNodeError as e:
-            print e.message
+            print(e.message)
             meta = {'Fehler': 'Benötigte Tabelle fehlt: "{}"'.format(
                 e.message
             )}
-        else:
-            meta['Summe aller Wege'] = int(round(modes_sum))
-            for name, mode_sum in modes.items():
-                meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
+        
+    n_modes = len(sum_of_each_mode)
+    for mode in xrange(n_modes):
+        name = 'Verkehrsmittel {}'.format(mode)
+        mode_sum = sum_of_each_mode[mode]
+        meta['Wegesumme ' + name] = int(round(mode_sum))
+        modes_sum += mode_sum
+
+    meta['Summe aller Wege'] = int(round(modes_sum))
+    for mode in xrange(n_modes):
+        name = 'Verkehrsmittel {}'.format(mode)
+        mode_sum = sum_of_each_mode[mode]
+        meta['Anteil ' + name] = '{:.2%}'.format(mode_sum / modes_sum)
 
     with open(csv_out, 'wb') as csv_file:
         w = csv.DictWriter(csv_file, meta.keys())
@@ -48,10 +45,10 @@ def evaluate(h5_in_path, csv_out):
         w.writerow(meta)
 
 def startmain():
-    parser = ArgumentParser(description="Maxem")
+    parser = ArgumentParser(description="Wiver Evaluation")
 
     parser.add_argument("-i", action="store",
-                        help="Maxem demand file",
+                        help="Wiver demand file",
                         dest="h5_in_path")
 
     parser.add_argument("-o", action="store",
