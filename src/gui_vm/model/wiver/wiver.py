@@ -21,13 +21,13 @@ class Wiver(TrafficModel):
 
     # name of the config file containing the target status of all input data
     # relative to the directory this file is in
-    RESOURCES_XML = 'wiver.xml'
+    RESOURCES_XML = 'Wiver.xml'
     EVALUATION_SCRIPT = 'evaluate_wiver.py'
 
     def __init__(self):
         super(Wiver, self).__init__('Wiver')
-        maxem_path = os.path.dirname(__file__)
-        resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
+        wiver_path = os.path.dirname(__file__)
+        resource_xml_file = os.path.join(wiver_path, self.RESOURCES_XML)
         self.resource_config_from_xml(resource_xml_file)
 
     def evaluate (self, file_path, overwrite=False):

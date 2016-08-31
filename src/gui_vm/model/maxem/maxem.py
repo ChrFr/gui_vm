@@ -7,7 +7,7 @@ import os, imp
 import sys
 import csv
 import numpy as np
-from gui_vm.config.config import Config, Singleton
+from gui_vm.config.config import Config
 import gui_vm
 
 config = Config()
@@ -72,9 +72,9 @@ class Maxem(TrafficModel):
         run_name: name of the run inside the scenario
         xml_file: absolute path th a xml-file containing the paths to the used resources and the settings for the scenario and run with the given names (gui_vm project-style)
         '''
-        python_path = config.settings['trafficmodels'][self.name]['interpreter']
+        arguments = config.settings['trafficmodels'][self.name]['arguments']
         executable = config.settings['trafficmodels'][self.name]['executable']
-        cmd = python_path + ' ' + executable
+        cmd = executable + ' ' + arguments
         cmd_scen_name = '-n "{}"'.format(scenario_name)
 
         if run_name is not None:
