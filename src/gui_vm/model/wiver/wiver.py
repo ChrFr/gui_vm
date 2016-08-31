@@ -7,27 +7,27 @@ import os, imp
 import sys
 import csv
 import numpy as np
-from gui_vm.config.config import Config
+from gui_vm.config.config import Config, Singleton
 import gui_vm
 
 config = Config()
 
-class Maxem(TrafficModel):
+class Wiver(TrafficModel):
     '''
-    Maxem traffic model
+    WIVER traffic model
     '''
     #__metaclass__ = Singleton
     # singleton won't work because of resource paths, TODO: clone in TrafficModel to avoid multiple readings
 
     # name of the config file containing the target status of all input data
     # relative to the directory this file is in
-    RESOURCES_XML = 'Maxem.xml'
-    EVALUATION_SCRIPT = 'evaluate_maxem.py'
+    RESOURCES_XML = 'Wiver.xml'
+    EVALUATION_SCRIPT = 'evaluate_wiver.py'
 
     def __init__(self):
-        super(Maxem, self).__init__('Maxem')
-        maxem_path = os.path.dirname(__file__)
-        resource_xml_file = os.path.join(maxem_path, self.RESOURCES_XML)
+        super(Wiver, self).__init__('Wiver')
+        wiver_path = os.path.dirname(__file__)
+        resource_xml_file = os.path.join(wiver_path, self.RESOURCES_XML)
         self.resource_config_from_xml(resource_xml_file)
 
     def evaluate (self, file_path, overwrite=False):
@@ -91,48 +91,37 @@ class Maxem(TrafficModel):
 
         self.already_done = 0.
         self.group = None
-        groups_count = len(self.get('groups_dest_mode'))
+        groups_count = self.get('n_groups')
         self.to_do = 0
         self.group_share = 100. / groups_count
         self.group_counter = 0
 
         def progress():
             message = str(process.readAllStandardError())
-            # reset counter
-            l = message.strip().split('Start iteration')
-            if len(l) > 1:
-                self.iteration = int(l[1].split(':')[0].strip())
-                self.already_done = 0.
-                self.group_counter = 0
-                self.to_do = 0
+            ## reset counter
+            #l = message.strip().split('Start iteration')
+            #if len(l) > 1:
+                #self.iteration = int(l[1].split(':')[0].strip())
+                #self.already_done = 0.
+                #self.group_counter = 0
+                #self.to_do = 0
 
-            # search new group
-            l = message.split("Calculating Group")
-            if len(l)>1:
-                self.group_counter += self.group_share
+            ## search new group
+            #l = message.split("calculate group")
+            #if len(l)>1:
+                #self.group_counter += self.group_share
 
-            # groups which make no trips
-            l = message.split('Wege_Soll: 0,')
-            if len(l)>1:
-                self.already_done += self.group_share
-
-            # new trip chain
-            l = message.split("INFO->['")
-            if len(l)>1:
-                l2 = l[1].split("'")
-                new_group = l2[0]
-                l3 = l[1].split(',')
-                self.to_do = max(self.to_do, int(l3[1].strip()))
-                self.already_done += self.group_share / self.to_do
-                if self.group != new_group:
-                    self.group = new_group
-                    self.to_do = 0
+                #self.to_do = max(self.to_do, int(l3[1].strip()))
+                #self.already_done += self.group_share / self.to_do
+                #if self.group != new_group:
+                    #self.group = new_group
+                    #self.to_do = 0
             if callback:
                 callback(message, self.already_done)
             # ' ... completed' is final success message of tdmks run
-            if 'completed' in message:
-                if on_success:
-                    on_success()
+            #if 'completed' in message:
+                #if on_success:
+                    #on_success()
         #ToDo: how to check if error occured (tdmks doesn't return exit codes)
 
         # QProcess emits `readyRead` when there is data to be read

@@ -459,6 +459,11 @@ class RunOptionsDialog(QtGui.QDialog):
 
     @staticmethod
     def getValues(scenario_node, stored_options={}, is_primary = False):
+        
+        model_options = scenario_node.model.options
+        # no options -> no need to configure anything
+        if len(model_options) == 0:
+            return {}, True
         dialog = RunOptionsDialog(
             scenario_node, stored_options=stored_options,
             is_primary=is_primary)
@@ -553,31 +558,24 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
         self.restart_required = False
-
-        self.python_exec_browse_button.clicked.connect(
-            lambda: set_file(self, self.python_edit,
-                             filters=[ALL_FILES_FILTER, 'Python-Interpreter (python.exe)'],
-                             selected_filter_idx=1)
-        )
+        
+        self.models_ui_elements = {}
         self.hdf5_exec_browse_button.clicked.connect(
             lambda: set_file(self, self.hdf5_edit,
                              filters=[ALL_FILES_FILTER, CALLABLE_FILES_FILTER],
                              selected_filter_idx=1)
         )
-        self.maxem_default_browse_button.clicked.connect(
-            lambda: set_file(self, self.maxem_default_edit,
-                             filters=[ALL_FILES_FILTER, TRAFFICMODEL_FILE_FILTER],
-                             selected_filter_idx=1,
-                             do_split=True)
-        )
-        self.maxem_exec_browse_button.clicked.connect(
-            lambda: set_file(self, self.maxem_exec_edit,
-                             filters=[ALL_FILES_FILTER, 'Python-Skript (*.py)'],
-                             selected_filter_idx=1)
-        )
+        
+        self.models_layout = QtGui.QVBoxLayout(self.models_scroll_content)
+        models = config.settings['trafficmodels']
+        for name in models:
+            self.add_model_content(name)
+            
+        spacer = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.models_layout.addItem(spacer)
 
-        def enable_restart_required():
-            self.restart_required = True
+        #def enable_restart_required():
+            #self.restart_required = True
 
         #self.auto_check.stateChanged.connect(enable_restart_required)
 
@@ -587,65 +585,95 @@ class SettingsDialog(QtGui.QDialog, Ui_Settings):
         self.OK_button.clicked.connect(self.write_config)
         self.reset_button.clicked.connect(self.reset)
         self.cancel_button.clicked.connect(self.close)
-        self.auto_python_button.clicked.connect(self.set_python_auto)
         self.fill()
         self.show()
-
-    def set_python_auto(self):
-        path = ''
-
-        try:
-            #linux
-            path = os.path.split(os.environ['PYTHONPATH'])[0]
-        except KeyError:
-            #Windows
-            try:
-                f = ''
-                for p in os.environ['PATH'].split(';'):
-                    if 'python' in p.lower():
-                        f = p
-                        break
-                for s in f.split('\\'):
-                    path += s + '\\'
-                    if 'python' in s.lower():
-                        break
-            except KeyError:
-                path = ''
-
-        self.python_edit.setText(os.path.join(path, 'python.exe'))
+        
+    def add_model_content(self, name):
+        self.models_ui_elements[name] = {}
+        elements = self.models_ui_elements[name]
+        
+        box = QtGui.QGroupBox(self.models_scroll_content)
+        box.setTitle(name)
+        vertical_layout = QtGui.QVBoxLayout(box)
+        grid_layout = QtGui.QGridLayout()
+        
+        # default folder
+        label = QtGui.QLabel(box)
+        label.setText('Defaultordner')        
+        grid_layout.addWidget(label, 0, 0, 1, 1)
+        default_edit = QtGui.QLineEdit(box)        
+        grid_layout.addWidget(default_edit, 0, 1, 1, 1)
+        default_browse_button = QtGui.QPushButton(box)
+        default_browse_button.setText('...')
+        default_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
+        grid_layout.addWidget(default_browse_button, 0, 3, 1, 1)
+        
+        # executable
+        label = QtGui.QLabel(box)
+        label.setText('Programmdatei')        
+        grid_layout.addWidget(label, 1, 0, 1, 1)
+        exec_edit = QtGui.QLineEdit(box)
+        grid_layout.addWidget(exec_edit, 1, 1, 1, 1)        
+        exec_browse_button = QtGui.QPushButton(box)
+        exec_browse_button.setMaximumSize(QtCore.QSize(30, 16777215))
+        exec_browse_button.setText('...')
+        grid_layout.addWidget(exec_browse_button, 1, 3, 1, 1)
+        
+        # arguments
+        label = QtGui.QLabel(box)
+        label.setText('Argumente')    
+        arguments_edit = QtGui.QLineEdit(box)
+        grid_layout.addWidget(label, 2, 0, 1, 1)        
+        grid_layout.addWidget(arguments_edit, 2, 1, 1, 1)
+        
+        vertical_layout.addLayout(grid_layout)
+        self.models_layout.addWidget(box)  
+        
+        
+        default_browse_button.clicked.connect(
+            lambda: set_file(self, default_edit,
+                             filters=[ALL_FILES_FILTER, TRAFFICMODEL_FILE_FILTER],
+                             selected_filter_idx=1,
+                             do_split=True)
+        )
+        exec_browse_button.clicked.connect(
+            lambda: set_file(self, exec_edit,
+                             filters=[ALL_FILES_FILTER, CALLABLE_FILES_FILTER],
+                             selected_filter_idx=1)
+        )        
+        
+        elements['exec'] = exec_edit    
+        elements['default'] = default_edit   
+        elements['args'] = arguments_edit   
 
     def fill(self):
         env = config.settings['environment']
 
         self.hdf5_edit.setText(env['hdf5_viewer'])
 
-        mod = config.settings['trafficmodels']
-        maxem = mod['Maxem']
-        self.maxem_default_edit.setText(maxem['default_folder'])
-        self.maxem_exec_edit.setText(maxem['executable'])
-        self.python_edit.setText(maxem['interpreter'])
+        # add traffic models
+        models = config.settings['trafficmodels']
         self.auto_check.setChecked(config.settings['auto_check'])
-
-        #verkmod = mod['VerkMod']
-        #self.verkmod_default_edit.setText(verkmod['default_folder'])
-        #self.verkmod_exec_edit.setText(verkmod['executable'])
+        
+        for name, values in models.iteritems():
+            ui_elements = self.models_ui_elements[name]
+            ui_elements['default'].setText(values['default_folder'])
+            ui_elements['exec'].setText(values['executable'])
+            ui_elements['args'].setText(values['arguments'])
 
     def write_config(self):
         env = config.settings['environment']
         #env['default_project_folder'] = str(self.project_edit.text())
         env['hdf5_viewer'] = str(self.hdf5_edit.text())
 
-        mod = config.settings['trafficmodels']
-        maxem = mod['Maxem']
-        maxem['default_folder'] = str(self.maxem_default_edit.text())
-        maxem['executable'] = str(self.maxem_exec_edit.text())
-        maxem['interpreter'] = str(self.python_edit.text())
+        models = config.settings['trafficmodels']
+        for name, values in models.iteritems():
+            ui_elements = self.models_ui_elements[name]
+            values['default_folder'] = str(ui_elements['default'].text())
+            values['executable'] = str(ui_elements['exec'].text())
+            values['arguments'] = str(ui_elements['args'].text())
 
         config.settings['auto_check'] = self.auto_check.isChecked()
-
-        #verkmod = mod['VerkMod']
-        #verkmod['default_folder'] = str(self.verkmod_default_edit.text())
-        #verkmod['executable'] = str(self.verkmod_exec_edit.text())
 
         config.write()
         if self.restart_required:

@@ -1,9 +1,35 @@
 from lxml import etree
 import os, sys
 import gui_vm
+import copy
 
 CONFIG_FILE = "config.xml"
-CONFIG_TEMPLATE = "config_template.xml"
+
+# holds structure of settings and default values
+# you may change sth in this structure 2 levels deep (eg adding a trafficmodel)
+# (deeper changes are not recognized when loading xml settings from previous versions -> delete config.xml)
+setting_struct = {
+    'environment': {
+        'hdf5_viewer': ''
+        },
+    'auto_check': False,
+    'trafficmodels': {
+        'Maxem': {
+            'default_folder': '', # folder with default resources
+            'executable': 'python.exe', # path to file that executes the model (respectively the interpreter, virtual machine etc.)
+            'arguments': '-m tdmks.main_xml', # command line arguments for the executable
+            'class_module': 'gui_vm.model.maxem.maxem' # the module with gui_vm related trafficmodel definitions (represents the gui_vm src folder structure)
+            },
+        'Wiver': {
+            'default_folder': '',
+            'executable': '',
+            'arguments': '',
+            'class_module': 'gui_vm.model.wiver.wiver'
+            },
+    },
+    'history': [],
+}
+
 
 class Singleton(type):
     '''
@@ -24,29 +50,11 @@ class Config():
     def __init__(self):
         main_p = gui_vm.__path__[0]
         self.filename = os.path.join(main_p, CONFIG_FILE)
-        self.default_file = os.path.join(main_p, CONFIG_TEMPLATE)
         self.mainWindow = None
         self.batch_mode = False
         self.admin_mode = False
         self.save_disabled = False
-        self.settings = {
-            'environment': {
-                'hdf5_viewer': ''
-                },
-            'auto_check': False,
-            'trafficmodels': {
-                'Maxem': {
-                    'default_folder': '',
-                    'executable': '',
-                    'interpreter': '',
-                    },
-                'VerkMod': {
-                    'default_folder': '',
-                    'executable': ''
-                    }
-            },
-            'history': [],
-        }
+        self.settings = {}
         self.read()
 
     def add_to_history(self, project_folder):
@@ -68,14 +76,22 @@ class Config():
 
     '''
     read the config from given xml file (default config.xml)
+    recognizes changes in setting_struct 2 levels deep (if you add or change
+    sth in comparsion to older settings)
     '''
     def read(self, filename=None):
         if not filename:
             filename = self.filename
         if not os.path.isfile(filename):
-            self.reset(reset_filename=filename)
+            self.reset()
         tree = etree.parse(filename)
-        self.settings.update(xml_to_dict(tree.getroot(), ['history']))
+        self.settings = copy.deepcopy(setting_struct)
+        f_set = xml_to_dict(tree.getroot(), ['history'])
+        for key, value in f_set.iteritems():
+            if isinstance(value, dict):
+                self.settings[key].update(value)
+            else:
+                self.settings[key] = value
 
     '''
     write the config as xml to given file (default config.xml)
@@ -87,21 +103,15 @@ class Config():
             filename = self.filename
         etree.ElementTree(xml_tree).write(str(filename), pretty_print=True)
 
-    def reset(self, reset_filename=None, reset_from_filename=None):
+    def reset(self):
         '''
-        reset the config to the values in another config file, keeps the old history
+        resets the config to the values in setting_struct
         '''
-        if not reset_filename:
-            reset_filename = self.filename
-        if not reset_from_filename:
-            reset_from_filename = self.default_file
-        if not os.path.isfile(reset_from_filename):
-            raise EnvironmentError('{} not found!'.format(reset_from_filename))
-        #keep the history
-        hist_tmp = self.settings['history']
-        self.read(filename=self.default_file)
+        #keep the history        
+        hist_tmp = self.settings['history'] if 'history' in self.settings else []
+        self.settings = copy.deepcopy(setting_struct)
         self.settings['history'] = hist_tmp
-        self.write(filename=reset_filename)
+        self.write()
 
 '''
 append the entries of a dictionary as childs to the given xml tree element

@@ -71,6 +71,10 @@ class ScenarioDetails(QtGui.QGroupBox, Ui_DetailsScenario):
         self.primary_button.clicked.connect(
             lambda: self.primary_run())
         self.special_button.clicked.connect(self.special_run)
+        
+        # deactivated change of model (no conversion of input files possible atm)
+        self.combo_model.setEnabled(False)        
+        
         if scenario_node.locked:
             self.primary_button.setEnabled(False)
             self.special_button.setEnabled(False)

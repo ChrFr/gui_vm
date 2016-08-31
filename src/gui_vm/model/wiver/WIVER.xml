@@ -1,0 +1,59 @@
+<Resources>
+  <Monitor>
+    <shape alias="Anzahl Zonen" resource="zonal_data" path="/zone_no">n_zones</shape>
+    <shape alias="Anzahl Verkehrsmittel" resource="matrices" path="/modes">n_modes</shape>
+    <shape alias="Anzahl Zeitscheiben" resource="params" path="/time_slices">n_time_slices</shape>
+    <shape alias="Anzahl Gruppen" resource="params" path="/param_dist">n_groups</shape>
+    <shape alias="Anzahl Savingskategorien" resource="params" path="/savings">n_savings</shape>
+    <!--observed attributes, can be cross referenced to from other resources via definitions with {nameofmonitorobject},
+order of monitored attributes determines the order in which they will be shown in GUI Scenario details-->
+    <!--==== possible entries ====-->
+    <!--<shape alias="" resource="" path="/">nameofmonitorobject</shape>
+observes the shape of a table, may be referenced like this: <H5Array dimension="{nameofmonitorobject} x {nameofmonitorobject} x 10" ... />-->
+    <!--<content alias="" resource="" path="/" column="">nameofmonitorobject</shape>
+observes the content of a column, may be referenced like this: <column ... > text{nameofmonitorobject}text </column>-->
+  </Monitor>
+  <RunOptions>
+    <!--selectable options before running, values may reference monitored content 
+is_unique - only one option can be checked at a time,
+default - by default selected option (index),
+is_special_only - only available for special runs,
+is_primary_only - only available for primary runs
+e.g. <group name="detailed" is_special_only="True">
+   <option value="groups">Gruppendetails</option>
+   <option value="activities">Aktivit&#228;tendetails</option>
+</group>-->
+  </RunOptions>
+  <H5Resource name="matrices" category="Matrizen">
+    <H5Array path="/destinations" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/origins" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/travel_time" dimension="{n_modes} x {n_zones} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/zone_no" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/modes" dimension="{n_modes}" minimum="" maximum=""/>
+    <H5Array path="/zone_name" dimension="{n_zones}" minimum="" maximum=""/>
+  </H5Resource>
+  <H5Resource name="params" category="Parameter">
+    <H5Array path="/groups" dimension="{n_groups}" minimum="" maximum=""/>
+    <H5Array path="/modes" dimension="{n_modes}" minimum="" maximum=""/>
+    <H5Array path="/mode_of_groups" dimension="{n_groups}" minimum="" maximum=""/>
+    <H5Array path="/param_dist" dimension="{n_groups}" minimum="" maximum=""/>
+    <H5Array path="/savings" dimension="{n_savings}" minimum="" maximum=""/>
+    <H5Array path="/savings_bins" dimension="{n_savings}" minimum="" maximum=""/>
+    <H5Array path="/savings_weights" dimension="{n_groups} x {n_savings}" minimum="" maximum=""/>
+    <H5Array path="/stops_per_tour" dimension="{n_groups}" minimum="" maximum=""/>
+    <H5Array path="/time_series_ending_trips" dimension="{n_groups} x {n_time_slices}" minimum="" maximum=""/>
+    <H5Array path="/time_series_linking_trips" dimension="{n_groups} x {n_time_slices}" minimum="" maximum=""/>
+    <H5Array path="/time_series_starting_trips" dimension="{n_groups} x {n_time_slices}" minimum="" maximum=""/>
+    <H5Array path="/time_slices" dimension="{n_time_slices}" minimum="" maximum=""/>
+    <H5Array path="/tour_rates" dimension="{n_groups}" minimum="" maximum=""/>
+  </H5Resource>
+  <H5Resource name="zonal_data" category="Zonen">
+    <H5Array path="/groups" dimension="{n_groups}" minimum="" maximum=""/>
+    <H5Array path="/zone_name" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/destinations" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/origins" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/sink_potential" dimension="{n_groups} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/source_potential" dimension="{n_groups} x {n_zones}" minimum="" maximum=""/>
+    <H5Array path="/zone_no" dimension="{n_zones}" minimum="" maximum=""/>
+  </H5Resource>
+</Resources>

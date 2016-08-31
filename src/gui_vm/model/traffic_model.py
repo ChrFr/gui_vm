@@ -33,15 +33,14 @@ class TrafficModel(Observable):
     '''
     FILENAME_DEFAULT = 'project.xml'
 
-    #names of the fields that can be displayed outside the model
-    monitored = OrderedDict()
-
     def __init__(self, name):
         super(TrafficModel, self).__init__()
         self.name = name
+        # names of the fields that can be displayed outside the model
+        self.monitored = OrderedDict()
 
-        #dictionary with categories of resources as keys
-        #items are lists of the resources to this category
+        # dictionary with categories of resources as keys
+        # items are lists of the resources to this category
         self.resources = {}
 
     def process(self):

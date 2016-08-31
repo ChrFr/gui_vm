@@ -16,6 +16,7 @@ def main(folder, model):
         os.path.expanduser(folder)) for f in fn]
 
     parser = ResourceConfigXMLParser()
+    parser.add_special_attributes()
 
     for filename in filenames:
         # the category is the path of the folder the file is in relative to the base folder (=subfolder)
