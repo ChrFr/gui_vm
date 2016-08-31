@@ -459,6 +459,11 @@ class RunOptionsDialog(QtGui.QDialog):
 
     @staticmethod
     def getValues(scenario_node, stored_options={}, is_primary = False):
+        
+        model_options = scenario_node.model.options
+        # no options -> no need to configure anything
+        if len(model_options) == 0:
+            return None, True
         dialog = RunOptionsDialog(
             scenario_node, stored_options=stored_options,
             is_primary=is_primary)
