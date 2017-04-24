@@ -104,7 +104,7 @@ class HDF5(object):
     def read(self):
         if self.file_exists:
             try:
-                self.h5_file = tables.openFile(self.filename, 'r')
+                self.h5_file = tables.open_file(self.filename, 'r')
             except:
                 return False
             return True
@@ -114,7 +114,7 @@ class HDF5(object):
     def get_table(self, table_path):
         if self.h5_file is not None:
             try:
-                table = self.h5_file.getNode(table_path)
+                table = self.h5_file.get_node(table_path)
                 return table
             except tables.NoSuchNodeError:
                 return None

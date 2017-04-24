@@ -22,12 +22,12 @@ def evaluate(h5_in_path, csv_out):
         print 'Datei {} nicht vorhanden!'.format(h5_in_path)
         return
 
-    with tables.openFile(h5_in_path) as h5_in:
+    with tables.open_file(h5_in_path) as h5_in:
 
         try:
             for name, mode_table in modes.items():
                 path = mode_path + '/' + mode_table
-                table = h5_in.getNode(path).read()
+                table = h5_in.get_node(path).read()
                 mode_sum = table.sum()
                 meta['Wegesumme ' + name] = int(round(mode_sum))
                 modes[name] = mode_sum

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gui_vm",
-    version="1.03",
+    version="1.5",
     url='https://github.com/ChrFr/gui_vm',
     author='Christoph Franke',
     description="graphical user interface for different traffic models",
@@ -31,7 +31,7 @@ setup(
 
     # deactivated requirements to avoid vcvarsall.bat errors in wheel installer, have to be installed with conda/pip before
     install_requires=[
-        'setuptools'#,
+        #'setuptools'#,
         #'numpy',
         #'tables',
         #'lxml'
