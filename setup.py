@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gui_vm",
-    version="1.15",
+    version="1.18",
     url='https://github.com/ChrFr/gui_vm',
     author='Christoph Franke',
     description="graphical user interface for different traffic models",
@@ -37,6 +37,9 @@ setup(
         #'tables',
         #'lxml'
     ],
+
+    scripts=['scripts/gui_vm.bat',
+             ],
 
     # PyQT 4 needed, no disutils available for the package.
     # install it seperately
