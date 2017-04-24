@@ -35,7 +35,7 @@ class GetTimeSclices(object):
                                                             ('Params', ))[0].file_absolute
 
     def import_time_series(self):
-        with tables.openFile(self.h5_params_file) as h:
+        with tables.open_file(self.h5_params_file) as h:
             try:
                 time_series = h.root.activities.time_series[:]
             except NoSuchNodeError:
