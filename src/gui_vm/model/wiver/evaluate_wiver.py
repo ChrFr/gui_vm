@@ -15,17 +15,17 @@ def evaluate(h5_in_path, csv_out):
         print('Datei {} nicht vorhanden!'.format(h5_in_path))
         return
 
-    with tables.openFile(h5_in_path) as h5_in:
+    with tables.open_file(h5_in_path) as h5_in:
 
         try:
-            table = h5_in.getNode(mode_path).read()
+            table = h5_in.get_node(mode_path).read()
             sum_of_each_mode = table.sum(1).sum(1)
         except tables.NoSuchNodeError as e:
             print(e.message)
             meta = {'Fehler': 'Benötigte Tabelle fehlt: "{}"'.format(
                 e.message
             )}
-        
+
     n_modes = len(sum_of_each_mode)
     for mode in xrange(n_modes):
         name = 'Verkehrsmittel {}'.format(mode)

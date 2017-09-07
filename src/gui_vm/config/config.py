@@ -49,7 +49,8 @@ class Config():
 
     def __init__(self):
         main_p = gui_vm.__path__[0]
-        self.filename = os.path.join(main_p, CONFIG_FILE)
+        folder = os.path.join(os.environ['APPDATA'], 'gui_vm')
+        self.filename = os.path.join(folder, CONFIG_FILE)
         self.mainWindow = None
         self.batch_mode = False
         self.admin_mode = False
@@ -107,7 +108,7 @@ class Config():
         '''
         resets the config to the values in setting_struct
         '''
-        #keep the history        
+        #keep the history
         hist_tmp = self.settings['history'] if 'history' in self.settings else []
         self.settings = copy.deepcopy(setting_struct)
         self.settings['history'] = hist_tmp

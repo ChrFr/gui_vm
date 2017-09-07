@@ -548,7 +548,7 @@ class H5Node(H5Resource):
             self.set('shape', None)
             return None
         self._status.set('table_path', Status.FOUND)
-        if table._c_classId != 'UNIMPLEMENTED':
+        if table._c_classid != 'UNIMPLEMENTED':
             table = table.read()
         self.set('shape', table.shape)
         return table
@@ -898,7 +898,7 @@ class H5Array(H5Node):
         add the minima/maxima
         '''
         table = super(H5Array, self).update(path, h5_in=h5_in)
-        if hasattr(table, '_c_classId') and table._c_classId == 'UNIMPLEMENTED':
+        if getattr(table, '_c_classid', '') == 'UNIMPLEMENTED':
             return
         if table is not None and table.dtype.char != 'S':
             self.max_value = table.max()

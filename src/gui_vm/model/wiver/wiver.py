@@ -74,7 +74,7 @@ class Wiver(TrafficModel):
         '''
         arguments = config.settings['trafficmodels'][self.name]['arguments']
         executable = config.settings['trafficmodels'][self.name]['executable']
-        cmd = executable + ' ' + arguments
+        cmd = '"{e}" {a}'.format(e=executable, a=arguments)
         cmd_scen_name = '-n "{}"'.format(scenario_name)
 
         if run_name is not None:
