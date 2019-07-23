@@ -100,7 +100,7 @@
     <H5Array path="/visum/in_vehicle_time_bus" dimension="{n_time_series} x {n_zones} x {n_zones}" minimum="" maximum=""/>
   </H5Resource>
   <H5Resource name="Tarifrelationen" category="OV">
-    <H5Array path="/tarif_relationen" dimension="{n_zones}" minimum="" maximum=""/>
+    <H5Array path="/tarif_relationen" dimension="{n_zones} x {n_zones}" minimum="" maximum=""/>
   </H5Resource>
   <H5Resource name="Betas" category="Parameter">
     <H5Table path="/coefficients/betas" n_rows="">
